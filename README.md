@@ -9,8 +9,8 @@ Node.js에서 `node serve.cjs` 실행 후 `http://127.0.0.1:4173` 접속.
 
 ## 사이트와 배포
 
-- 사이트: https://happym5re.github.io/writemisu/
-- 저장소: https://github.com/happym5re/writemisu
+- 사이트: https://writemisu.github.io/
+- 저장소: https://github.com/writemisu/writemisu.github.io
 - GitHub Pages의 Source는 GitHub Actions를 사용한다.
 - `main`에 변경 사항을 올리면 JavaScript 문법 검사와 자동 테스트를 통과한 뒤 `dist/`만 배포한다. GitHub Actions에서 수동 실행도 가능하다.
 - `serve.cjs`는 로컬 확인용이며 사이트에서 서버를 실행하지 않는다. 입력과 PNG 생성은 브라우저에서 처리한다.
