@@ -1,10 +1,32 @@
-const marks=['bold','italic','underline','strike'];
+const marks=['bold','italic','underline','strike'],paintStyles=['color','highlight','highlightOpacity'];
+export function fillTextWithSpaces(ctx,text,x,y){
+ if(!text.includes('\u3000')){ctx.fillText(text,x,y);return;}
+ // KoPub draws a dot for U+3000. Keep its advance without painting the glyph.
+ const space=ctx.measureText('\u3000').width;
+ for(const part of text.split('\u3000')){if(part)ctx.fillText(part,x,y);x+=ctx.measureText(part).width+space;}
+}
 export function normalizeRuns(runs){
  const result=[];
- for(const run of runs){if(!run.text)continue;const next={text:run.text};for(const key of marks)if(run[key])next[key]=true;const last=result.at(-1);if(last&&marks.every(key=>!!last[key]===!!next[key]))last.text+=next.text;else result.push(next);}
+ for(const run of runs){if(!run.text)continue;const next={text:run.text};for(const key of marks)if(run[key])next[key]=true;for(const key of paintStyles)if(run[key]!=null)next[key]=run[key];const last=result.at(-1);if(last&&marks.every(key=>!!last[key]===!!next[key])&&paintStyles.every(key=>last[key]===next[key]))last.text+=next.text;else result.push(next);}
  return result;
 }
 export function blockRuns(block){return block.runs||[{text:block.text,bold:!!block.bold}];}
+export function quoteRuns(runs,style){
+ if(!style?.enabled)return runs;
+ const text=runs.map(r=>r.text).join(''),ranges=Array.from(text.matchAll(/"([^"]*)"|“([^”]*)”/g),m=>({start:m.index+1,end:m.index+m[0].length-1})).filter(r=>r.end>r.start);
+ if(!ranges.length)return runs;
+ let offset=0,index=0;
+ return normalizeRuns(runs.flatMap(run=>{
+  const start=offset,end=start+run.text.length,parts=[];
+  while(offset<end){
+   while(ranges[index]?.end<=offset)index++;
+   const range=ranges[index],quoted=range&&offset>=range.start,to=Math.min(end,range?(quoted?range.end:range.start):end),part={...run,text:run.text.slice(offset-start,to-start)};
+   if(quoted){for(const key of marks)if(style[key])part[key]=true;if(style.color)part.color=style.color;if(style.highlight&&style.highlightOpacity>0){part.highlight=style.highlight;part.highlightOpacity=style.highlightOpacity;}}
+   parts.push(part);offset=to;
+  }
+  return parts;
+ }));
+}
 export function sliceRuns(runs,start,end){let offset=0;return normalizeRuns(runs.flatMap(run=>{const from=Math.max(0,start-offset),to=Math.min(run.text.length,end-offset);offset+=run.text.length;return to>from?[{...run,text:run.text.slice(from,to)}]:[];}));}
 export function rangeHasMark(runs,start,end,key){const selected=sliceRuns(runs,start,end);return selected.length>0&&selected.every(run=>run[key]);}
 export function toggleMark(runs,start,end,key){

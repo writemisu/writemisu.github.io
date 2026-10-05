@@ -16,6 +16,13 @@ test('restoration advances ids beyond existing blocks and groups',()=>{
  assert.equal(parseDraft(encode(state,1)).counter,8);
 });
 
+test('quote settings survive saving and old drafts remain valid',()=>{
+ const quoteStyle={enabled:true,color:null,highlight:'#333333',highlightOpacity:8,bold:false,italic:true,underline:false,strike:false};
+ assert.deepEqual(parseDraft(encode({...state,quoteStyle})).state.quoteStyle,quoteStyle);
+ assert.equal(parseDraft(encode()).state.quoteStyle,undefined);
+ for(const patch of [{highlight:'bad'},{highlightOpacity:101},{enabled:'yes'},{color:'red'}])assert.equal(parseDraft(encode({...state,quoteStyle:{...quoteStyle,...patch}})),null);
+});
+
 test('an intentionally empty document is restored without bringing deleted text back',()=>{
  assert.deepEqual(parseDraft(encode({...state,blocks:[]})).state.blocks,[]);
 });

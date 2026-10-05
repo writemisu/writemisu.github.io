@@ -1,7 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {toggleMark,normalizeRuns,richTextLines,positionedRuns} from '../dist/richtext.js';
+import {toggleMark,normalizeRuns,richTextLines,positionedRuns,fillTextWithSpaces} from '../dist/richtext.js';
 import {styledHTML} from '../dist/core.js';
+
+test('ideographic spaces keep their original advance without painting their glyph',()=>{
+ const calls=[],ctx={fillText:(...args)=>calls.push(args),measureText:text=>({width:[...text].reduce((w,c)=>w+(c==='\u3000'?14.4:16),0)})};
+ fillTextWithSpaces(ctx,'\u3000가\u3000\u3000나\u3000',20,30);
+ assert.deepEqual(calls.map(c=>c[0]),['가','나']);
+ assert.ok(Math.abs(calls[0][1]-34.4)<1e-9);assert.ok(Math.abs(calls[1][1]-79.2)<1e-9);
+ assert.ok(calls.every(c=>c[2]===30));
+ calls.length=0;fillTextWithSpaces(ctx,'\u3000\u3000',0,0);assert.equal(calls.length,0);
+});
+
+test('ordinary text, spaces and intentional dots retain the original drawing call',()=>{
+ const calls=[],ctx={fillText:(...args)=>calls.push(args),measureText(){throw Error('Unchanged text needs no extra measurement');}};
+ fillTextWithSpaces(ctx,'AV · 가운데점  .',12,24);
+ assert.deepEqual(calls,[['AV · 가운데점  .',12,24]]);
+});
 
 test('overlapping range formats combine and toggle only the selected mark',()=>{
  let runs=toggleMark([{text:'가나다라마'}],1,4,'bold');

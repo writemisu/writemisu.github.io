@@ -1,13 +1,13 @@
-import {blockRuns,richTextLines} from './richtext.js';
+import {blockRuns,richTextLines,quoteRuns} from './richtext.js';
 
-export function blockMetrics(b,measure){
+export function blockMetrics(b,measure,quoteStyle){
  if(b.type==='line')return {lines:[],w:b.w,h:24};
  const chat=b.presentation==='chat',notification=b.presentation==='notification',chapter=b.presentation==='chapter',inset=chat?14:chapter?18:notification?20:0;
  const tailWidth=chat?8:0,markerSize=chapter?Math.min(b.size*.45,Math.max(0,(b.w-32)/2)):0,markerOffset=chapter?markerSize+10:0;
  const textOffset=markerOffset+(chat&&b.messageSide!=='right'?tailWidth:0);
  const paddingX=Math.min(b.padding+inset,Math.max(0,(b.w-20-markerOffset-tailWidth)/2)),paddingY=chat?11:notification?16:chapter?12:0;
  const headerSize=Math.max(11,b.size*.72),headerHeight=notification?headerSize*1.4+10:0;
- const runs=notification&&b.messageSender?[{text:b.messageSender+': ',bold:true},...blockRuns(b)]:chapter?blockRuns(b).map(run=>({...run,bold:true})):blockRuns(b);
+ const body=quoteRuns(blockRuns(b),quoteStyle),runs=notification&&b.messageSender?[{text:b.messageSender+': ',bold:true},...body]:chapter?body.map(run=>({...run,bold:true})):body;
  const lines=richTextLines(runs,Math.max(20,b.w-paddingX*2-markerOffset-tailWidth),measure);
  const w=chat&&b.messageFit!==false?Math.min(b.w,Math.max(52,...lines.map(line=>line.width+paddingX*2+tailWidth))):b.w;
  return {lines,w,h:Math.max(1,lines.length)*b.size*b.lineHeight+paddingY*2+headerHeight,paddingX,paddingY,headerSize,headerHeight,markerSize,textOffset,tailWidth,textWidth:Math.max(20,w-paddingX*2-markerOffset-tailWidth)};

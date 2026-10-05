@@ -8,6 +8,8 @@ export function parseDraft(raw){
  try{
   const draft=JSON.parse(raw),s=draft?.state;
   if(draft?.version!==1||!s||!number(s.width,400)||s.width>1600||!number(s.margin)||!number(s.padding)||!number(s.noise)||!number(s.seed)||!['solid','radial'].includes(s.background)||!Array.isArray(s.colors)||s.colors.length!==2||!s.colors.every(color)||!color(s.textColor)||!Array.isArray(s.blocks))return null;
+  const q=s.quoteStyle;
+  if(q!==undefined&&(!q||typeof q.enabled!=='boolean'||q.color!=null&&!color(q.color)||!color(q.highlight)||!number(q.highlightOpacity)||q.highlightOpacity>100||['bold','italic','underline','strike'].some(key=>typeof q[key]!=='boolean')))return null;
   const ids=new Set();let counter=number(draft.counter)?draft.counter:0;
   for(const b of s.blocks){
    if(!b||!/^b\d+$/.test(b.id)||ids.has(b.id)||!['text','line'].includes(b.type)||typeof b.text!=='string'||!['x','y','padding'].every(key=>number(b[key]))||!['w','size','lineHeight'].every(key=>number(b[key],.01))||!Object.hasOwn(fonts,b.font)||!color(b.color)||!color(b.box)||!number(b.opacity)||!['left','center','right','justify'].includes(b.align))return null;

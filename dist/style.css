@@ -152,6 +152,15 @@ h3{display:flex;align-items:center;font-size:13px;font-weight:700;letter-spacing
 .text-formatting button svg{width:15px;height:15px;stroke-width:1.8}
 .text-formatting button[aria-pressed=true]{background:#e1e8ee;color:var(--accent)}
 .text-formatting button:hover:not(:disabled){background:#e9edf1}
+.quote-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.quote-heading h3{margin:0}
+.quote-heading h3 span{margin-left:5px;font-size:10px;font-weight:400;color:var(--muted)}
+.quote-switch{min-width:42px;padding:5px 8px;border-radius:20px;font-size:10px;font-weight:600;background:#e9edf0;color:#64717d;border:0}
+.quote-switch[aria-checked=true]{background:var(--accent);color:#fff}
+#quoteFields{margin-top:16px}
+.quote-color-toggle{display:flex;align-items:center;gap:6px;margin:16px 0 10px;font-size:12px}
+.quote-color-toggle input{margin:0;accent-color:var(--accent)}
+#quoteMarks{margin-top:12px}
 .paragraph-input{display:block;overflow:auto;resize:vertical;min-height:112px;height:128px;width:100%;padding:12px 7px 6px;margin-top:5px;line-height:1.8;font-size:13px;font-synthesis:style;white-space:pre-wrap;overflow-wrap:anywhere;color:#333b42;background:#fff;border:0;border-radius:4px;outline:none;cursor:text}
 .paragraph-input:empty:before{content:'본문';color:#8a939b;pointer-events:none}
 .paragraph-input:focus-visible{outline:1px solid #e1e7ec;outline-offset:-1px}
