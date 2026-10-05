@@ -115,6 +115,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .top-actions svg{width:17px;height:17px;stroke-width:1.8;flex-shrink:0}
 .primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:9px 14px;background:var(--accent);border-color:var(--accent);color:#fff;font-size:12px;box-shadow:0 1px 2px #27394912}
 .primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:#fff}
+.png-save-tools{display:flex;align-items:center;gap:6px}
+#pngScale{display:flex;align-items:center;gap:8px;min-height:36px;padding:8px 10px;border-radius:6px;color:#536574;font-size:12px}
+.png-scale-menu{position:fixed;inset:auto;margin:0;padding:5px;border:1px solid #e1e5e9;border-radius:9px;background:#fff;color:#374550;box-shadow:0 8px 24px #27394916}
+.png-scale-menu button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 8px;border:0;border-radius:5px;font-size:12px;text-align:left}
+.png-scale-menu button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
+.png-scale-menu button:hover{background:#f0f3f5}
+.png-scale-menu small{color:#697986;font-size:10px;font-variant-numeric:tabular-nums}
 .workspace.design-open{grid-template-columns:var(--sidebar-width,420px) 330px minmax(0,1fr)}
 .workspace{height:calc(100dvh - 64px);min-height:0;padding:14px 16px 16px;gap:14px;grid-template-columns:var(--sidebar-width,420px) minmax(0,1fr)}
 .panel{min-width:0;min-height:0;padding:16px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;scrollbar-width:none}
