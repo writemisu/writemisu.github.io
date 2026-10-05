@@ -188,7 +188,9 @@ h3{display:flex;align-items:center;font-size:13px;font-weight:700;letter-spacing
 .stage-scroll{padding:32px 24px 38px;background-color:#edf0f2;background-image:radial-gradient(#cdd3d9 .65px,transparent .65px);background-size:18px 18px;scrollbar-color:#c2cad2 transparent}
 #board{box-shadow:0 8px 28px #29374514,0 0 0 1px #4354650e}
 #draftStatus[data-failed=true]{color:#9b4343}
-.stage-footer{min-height:30px;padding:8px 15px;border-top:1px solid #dfe4e8;background:#fafbfc;color:#6d7983;font-size:10px;font-variant-numeric:tabular-nums}
+.stage-footer{position:relative;align-items:center;min-height:30px;padding:8px 15px;border-top:1px solid #dfe4e8;background:#fafbfc;color:#6d7983;font-size:10px;font-variant-numeric:tabular-nums}
+.stage-size{display:flex;align-items:center;gap:7px}
+.size-help .help-content{top:auto;bottom:calc(100% + 8px);left:15px;width:max-content;max-width:calc(100% - 30px);padding:10px 12px;z-index:4}
 .block-overlay:hover{border-color:#a2afbb;background:#40566b05}
 .block-overlay.selected{border:1px solid #647c91;box-shadow:0 0 0 1px #ffffffa0}
 .block-overlay:focus-visible{outline-color:#879caf}
