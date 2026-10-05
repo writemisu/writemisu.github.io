@@ -1,0 +1,22 @@
+Third-party resources used by 작성미수
+
+Freesentation
+  Copyright 2024 The Freesentation Authors
+  https://github.com/Freesentation/freesentation
+  SIL Open Font License 1.1; bundled font license: FREESENTATION-LICENSE.txt
+
+Pretendard
+  https://github.com/orioncactus/pretendard
+  Loaded from jsDelivr, version 1.3.9.
+  SIL Open Font License 1.1:
+  https://github.com/orioncactus/pretendard/blob/main/LICENSE
+
+Noto Serif KR
+  https://github.com/google/fonts/tree/main/ofl/notoserifkr
+  Loaded from Google Fonts CDN.
+  SIL Open Font License 1.1:
+  https://github.com/google/fonts/blob/main/ofl/notoserifkr/OFL.txt
+
+Lucide icons
+  https://lucide.dev/
+  ISC License; bundled license: LUCIDE-LICENSE.txt

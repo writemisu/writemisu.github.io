@@ -1,0 +1,7 @@
+@font-face{font-family:'Pretendard';font-weight:400;src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Pretendard';font-weight:700;src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2/Pretendard-Bold.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Noto Serif KR';font-weight:400;src:url('https://fonts.gstatic.com/s/notoserifkr/v32/3JnoSDn90Gmq2mr3blnHaTZXbOtLJDvui3JOncjmeM52.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'Noto Serif KR';font-weight:700;src:url('https://fonts.gstatic.com/s/notoserifkr/v32/3JnoSDn90Gmq2mr3blnHaTZXbOtLJDvui3JOncgBf852.ttf') format('truetype');font-display:swap}
+
+@font-face{font-family:'Freesentation';font-weight:400;src:url('fonts/Freesentation-Regular.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Freesentation';font-weight:700;src:url('fonts/Freesentation-Bold.woff2') format('woff2');font-display:swap}
