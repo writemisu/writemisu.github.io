@@ -5,16 +5,16 @@
 ## 실행
 
 Node.js에서 `node serve.cjs` 실행 후 `http://127.0.0.1:4173` 접속.
-배포 대상은 `dist/` 전체다. 설치할 패키지나 빌드 과정은 없다.
+로컬 원본은 `dist/` 전체다. 설치할 패키지는 없다. 배포 전 `node scripts/prepare-pages.cjs`를 실행하면 `artifacts/pages/`에 배포 파일을 만든다.
 
 ## 사이트와 배포
 
 - 사이트: https://writemisu.github.io/
 - 저장소: https://github.com/writemisu/writemisu.github.io
 - GitHub Pages의 Source는 GitHub Actions를 사용한다.
-- `main`에 변경 사항을 올리면 JavaScript 문법 검사와 자동 테스트를 통과한 뒤 `dist/`만 배포한다. GitHub Actions에서 수동 실행도 가능하다.
+- `main`에 변경 사항을 올리면 JavaScript 문법 검사와 자동 테스트를 통과한 뒤 배포 파일을 생성한다. HTML이 불러오는 CSS·JavaScript와 모든 내부 모듈 참조에 같은 콘텐츠 버전을 붙여 이전 캐시와 새 코드가 섞이지 않게 한다. `artifacts/pages/`만 배포하며 원본 `dist/`는 바꾸지 않는다. GitHub Actions에서 수동 실행도 가능하다.
 - `serve.cjs`는 로컬 확인용이며 사이트에서 서버를 실행하지 않는다. 입력과 PNG 생성은 브라우저에서 처리한다.
-- `artifacts/`의 검수 화면·작업 파일은 저장소와 배포에서 제외한다.
+- `artifacts/`는 저장소에서 제외한다. 그 안의 검수 화면·작업 파일은 `pages/` 밖에 두어 배포에도 포함하지 않는다.
 
 ## 편집
 
