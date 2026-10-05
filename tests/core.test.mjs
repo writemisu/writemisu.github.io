@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {splitParagraphs,wrapText,constrainDelta,fonts,gradientCSS,radialGeometry,textLines,justifyLine,alignedX} from '../dist/core.js';
+import {splitParagraphs,wrapText,constrainDelta,fonts,gradientCSS,radialGeometry,textLines,justifyLine,alignedX,resizeWidths,verticalPositions,snapEdge} from '../dist/core.js';
 test('paragraph parsing preserves indentation, internal newlines and CRLF',()=>{
  assert.deepEqual(splitParagraphs('　첫 문단\r\n둘째 줄\r\n \r\n다음 문단'),['　첫 문단\n둘째 줄','다음 문단']);
  assert.deepEqual(splitParagraphs('하나\n둘\n\n셋',true),['하나','둘','셋']);
@@ -35,4 +35,29 @@ test('divider alignment moves its box inside the page margins',()=>{
  assert.equal(alignedX('center',200,1400,112),600);
  assert.equal(alignedX('right',200,1400,112),1088);
  assert.equal(alignedX('right',790,800,80),0);
+});
+
+test('multi-resize applies one delta and stops every box together at either boundary',()=>{
+ const items=[{id:'a',w:240,minWidth:80,maxWidth:720},{id:'b',w:320,minWidth:120,maxWidth:400}],before=structuredClone(items);
+ assert.deepEqual(resizeWidths(items,40),[{id:'a',w:280},{id:'b',w:360}]);
+ assert.deepEqual(resizeWidths(items,200),[{id:'a',w:320},{id:'b',w:400}]);
+ assert.deepEqual(resizeWidths(items,-300),[{id:'a',w:80},{id:'b',w:160}]);
+ assert.deepEqual(items,before);
+});
+
+test('equal vertical gaps account for different heights and preserve outer edges',()=>{
+ const items=[{id:'c',y:300,h:60},{id:'a',y:80,h:40},{id:'b',y:150,h:80}],before=structuredClone(items);
+ assert.deepEqual(verticalPositions(items),[{id:'a',y:80},{id:'b',y:170},{id:'c',y:300}]);
+ assert.deepEqual(verticalPositions(items,24),[{id:'a',y:80},{id:'b',y:144},{id:'c',y:248}]);
+ assert.deepEqual(items,before);
+});
+
+test('overlapping paragraphs distribute without negative gaps',()=>{
+ assert.deepEqual(verticalPositions([{id:'a',y:80,h:100},{id:'b',y:90,h:80},{id:'c',y:120,h:20}]),[{id:'a',y:80},{id:'b',y:180},{id:'c',y:260}]);
+});
+
+test('right-edge snapping chooses the closest guide within the screen threshold',()=>{
+ assert.deepEqual(snapEdge(637,[80,400,640,720],6),{pos:640,delta:3});
+ assert.deepEqual(snapEdge(718,[640,720,719],6),{pos:719,delta:1});
+ assert.equal(snapEdge(620,[640,720],6),null);
 });

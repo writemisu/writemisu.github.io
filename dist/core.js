@@ -17,3 +17,18 @@ export function justifyLine(text,width,measure){
 }
 export function escapeHTML(text){return String(text).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 export function styledHTML(block,lineBreaks=true){return blockRuns(block).map(run=>{const css=runCSS(run),text=escapeHTML(run.text),body=lineBreaks?text.replace(/\n/g,'<br>'):text;return css?`<span style="${css}">${body}</span>`:body;}).join('');}
+
+export function resizeWidths(items,delta){
+ const min=Math.max(...items.map(b=>b.minWidth-b.w)),max=Math.min(...items.map(b=>b.maxWidth-b.w));
+ const amount=Math.max(min,Math.min(max,delta));
+ return items.map(b=>({id:b.id,w:b.w+amount}));
+}
+export function verticalPositions(items,gap){
+ const sorted=[...items].sort((a,b)=>a.y-b.y);if(sorted.length<2)return sorted.map(({id,y})=>({id,y}));
+ const top=sorted[0].y,bottom=Math.max(...sorted.map(b=>b.y+b.h));
+ const spacing=gap??Math.max(0,(bottom-top-sorted.reduce((sum,b)=>sum+b.h,0))/(sorted.length-1));
+ let y=top;return sorted.map(b=>{const position={id:b.id,y};y+=b.h+spacing;return position;});
+}
+export function snapEdge(edge,targets,distance){
+ let nearest=null;for(const target of targets){const delta=target-edge;if(Math.abs(delta)<distance){distance=Math.abs(delta);nearest={pos:target,delta};}}return nearest;
+}
