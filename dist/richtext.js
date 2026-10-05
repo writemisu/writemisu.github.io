@@ -61,3 +61,12 @@ export function positionedRuns(line,width,align,measure){
  for(let i=0;i<=last;i++){buffer.push(chars[i]);if(slots.has(i)||i===last){for(const run of normalizeRuns(buffer)){const w=measure(run.text,run);result.push({...run,x,w});x+=w;}if(slots.has(i))x+=gap;buffer=[];}}
  return result;
 }
+export function lineHighlights(runs){
+ const result=[];let span=null;
+ for(const run of runs){
+  if(!run.highlight||!run.highlightOpacity){span=null;continue;}
+  if(span&&span.highlight===run.highlight&&span.highlightOpacity===run.highlightOpacity)span.w=run.x+run.w-span.x;
+  else{span={x:run.x,w:run.w,highlight:run.highlight,highlightOpacity:run.highlightOpacity};result.push(span);}
+ }
+ return result;
+}

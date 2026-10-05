@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {quoteRuns,normalizeRuns,richTextLines,positionedRuns} from '../dist/richtext.js';
+import {quoteRuns,normalizeRuns,richTextLines,positionedRuns,lineHighlights} from '../dist/richtext.js';
 import {blockMetrics} from '../dist/messages.js';
 
 const style={enabled:true,color:'#40566b',highlight:'#333333',highlightOpacity:8,bold:true,italic:false,underline:false,strike:false};
@@ -51,4 +51,33 @@ test('quoted bold widths drive layout and notifications do not style their sende
 test('zero opacity disables highlighting without disabling other quote marks',()=>{
  const result=quoteRuns([{text:'"대사"'}],{...style,highlightOpacity:0,italic:true});
  assert.ok(result.every(r=>r.highlight===undefined));assert.ok(result.some(r=>r.bold&&r.italic));
+});
+
+test('justified highlights cover expanded word and character spacing without moving text',()=>{
+ const measure=t=>[...t].length;
+ for(const text of ['“가 나 다”','“가나다”','"Stop hiding your hands"']){
+  const runs=quoteRuns([{text}],style),line={runs,width:measure(text),justify:true},positioned=positionedRuns(line,40,'justify',measure),before=structuredClone(positioned);
+  const marked=positioned.filter(r=>r.highlight),spans=lineHighlights(positioned);
+  assert.ok(marked.some((r,i)=>i&&r.x>marked[i-1].x+marked[i-1].w),'reproduces expanded gaps');
+  assert.equal(spans.length,1);assert.equal(spans[0].x,marked[0].x);
+  assert.equal(spans[0].x+spans[0].w,marked.at(-1).x+marked.at(-1).w);
+  assert.deepEqual(positioned,before);
+ }
+});
+
+test('highlight spans join across manual marks but stop at narration and quote boundaries',()=>{
+ const marked={highlight:'#333333',highlightOpacity:8};
+ const runs=[{text:'가 ',x:0,w:10,...marked},{text:'나',x:20,w:5,bold:true,...marked},{text:'” 지문 “',x:25,w:20},{text:'다',x:45,w:5,...marked},{text:'라',x:50,w:5,highlight:'#ffffff',highlightOpacity:8}];
+ assert.deepEqual(lineHighlights(runs),[{x:0,w:25,...marked},{x:45,w:5,...marked},{x:50,w:5,highlight:'#ffffff',highlightOpacity:8}]);
+ assert.deepEqual(lineHighlights([{text:'가',x:0,w:5,highlight:'#333333',highlightOpacity:0}]),[]);
+});
+
+test('wrapped and final dialogue lines each have one highlight for every alignment',()=>{
+ const measure=t=>[...t].length,lines=richTextLines(quoteRuns([{text:'“가 나 다 라 마 바 사 아 자 차 카 타 파 하”'}],style),10,measure);
+ assert.ok(lines.length>1);assert.equal(lines.at(-1).justify,false);
+ for(const align of ['left','center','right','justify'])for(const line of lines){
+  const positioned=positionedRuns(line,12,align,measure),marked=positioned.filter(r=>r.highlight),spans=lineHighlights(positioned);
+  assert.equal(spans.length,1);assert.equal(spans[0].x,marked[0].x);
+  assert.equal(spans[0].w,marked.at(-1).x+marked.at(-1).w-marked[0].x);
+ }
 });
