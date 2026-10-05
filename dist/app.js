@@ -1,6 +1,7 @@
 import {blockRuns,positionedRuns} from './richtext.js';
 import {blockMetrics,presentationColors,messageX,chatPath} from './messages.js';
-import {createEditor,syncEditor} from './editor.js';
+import {createEditor,syncEditor,readEditor} from './editor.js';
+import {readDraft,writeDraft} from './draft.js';
 import {icons} from './icons.js';
 import {splitParagraphs,constrainDelta,fonts,radialGeometry,gradientCSS,alignedX,resizeWidths,verticalPositions,snapEdge} from './core.js';
 const $=id=>document.getElementById(id),canvas=$('artwork'),ctx=canvas.getContext('2d');
@@ -10,13 +11,14 @@ try{const saved=localStorage.getItem('letter-studio-font');if(Object.hasOwn(font
 function defaultFontSize(font){return (font==='freesentation'?20:12)*4/3;}
 function newBlock(text='',type='text'){return {id:'b'+(++counter),type,text,x:(state.width-bodyWidth())/2,y:state.margin,w:bodyWidth(),size:defaultFontSize(preferredFont),lineHeight:1.85,font:preferredFont,auto:true,color:state.textColor,align:'left',bold:false,padding:state.padding,box:'#ffffff',opacity:0,group:null};}
 let state={width:800,height:260,margin:80,padding:0,background:'solid',colors:[...palettes[1].colors],textColor:palettes[1].text,noise:0,seed:741,blocks:[],demo:false};
-state.blocks.push(newBlock());
-let selected=new Set([state.blocks[0].id]),undoStack=[],redoStack=[],alignmentMode='text',zoom=.7,fitMode=true,drag=null,bgKey='',background=null,renderFrame=0,toastTimer;
+const restoredDraft=readDraft(()=>sessionStorage)||readDraft(()=>localStorage);
+if(restoredDraft){state=restoredDraft.state;counter=restoredDraft.counter;writeDraft(()=>sessionStorage,JSON.stringify({version:1,...restoredDraft}));}else state.blocks.push(newBlock());
+let selected=new Set(state.blocks[0]?[state.blocks[0].id]:[]),undoStack=[],redoStack=[],alignmentMode='text',zoom=.7,fitMode=true,drag=null,bgKey='',background=null,renderFrame=0,toastTimer;
 const snapshot=()=>JSON.stringify(state);
-function record(before=snapshot()){if(undoStack.at(-1)!==before)undoStack.push(before);if(undoStack.length>60)undoStack.shift();redoStack=[];updateHistory();}
+function record(before=snapshot()){if(undoStack.at(-1)!==before)undoStack.push(before);if(undoStack.length>60)undoStack.shift();redoStack=[];updateHistory();queueDraftSave();}
 function change(fn){const before=snapshot();fn();if(snapshot()!==before)record(before);render();}
 function updateHistory(){$('undo').disabled=!undoStack.length;$('redo').disabled=!redoStack.length;}
-function historyBack(forward=false){const from=forward?redoStack:undoStack,to=forward?undoStack:redoStack;if(!from.length)return;to.push(snapshot());state=JSON.parse(from.pop());endTyping();selected=new Set([...selected].filter(id=>state.blocks.some(b=>b.id===id)));render();notify(forward?'다시 실행됨':'실행 취소됨');}
+function historyBack(forward=false){const from=forward?redoStack:undoStack,to=forward?undoStack:redoStack;if(!from.length)return;to.push(snapshot());state=JSON.parse(from.pop());endTyping();selected=new Set([...selected].filter(id=>state.blocks.some(b=>b.id===id)));render();queueDraftSave();notify(forward?'다시 실행됨':'실행 취소됨');}
 function notify(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,3600);}
 function selection(){return state.blocks.filter(b=>selected.has(b.id));}
 function fontString(b,run={}){return `${run.bold||b.bold?'700':'400'} ${b.size}px ${fonts[b.font]}`;}
@@ -38,7 +40,7 @@ function createPresentationControls(id){
  options.forEach(option=>option.onclick=()=>choose(option.dataset.value));
  menu.onkeydown=e=>{const index=options.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){e.preventDefault();e.stopPropagation();options[e.key==='Home'?0:e.key==='End'?options.length-1:(index+(e.key==='ArrowDown'?1:-1)+options.length)%options.length].focus({preventScroll:true});}else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();menu.hidePopover();trigger.focus({preventScroll:true});}else if(e.key==='Tab'){menu.hidePopover();trigger.focus({preventScroll:true});}};
  for(const button of host.querySelectorAll('[data-side]'))button.onclick=()=>change(()=>{const b=state.blocks.find(x=>x.id===id);b.messageSide=button.dataset.side;b.messagePinned=true;pinMessage(b);selected=new Set([id]);});
- for(const input of host.querySelectorAll('[data-message]')){input.onfocus=()=>{endTyping();if(!selected.has(id))select(id);};input.oninput=()=>{const b=state.blocks.find(x=>x.id===id),before=snapshot();b[input.dataset.message]=input.value;if(!typing)record(before);typing=true;clearTimeout(typingTimer);typingTimer=setTimeout(endTyping,700);loadUsedFonts().catch(()=>{});scheduleDraw();};input.onblur=endTyping;input.onkeydown=textKeyDown;}
+ for(const input of host.querySelectorAll('[data-message]')){input.onfocus=()=>{endTyping();if(!selected.has(id))select(id);};input.oninput=()=>{const b=state.blocks.find(x=>x.id===id),before=snapshot();b[input.dataset.message]=input.value;if(!typing)record(before);typing=true;clearTimeout(typingTimer);typingTimer=setTimeout(endTyping,700);loadUsedFonts().catch(()=>{});scheduleDraw();queueDraftSave();};input.onblur=endTyping;input.onkeydown=textKeyDown;}
  return host;
 }
 function closePresentationMenus(){document.querySelectorAll('.presentation-menu:popover-open').forEach(menu=>menu.hidePopover());}
@@ -105,7 +107,7 @@ function renderSelection(){
  bindSlider($('paragraphGap'),v=>arrangeSelection(v),v=>$('paragraphGapValue').textContent=v+'px');
  bindSlider($('padding'),v=>{state.padding=clamp(v,0,60);state.blocks.forEach(x=>x.padding=state.padding);});
 }
-function bindSlider(element,mutate,display){let before=null;element.oninput=()=>{if(before===null)before=snapshot();mutate(+element.value);display?.(+element.value);scheduleDraw();};element.onchange=()=>{if(before!==null&&before!==snapshot())record(before);before=null;};}
+function bindSlider(element,mutate,display){let before=null;element.oninput=()=>{if(before===null)before=snapshot();mutate(+element.value);display?.(+element.value);scheduleDraw();queueDraftSave();};element.onchange=()=>{if(before!==null&&before!==snapshot())record(before);before=null;};}
 function scheduleDraw(){if(renderFrame)return;renderFrame=requestAnimationFrame(()=>{renderFrame=0;updateCanvas();renderOverlays();});}
 function renderSettings(){$('color2').closest('label').hidden=state.background==='solid';$('color1').closest('label').firstChild.textContent=state.background==='solid'?'바탕색':'색 1';state.colors.forEach((v,i)=>$('color'+(i+1)).value=v);$('noise').value=state.noise;$('noiseValue').textContent=state.noise+'%';$('pageWidth').value=state.width;$('pageMargin').value=state.margin;$('palettes').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active',palettes[i].background===state.background&&JSON.stringify(palettes[i].colors)===JSON.stringify(state.colors)));}
 function render(){cancelAnimationFrame(renderFrame);renderFrame=0;const ids=new Set(state.blocks.map(b=>b.id));for(const id of metricCache.keys())if(!ids.has(id))metricCache.delete(id);loadUsedFonts().catch(()=>{});updateCanvas();renderList();renderOverlays();renderSelection();renderSettings();updateHistory();}
@@ -124,7 +126,7 @@ document.addEventListener('pointermove',onDrag,{passive:false});document.addEven
 $('board').addEventListener('pointerdown',e=>{if(e.target===canvas){selected.clear();renderList();renderOverlays();renderSelection();}});
 let typing=false,typingTimer;
 function endTyping(){typing=false;clearTimeout(typingTimer);}
-function updateText(id,runs){const b=state.blocks.find(b=>b.id===id);if(!b||JSON.stringify(blockRuns(b))===JSON.stringify(runs))return;const before=snapshot();b.runs=runs;b.text=runs.map(r=>r.text).join('');if(!typing)record(before);typing=true;clearTimeout(typingTimer);typingTimer=setTimeout(endTyping,700);loadUsedFonts().catch(()=>{});scheduleDraw();}
+function updateText(id,runs){const b=state.blocks.find(b=>b.id===id);if(!b||JSON.stringify(blockRuns(b))===JSON.stringify(runs))return;const before=snapshot();b.runs=runs;b.text=runs.map(r=>r.text).join('');if(!typing)record(before);typing=true;clearTimeout(typingTimer);typingTimer=setTimeout(endTyping,700);loadUsedFonts().catch(()=>{});scheduleDraw();queueDraftSave();}
 function textKeyDown(e){if(e.isComposing)return;if((e.ctrlKey||e.metaKey)&&['z','y'].includes(e.key.toLowerCase())){e.preventDefault();historyBack(e.shiftKey||e.key.toLowerCase()==='y');}}
 function editBlock(id){const input=$('blockList').querySelector('[data-id="'+id+'"] .paragraph-input');if(input){input.focus();input.scrollIntoView({block:'nearest'});}}
 const fontLoads=new Map();
@@ -159,7 +161,27 @@ $('contentTab').onclick=()=>{const id=selection().find(b=>b.type==='text')?.id;i
 $('designTab').onclick=()=>setDesignOpen($('designSidebar').hidden);
 $('closeDesign').innerHTML=icons['panel-left-close'];$('closeDesign').onclick=()=>setDesignOpen(false);
 document.addEventListener('keydown',e=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)||e.target.isContentEditable)return;const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();historyBack(e.shiftKey);return;}if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();historyBack(true);return;}if(e.key==='Escape'){if(drag)finishDrag(true);else{selected.clear();renderOverlays();renderList();renderSelection();}return;}if(mod&&e.key.toLowerCase()==='a'){e.preventDefault();selected=new Set(state.blocks.map(b=>b.id));renderOverlays();renderList();renderSelection();return;}if(!selected.size)return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const step=e.shiftKey?10:1;change(()=>{state.blocks.forEach(b=>b.auto=false);const blocks=selection(),r=bounds(blocks),d=constrainDelta(r,e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0,e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0,state.width);blocks.forEach(b=>{b.auto=false;if(b.presentation==='chat')b.messagePinned=false;b.x+=d.x;b.y+=d.y;});});}if(e.key==='Delete'){e.preventDefault();change(()=>{state.blocks=state.blocks.filter(b=>!selected.has(b.id));selected.clear();});}});
-window.addEventListener('beforeunload',e=>{if(undoStack.length&&!state.demo){e.preventDefault();e.returnValue='';}});
+let draftDirty=!!restoredDraft?.pending,draftTimer=null,draftErrorShown=false;
+function draftStatus(text,failed=false){$('draftStatus').textContent=text;$('draftStatus').dataset.failed=failed;}
+function queueDraftSave(){draftDirty=true;draftStatus('임시저장 중…');if(draftTimer===null)draftTimer=setTimeout(flushDraft,500);}
+function flushDraft(){
+ clearTimeout(draftTimer);draftTimer=null;if(!draftDirty)return true;
+ flowLayout();fitHeight();const draftState=structuredClone(state);
+ // Save IME composition without changing live state or interrupting the caret.
+ for(const input of document.querySelectorAll('.paragraph-input')){const b=draftState.blocks.find(b=>b.id===input.closest('.paragraph-editor').dataset.id);if(b){b.runs=readEditor(input);b.text=b.runs.map(r=>r.text).join('');}}
+ const draft={version:1,state:draftState,counter},data=JSON.stringify(draft);
+ const saved=writeDraft(()=>localStorage,data),sessionSaved=writeDraft(()=>sessionStorage,saved?data:JSON.stringify({...draft,pending:true}));
+ if(!sessionSaved){try{sessionStorage.removeItem('writemisu-draft-v1');}catch{}}
+ draftDirty=!saved;draftStatus(saved?'임시저장됨':'임시저장 실패',!saved);
+ if(!saved&&!draftErrorShown){draftErrorShown=true;notify('임시저장을 사용할 수 없어. 탭을 닫기 전에 내용을 복사해 둬.');}if(saved)draftErrorShown=false;
+ return saved;
+}
+document.addEventListener('input',e=>{if(e.target.closest('.paragraph-input'))queueDraftSave();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){finishDrag();flushDraft();}});
+window.addEventListener('pagehide',()=>{finishDrag();flushDraft();});
+window.addEventListener('beforeunload',e=>{finishDrag();if(!flushDraft()){e.preventDefault();e.returnValue='';}});
+draftStatus(restoredDraft?'임시저장 복원됨':'자동 임시저장');
+if(restoredDraft?.pending)queueDraftSave();
 
 render();document.fonts.ready.then(()=>{metricCache.clear();scheduleDraw();});
 if(document.modelContext?.registerTool){const lifecycle=new AbortController(),register=tool=>{try{Promise.resolve(document.modelContext.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}};

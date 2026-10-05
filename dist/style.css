@@ -174,6 +174,7 @@ h3{display:flex;align-items:center;font-size:13px;font-weight:700;letter-spacing
 .zoom-tools #zoomFit{margin-left:3px;padding:4px 7px;border-left:1px solid #e4e8ec;border-radius:0 4px 4px 0;font-size:11px}
 .stage-scroll{padding:32px 24px 38px;background-color:#edf0f2;background-image:radial-gradient(#cdd3d9 .65px,transparent .65px);background-size:18px 18px;scrollbar-color:#c2cad2 transparent}
 #board{box-shadow:0 8px 28px #29374514,0 0 0 1px #4354650e}
+#draftStatus[data-failed=true]{color:#9b4343}
 .stage-footer{min-height:30px;padding:8px 15px;border-top:1px solid #dfe4e8;background:#fafbfc;color:#6d7983;font-size:10px;font-variant-numeric:tabular-nums}
 .block-overlay:hover{border-color:#a2afbb;background:#40566b05}
 .block-overlay.selected{border:1px solid #647c91;box-shadow:0 0 0 1px #ffffffa0}
