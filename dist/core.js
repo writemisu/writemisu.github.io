@@ -29,6 +29,15 @@ export function verticalPositions(items,gap){
  const spacing=gap??Math.max(0,(bottom-top-sorted.reduce((sum,b)=>sum+b.h,0))/(sorted.length-1));
  let y=top;return sorted.map(b=>{const position={id:b.id,y};y+=b.h+spacing;return position;});
 }
+export function reorderBlocks(blocks,id,direction,heightOf){
+ const index=blocks.findIndex(b=>b.id===id),target=index+direction;
+ if(index<0||target<0||target>=blocks.length)return blocks;
+ const start=Math.min(index,target),first=blocks[start],second=blocks[start+1],firstHeight=heightOf(first),secondHeight=heightOf(second);
+ const top=Math.min(first.y,second.y),gap=Math.max(0,first.y<=second.y?second.y-first.y-firstHeight:first.y-second.y-secondHeight),auto=first.auto!==false&&second.auto!==false;
+ const result=[...blocks];
+ result.splice(start,2,{...second,y:top,auto},{...first,y:top+secondHeight+gap,auto});
+ return result;
+}
 export function snapEdge(edge,targets,distance){
  let nearest=null;for(const target of targets){const delta=target-edge;if(Math.abs(delta)<distance){distance=Math.abs(delta);nearest={pos:target,delta};}}return nearest;
 }

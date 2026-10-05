@@ -134,6 +134,10 @@ h3{display:flex;align-items:center;font-size:13px;font-weight:700;letter-spacing
 .paragraph-editor .block-row[aria-pressed=true]::before{content:'';width:4px;height:4px;flex-shrink:0;border-radius:50%;background:var(--accent)}
 .paragraph-delete{padding:5px 6px;border-color:transparent;background:transparent;color:#727a82;font-size:11px}
 .paragraph-delete:hover{color:#323b43;background:#f1f3f5;border-color:transparent}
+.paragraph-move{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:5px;border:0;border-radius:5px;background:transparent;color:#657583}
+.paragraph-move svg{width:15px;height:15px}
+.paragraph-move:hover:not(:disabled){background:var(--accent-soft);color:var(--accent)}
+.paragraph-move:disabled{opacity:.25}
 .presentation-controls{padding:2px 3px 8px;border-bottom:0}
 .presentation-picker{display:flex;align-items:center;gap:10px;font-size:11px;color:#65707a}
 .presentation-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:1;min-width:0;padding:7px 9px;border:1px solid #e5e8eb;border-radius:6px;background:#f8f9fa;color:#45505a;font-size:11px;text-align:left}
