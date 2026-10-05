@@ -27,6 +27,15 @@ test('an intentionally empty document is restored without bringing deleted text 
  assert.deepEqual(parseDraft(encode({...state,blocks:[]})).state.blocks,[]);
 });
 
+test('replacement rules and untouched source text survive drafts, including cleared rows',()=>{
+ for(const replacementRules of [[{find:'안새롬',replace:'{{user}}'},{find:'',replace:''}],[]]){
+  const saved=parseDraft(encode({...state,replacementRules})).state;
+  assert.deepEqual(saved.replacementRules,replacementRules);assert.deepEqual(saved.blocks,state.blocks);
+ }
+ assert.equal(parseDraft(encode()).state.replacementRules,undefined);
+ for(const replacementRules of [null,{},[null],[{find:1,replace:'x'}],[{find:'x'}]])assert.equal(parseDraft(encode({...state,replacementRules})),null);
+});
+
 test('a tab-only backup retains the need to retry persistent saving after recovery',()=>{
  assert.equal(parseDraft(JSON.stringify({version:1,state,counter:9,pending:true})).pending,true);
 });

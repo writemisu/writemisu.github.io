@@ -2,6 +2,7 @@ import {blockRuns,positionedRuns,fillTextWithSpaces,lineHighlights} from './rich
 import {blockMetrics,presentationColors,messageX,chatPath} from './messages.js';
 import {createEditor,syncEditor,readEditor} from './editor.js';
 import {readDraft,writeDraft} from './draft.js';
+import {replaceBlocks} from './replace.js';
 import {icons} from './icons.js';
 import {splitParagraphs,constrainDelta,fonts,radialGeometry,gradientCSS,alignedX,resizeWidths,verticalPositions,reorderBlocks,snapEdge} from './core.js';
 const $=id=>document.getElementById(id),canvas=$('artwork'),ctx=canvas.getContext('2d');
@@ -24,7 +25,7 @@ function selection(){return state.blocks.filter(b=>selected.has(b.id));}
 function fontString(b,run={}){return `${run.bold||b.bold?'700':'400'} ${b.size}px ${fonts[b.font]}`;}
 function measureRun(b,text,run){ctx.font=fontString(b,run);return ctx.measureText(text).width;}
 const metricCache=new Map();
-function metrics(b){const key=[b.text,b.w,b.padding,b.size,b.lineHeight,b.font,b.bold,b.presentation,b.messageSender,b.messageSide,b.messageFit,JSON.stringify(b.runs),JSON.stringify(state.quoteStyle)].join('|'),cached=metricCache.get(b.id);if(cached?.key===key)return cached.value;const value=blockMetrics(b,(text,run)=>measureRun(b,text,run),state.quoteStyle);metricCache.set(b.id,{key,value});return value;}
+function metrics(b){const key=[b.text,b.w,b.padding,b.size,b.lineHeight,b.font,b.bold,b.presentation,b.messageSender,b.messageTitle,b.messageTime,b.messageSide,b.messageFit,JSON.stringify(b.runs),JSON.stringify(state.quoteStyle),JSON.stringify(state.replacementRules)].join('|'),cached=metricCache.get(b.id);if(cached?.key===key)return cached.value;const display=replaceBlocks([b],state.replacementRules||[]).blocks[0],value={...blockMetrics(display,(text,run)=>measureRun(b,text,run),state.quoteStyle),messageTitle:display.messageTitle,messageTime:display.messageTime};metricCache.set(b.id,{key,value});return value;}
 function bounds(blocks){if(!blocks.length)return null;const x=Math.min(...blocks.map(b=>b.x)),y=Math.min(...blocks.map(b=>b.y));return {x,y,w:Math.max(...blocks.map(b=>b.x+metrics(b).w))-x,h:Math.max(...blocks.map(b=>b.y+metrics(b).h))-y};}
 function fitHeight(){state.height=Math.ceil(Math.max(state.margin*2+100,...state.blocks.map(b=>b.y+metrics(b).h+state.margin)));}
 function bodyWidth(){return Math.min(480,state.width-state.margin*2);}
@@ -54,7 +55,7 @@ function syncPresentationControls(card,b,index){
 function paintMessageHeader(c,b,m){
  c.font=`400 ${m.headerSize}px ${fonts[b.font]}`;
  const fit=(text,width)=>{const chars=Array.from(text);if(c.measureText(text).width<=width)return text;while(chars.length&&c.measureText(chars.join('')+'…').width>width)chars.pop();return chars.length?chars.join('')+'…':'';};
- const width=m.textWidth,time=fit(b.messageTime??'지금',width*.4),timeWidth=c.measureText(time).width,title=fit(b.messageTitle??'메시지',width-(time?timeWidth+12:0)),y=b.y+m.paddingY+m.headerSize;
+ const width=m.textWidth,time=fit(m.messageTime??'지금',width*.4),timeWidth=c.measureText(time).width,title=fit(m.messageTitle??'메시지',width-(time?timeWidth+12:0)),y=b.y+m.paddingY+m.headerSize;
  fillTextWithSpaces(c,title,b.x+m.paddingX,y);c.globalAlpha=.55;fillTextWithSpaces(c,time,b.x+m.w-m.paddingX-timeWidth,y);c.globalAlpha=1;
 }
 function pinMessage(b){b.x=messageX(b.messageSide,metrics(b).w,state.width,state.width-state.margin*2);}
@@ -147,8 +148,29 @@ function renderSelection(){
 }
 function bindSlider(element,mutate,display){let before=null;element.oninput=()=>{if(before===null)before=snapshot();mutate(+element.value);display?.(+element.value);scheduleDraw();queueDraftSave();};element.onchange=()=>{if(before!==null&&before!==snapshot())record(before);before=null;};}
 function scheduleDraw(){if(renderFrame)return;renderFrame=requestAnimationFrame(()=>{renderFrame=0;updateCanvas();renderOverlays();});}
+function replacementRules(){return state.replacementRules||[{find:'',replace:''}];}
+function renderReplacements(){
+ const rules=replacementRules(),host=$('replacementRows');
+ while(host.children.length>rules.length)host.lastElementChild.remove();
+ rules.forEach((rule,i)=>{
+  let row=host.children[i];
+  if(!row){
+   row=document.createElement('div');row.className='replacement-row';
+   row.innerHTML='<div class="replacement-fields"><label>찾을 단어<input data-replacement="find" type="text" autocomplete="off" spellcheck="false"></label><label>표시할 글자<input data-replacement="replace" type="text" autocomplete="off" spellcheck="false"></label></div><button type="button" class="replacement-delete">삭제</button>';
+   for(const input of row.querySelectorAll('input')){
+    input.onfocus=endTyping;input.onblur=endTyping;input.onkeydown=textKeyDown;
+    input.oninput=()=>{const before=snapshot();state.replacementRules=replacementRules();state.replacementRules[i][input.dataset.replacement]=input.value;if(!typing)record(before);typing=true;clearTimeout(typingTimer);typingTimer=setTimeout(endTyping,700);scheduleDraw();queueDraftSave();};
+   }
+   row.querySelector('button').onclick=()=>{endTyping();change(()=>{state.replacementRules=replacementRules();state.replacementRules.splice(i,1);});(host.children[Math.min(i,host.children.length-1)]?.querySelector('input')||$('addReplacement')).focus({preventScroll:true});};
+   host.append(row);
+  }
+  for(const input of row.querySelectorAll('input')){input.value=rule[input.dataset.replacement];input.setAttribute('aria-label','치환 '+(i+1)+(input.dataset.replacement==='find'?' 찾을 단어':' 표시할 글자'));}
+  row.querySelector('button').setAttribute('aria-label','치환 '+(i+1)+' 삭제');
+ });
+}
+$('addReplacement').onclick=()=>{endTyping();change(()=>{state.replacementRules=[...replacementRules(),{find:'',replace:''}];});const input=$('replacementRows').lastElementChild.querySelector('input');input.focus();input.scrollIntoView({block:'nearest'});};
 function renderSettings(){$('color2').closest('label').hidden=state.background==='solid';$('color1').closest('label').firstChild.textContent=state.background==='solid'?'바탕색':'색 1';state.colors.forEach((v,i)=>$('color'+(i+1)).value=v);$('noise').value=state.noise;$('noiseValue').textContent=state.noise+'%';$('pageWidth').value=state.width;$('pageMargin').value=state.margin;$('palettes').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active',palettes[i].background===state.background&&JSON.stringify(palettes[i].colors)===JSON.stringify(state.colors)));}
-function render(){cancelAnimationFrame(renderFrame);renderFrame=0;const ids=new Set(state.blocks.map(b=>b.id));for(const id of metricCache.keys())if(!ids.has(id))metricCache.delete(id);loadUsedFonts().catch(()=>{});updateCanvas();renderList();renderOverlays();renderSelection();renderQuoteSettings();renderSettings();updateHistory();}
+function render(){cancelAnimationFrame(renderFrame);renderFrame=0;const ids=new Set(state.blocks.map(b=>b.id));for(const id of metricCache.keys())if(!ids.has(id))metricCache.delete(id);loadUsedFonts().catch(()=>{});updateCanvas();renderList();renderOverlays();renderSelection();renderQuoteSettings();renderReplacements();renderSettings();updateHistory();}
 
 function startDrag(e,id){if(e.button!==0)return;e.preventDefault();const resize=!!e.target.dataset.resize;if(e.shiftKey||e.ctrlKey||e.metaKey){select(id,true);return;}if(!selected.has(id))select(id);const blocks=selection();e.currentTarget.focus({preventScroll:true});drag={startX:e.clientX,startY:e.clientY,before:snapshot(),original:blocks.map(b=>({...b,w:resize?metrics(b).w:b.w,...widthLimit(b)})),bounds:bounds(blocks),resize,moved:false,zoom};document.body.style.userSelect='none';}
 function onDrag(e){
