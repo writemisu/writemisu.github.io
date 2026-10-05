@@ -11,8 +11,8 @@ try{const saved=localStorage.getItem('letter-studio-font');if(Object.hasOwn(font
 function defaultFontSize(font){return (font==='freesentation'?20:12)*4/3;}
 function newBlock(text='',type='text'){return {id:'b'+(++counter),type,text,x:(state.width-bodyWidth())/2,y:state.margin,w:bodyWidth(),size:defaultFontSize(preferredFont),lineHeight:1.85,font:preferredFont,auto:true,color:state.textColor,align:'left',bold:false,padding:state.padding,box:'#ffffff',opacity:0,group:null};}
 let state={width:800,height:260,margin:80,padding:0,background:'solid',colors:[...palettes[1].colors],textColor:palettes[1].text,noise:0,seed:741,blocks:[],demo:false};
-const restoredDraft=readDraft(()=>sessionStorage)||readDraft(()=>localStorage);
-if(restoredDraft){state=restoredDraft.state;counter=restoredDraft.counter;writeDraft(()=>sessionStorage,JSON.stringify({version:1,...restoredDraft}));}else state.blocks.push(newBlock());
+const tabDraft=readDraft(()=>sessionStorage),restoredDraft=tabDraft||readDraft(()=>localStorage);
+if(restoredDraft){state=restoredDraft.state;counter=restoredDraft.counter;if(!tabDraft)writeDraft(()=>sessionStorage,JSON.stringify({version:1,...restoredDraft}));}else state.blocks.push(newBlock());
 let selected=new Set(state.blocks[0]?[state.blocks[0].id]:[]),undoStack=[],redoStack=[],alignmentMode='text',zoom=.7,fitMode=true,drag=null,bgKey='',background=null,renderFrame=0,toastTimer;
 const snapshot=()=>JSON.stringify(state);
 function record(before=snapshot()){if(undoStack.at(-1)!==before)undoStack.push(before);if(undoStack.length>60)undoStack.shift();redoStack=[];updateHistory();queueDraftSave();}
@@ -161,14 +161,14 @@ $('contentTab').onclick=()=>{const id=selection().find(b=>b.type==='text')?.id;i
 $('designTab').onclick=()=>setDesignOpen($('designSidebar').hidden);
 $('closeDesign').innerHTML=icons['panel-left-close'];$('closeDesign').onclick=()=>setDesignOpen(false);
 document.addEventListener('keydown',e=>{if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)||e.target.isContentEditable)return;const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();historyBack(e.shiftKey);return;}if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();historyBack(true);return;}if(e.key==='Escape'){if(drag)finishDrag(true);else{selected.clear();renderOverlays();renderList();renderSelection();}return;}if(mod&&e.key.toLowerCase()==='a'){e.preventDefault();selected=new Set(state.blocks.map(b=>b.id));renderOverlays();renderList();renderSelection();return;}if(!selected.size)return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const step=e.shiftKey?10:1;change(()=>{state.blocks.forEach(b=>b.auto=false);const blocks=selection(),r=bounds(blocks),d=constrainDelta(r,e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0,e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0,state.width);blocks.forEach(b=>{b.auto=false;if(b.presentation==='chat')b.messagePinned=false;b.x+=d.x;b.y+=d.y;});});}if(e.key==='Delete'){e.preventDefault();change(()=>{state.blocks=state.blocks.filter(b=>!selected.has(b.id));selected.clear();});}});
-let draftDirty=!!restoredDraft?.pending,draftTimer=null,draftErrorShown=false;
-function draftStatus(text,failed=false){$('draftStatus').textContent=text;$('draftStatus').dataset.failed=failed;}
+let draftDirty=!!restoredDraft?.pending,draftTimer=null,draftErrorShown=false,composingInput=null;
+function draftStatus(text,failed=false){const node=$('draftStatus');if(node.textContent!==text)node.textContent=text;if(node.dataset.failed!==String(failed))node.dataset.failed=failed;}
 function queueDraftSave(){draftDirty=true;draftStatus('임시저장 중…');if(draftTimer===null)draftTimer=setTimeout(flushDraft,500);}
 function flushDraft(){
  clearTimeout(draftTimer);draftTimer=null;if(!draftDirty)return true;
- flowLayout();fitHeight();const draftState=structuredClone(state);
- // Save IME composition without changing live state or interrupting the caret.
- for(const input of document.querySelectorAll('.paragraph-input')){const b=draftState.blocks.find(b=>b.id===input.closest('.paragraph-editor').dataset.id);if(b){b.runs=readEditor(input);b.text=b.runs.map(r=>r.text).join('');}}
+ if(renderFrame){flowLayout();fitHeight();}let draftState=state;
+ // Only uncommitted IME text needs a DOM read; all other edits are already in state.
+ if(composingInput?.isConnected){const id=composingInput.closest('.paragraph-editor').dataset.id,runs=readEditor(composingInput),text=runs.map(r=>r.text).join('');draftState={...state,blocks:state.blocks.map(b=>b.id===id?{...b,runs,text}:b)};}
  const draft={version:1,state:draftState,counter},data=JSON.stringify(draft);
  const saved=writeDraft(()=>localStorage,data),sessionSaved=writeDraft(()=>sessionStorage,saved?data:JSON.stringify({...draft,pending:true}));
  if(!sessionSaved){try{sessionStorage.removeItem('writemisu-draft-v1');}catch{}}
@@ -176,7 +176,9 @@ function flushDraft(){
  if(!saved&&!draftErrorShown){draftErrorShown=true;notify('임시저장을 사용할 수 없어. 탭을 닫기 전에 내용을 복사해 둬.');}if(saved)draftErrorShown=false;
  return saved;
 }
-document.addEventListener('input',e=>{if(e.target.closest('.paragraph-input'))queueDraftSave();});
+document.addEventListener('compositionstart',e=>{composingInput=e.target.closest('.paragraph-input');});
+document.addEventListener('compositionend',()=>{composingInput=null;});
+document.addEventListener('input',()=>{if(composingInput)queueDraftSave();});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){finishDrag();flushDraft();}});
 window.addEventListener('pagehide',()=>{finishDrag();flushDraft();});
 window.addEventListener('beforeunload',e=>{finishDrag();if(!flushDraft()){e.preventDefault();e.returnValue='';}});
