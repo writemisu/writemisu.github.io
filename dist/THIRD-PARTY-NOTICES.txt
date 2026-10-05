@@ -1,5 +1,12 @@
 Third-party resources used by 작성미수
 
+KoPub Batang / KoPub Dotum
+  Copyright: Ministry of Culture, Sports and Tourism / Korea Publishers Society.
+  Loaded from the fonts-archive repository through jsDelivr; fonts are not modified.
+  Official terms and use information:
+  https://www.kopus.org/biz-electronic-font2/
+  The official page includes a separate approval condition for web-service embedding.
+
 Freesentation
   Copyright 2024 The Freesentation Authors
   https://github.com/Freesentation/freesentation

@@ -39,7 +39,7 @@ Node.js에서 `node serve.cjs` 실행 후 `http://127.0.0.1:4173` 접속.
 ## 내보내기
 
 - PNG: 동일한 Canvas 렌더러와 고정 시드 배경 사용. 기본 2배 해상도. 긴 지면은 최대 변 16,000px 및 총 1,600만 픽셀에 맞춰 해상도 조정.
-- 글꼴 메뉴는 본문(프리텐다드·Noto Serif KR)과 헤더(프리젠테이션)로 구분한다. 프리젠테이션의 Regular/Bold 웹폰트는 공식 저장소에서 받아 `dist/fonts/`에 포함했으며 SIL OFL 1.1 라이선스는 `dist/FREESENTATION-LICENSE.txt`에 동봉했다. 기본 본문은 Noto Serif KR이다. 코펍 2종은 웹서비스 임베딩 별도 승인 조건 때문에 공개 배포판에서 제외했다. 본문 글꼴은 웹폰트로 지원한다. Google Fonts와 jsDelivr에서 불러오며 PNG는 사용한 글꼴 로딩 완료 후 저장.
+- 글꼴 메뉴는 본문(코펍돋움·코펍바탕·프리텐다드·Noto Serif KR)과 헤더(프리젠테이션)로 구분한다. 프리젠테이션의 Regular/Bold 웹폰트는 공식 저장소에서 받아 `dist/fonts/`에 포함했으며 SIL OFL 1.1 라이선스는 `dist/FREESENTATION-LICENSE.txt`에 동봉했다. 기본 본문은 코펍바탕이며 마지막에 고른 글꼴을 우선한다. 코펍은 기존 CDN 웹폰트로 제공한다. 공식 안내의 일반 무료 사용 조건과 웹서비스 임베딩 별도 승인 항목은 [KoPub 공식 안내](https://www.kopus.org/biz-electronic-font2/)를 참고한다. 본문 글꼴은 웹폰트로 지원한다. Google Fonts와 jsDelivr에서 불러오며 PNG는 사용한 글꼴 로딩 완료 후 저장.
 - 편집 내용은 현재 탭 메모리에만 보관. 새로고침/닫기 전에 PNG로 저장해야 한다. 편집한 탭을 떠날 때 브라우저 경고를 표시한다.
 
 ## 검증
