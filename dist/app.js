@@ -177,7 +177,7 @@ function renderReplacements(){
  });
 }
 $('addReplacement').onclick=()=>{endTyping();change(()=>{state.replacementRules=[...replacementRules(),{find:'',replace:''}];});const input=$('replacementRows').lastElementChild.querySelector('input');input.focus();input.scrollIntoView({block:'nearest'});};
-function renderSettings(){$('color2').closest('label').hidden=state.background==='solid';$('color1').closest('label').firstChild.textContent=state.background==='solid'?'바탕색':'색 1';state.colors.forEach((v,i)=>$('color'+(i+1)).value=v);$('noise').value=state.noise;$('noiseValue').textContent=state.noise+'%';$('pageWidth').value=state.width;$('pageMargin').value=state.margin;const html=htmlSettings(state);$('htmlWidth').value=html.width;$('htmlPadding').value=html.padding;$('htmlGap').value=html.gap;$('htmlGapValue').textContent=html.gap+'px';$('palettes').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active',palettes[i].background===state.background&&JSON.stringify(palettes[i].colors)===JSON.stringify(state.colors)));}
+function renderSettings(){$('backgroundTitle').textContent=editorMode==='html'?'접기 창':'배경';$('color2').closest('label').hidden=editorMode==='html'||state.background==='solid';$('color1').closest('label').firstChild.textContent=editorMode==='html'?'창 배경색':state.background==='solid'?'바탕색':'색 1';state.colors.forEach((v,i)=>$('color'+(i+1)).value=v);$('noise').value=state.noise;$('noiseValue').textContent=state.noise+'%';$('pageWidth').value=state.width;$('pageMargin').value=state.margin;const html=htmlSettings(state);$('htmlWidth').value=html.width;$('htmlPadding').value=html.padding;$('htmlGap').value=html.gap;$('htmlGapValue').textContent=html.gap+'px';$('palettes').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active',palettes[i].background===state.background&&JSON.stringify(palettes[i].colors)===JSON.stringify(state.colors)));}
 function render(){cancelAnimationFrame(renderFrame);renderFrame=0;const ids=new Set(state.blocks.map(b=>b.id));for(const id of metricCache.keys())if(!ids.has(id))metricCache.delete(id);loadUsedFonts().catch(()=>{});updateCanvas();renderList();renderOverlays();renderSelection();renderQuoteSettings();renderReplacements();renderSettings();updateHistory();}
 
 function startDrag(e,id){if(editorMode==='html'||e.button!==0)return;e.preventDefault();const resize=!!e.target.dataset.resize;if(e.shiftKey||e.ctrlKey||e.metaKey){select(id,true);return;}if(!selected.has(id))select(id);const blocks=selection();e.currentTarget.focus({preventScroll:true});drag={startX:e.clientX,startY:e.clientY,before:snapshot(),original:blocks.map(b=>({...b,w:resize?metrics(b).w:b.w,...widthLimit(b)})),bounds:bounds(blocks),resize,moved:false,zoom};document.body.style.userSelect='none';}
@@ -220,18 +220,11 @@ async function savePNG(){const exportScale=pngScale,button=$('savePNG');button.d
 for(const [id,icon] of [['undo','undo-2'],['redo','redo-2']])$(id).innerHTML=icons[icon];
 const saveButtonContent=icons.download+'<span>PNG 저장</span>';
 $('savePNG').innerHTML=saveButtonContent;$('savePNG').onclick=savePNG;
-let htmlCodeView=false,htmlTextureKey='',htmlTexture='',htmlPreviewObserver;
+let htmlCodeView=false,htmlPreviewObserver;
 const htmlOpenIds=new Set();
-function noiseTexture(){
- if(!state.noise)return '';
- const key=state.noise+'|'+state.seed;if(key===htmlTextureKey)return htmlTexture;
- const tile=document.createElement('canvas');tile.width=tile.height=160;const c=tile.getContext('2d'),pixels=c.createImageData(160,160);let random=state.seed;
- for(let y=0;y<160;y++)for(let x=0;x<160;x++){random^=random<<13;random^=random>>>17;random^=random<<5;const value=(((random>>>0)/4294967295-.5)*.75+(smoothNoise(x/96,y/96)-.5)*.65)*state.noise,i=(y*160+x)*4;pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=value>0?255:0;pixels.data[i+3]=Math.min(255,Math.abs(value)*2);}
- c.putImageData(pixels,0,0);htmlTextureKey=key;htmlTexture=tile.toDataURL('image/png');return htmlTexture;
-}
 function resizeHTMLPreview(){const root=$('htmlPreview').contentDocument?.body.firstElementChild;if(root)$('htmlPreview').style.height=Math.max(120,Math.ceil(root.getBoundingClientRect().height))+'px';}
 function renderHTMLPreview(){
- const html=exportHTML(state,noiseTexture()),settings=htmlSettings(state),frame=$('htmlPreview');
+ const html=exportHTML(state),settings=htmlSettings(state),frame=$('htmlPreview');
  $('htmlCode').value=html;$('htmlSizeLabel').textContent='최대 '+settings.width+'px · HTML + 인라인';frame.style.maxWidth=settings.width+'px';
  const body=frame.contentDocument?.body;if(!body||!frame.dataset.ready)return;
  htmlPreviewObserver?.disconnect();body.innerHTML=html;
@@ -257,7 +250,7 @@ $('htmlPreviewTab').onclick=()=>setHTMLView(false);$('htmlCodeTab').onclick=()=>
 for(const [id,key,min,max] of [['htmlWidth','width',280,1600],['htmlPadding','padding',0,120]])$(id).onchange=e=>change(()=>state.htmlSettings={...htmlSettings(state),[key]:clamp(+e.target.value,min,max)});
 bindSlider($('htmlGap'),value=>state.htmlSettings={...htmlSettings(state),gap:value},value=>$('htmlGapValue').textContent=value+'px');
 async function copyHTML(formatted=false){
- const html=exportHTML(state,noiseTexture());
+ const html=exportHTML(state);
  try{
   if(formatted){const doc=new DOMParser().parseFromString(html,'text/html');await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([doc.body.textContent],{type:'text/plain'})})]);}
   else await navigator.clipboard.writeText(html);

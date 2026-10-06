@@ -124,7 +124,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .html-summary-field{display:flex;align-items:center;gap:14px;margin:0 4px 10px;color:#7c8790;font-size:11px}
 .html-summary-field input{width:0;flex:1;min-width:0;padding:7px 10px;border:1px solid #e0e6eb;border-radius:5px;background:#fafbfc;color:#3b4751;font-size:12px}
 #htmlStage{width:100%;min-height:100%}
-#htmlPreview{display:block;width:100%;min-height:120px;margin:0 auto;border:0;background:transparent;box-shadow:0 8px 28px #2739490c}
+#htmlPreview{display:block;width:100%;min-height:120px;margin:0 auto;border:0;background:transparent}
 #htmlCode{display:block;width:100%;min-height:480px;resize:vertical;padding:18px;border:1px solid #dfe5e9;border-radius:8px;background:#fff;color:#374550;font:12px/1.7 Consolas,monospace;tab-size:2}
 .html-mode .stage-scroll{background-image:none}
 @media(max-width:580px){.topbar{flex-wrap:wrap!important;height:auto!important;min-height:100px!important;padding:12px 14px!important;gap:10px}.brand-tools{gap:10px}.mode-tabs button{padding:5px 10px}.top-actions{margin-left:auto}.html-save-tools{gap:6px}}

@@ -1,4 +1,4 @@
-import {escapeHTML,fonts,gradientCSS} from './core.js';
+import {escapeHTML,fonts} from './core.js';
 import {blockRuns,quoteRuns,runCSS} from './richtext.js';
 import {presentationColors} from './messages.js';
 import {replaceBlocks} from './replace.js';
@@ -13,13 +13,9 @@ function runsHTML(runs){return runs.map(run=>{
  const text=textHTML(run.text);return style?`<span style="${style}">${text}</span>`:text;
 }).join('');}
 
-export function exportHTML(state,texture=''){
+export function exportHTML(state){
  const {width,padding,gap}=htmlSettings(state),blocks=replaceBlocks(state.blocks,state.replacementRules||[]).blocks;
- const colors=state.colors.map(c=>color(c,'#f5f5f5')),backgrounds=[];
- if(/^data:image\/png;base64,[\w+/=]+$/.test(texture))backgrounds.push(`url('${texture}')`);
- if(state.background==='radial')backgrounds.push(gradientCSS(colors));
- const background=`background-color:${colors[0]};`+(backgrounds.length?`background-image:${backgrounds.join(',')};`:'');
- const ink=color(state.textColor),header='#'+[1,3,5].map(i=>Math.round(parseInt(colors[0].slice(i,i+2),16)*.94+parseInt(ink.slice(i,i+2),16)*.06).toString(16).padStart(2,'0')).join('');
+ const surface=color(state.colors[0],'#f5f5f5'),ink=color(state.textColor),header='#'+[1,3,5].map(i=>Math.round(parseInt(surface.slice(i,i+2),16)*.94+parseInt(ink.slice(i,i+2),16)*.06).toString(16).padStart(2,'0')).join('');
  const toggle=`display:inline-block;box-sizing:border-box;width:28px;height:28px;background-color:${header};font:400 22px/28px Arial,sans-serif;text-align:center;color:${ink};`;
  const content=blocks.map((b,i)=>{
   const align=['left','center','right','justify'].includes(b.align)?b.align:'left',gapAfter=i<blocks.length-1?gap:0,space=b.type==='line'?gapAfter:0;
@@ -40,7 +36,7 @@ export function exportHTML(state,texture=''){
   }else html=`<div style="box-sizing:border-box;margin:0 0 ${space}px;padding:${chapter?'12px '+(18+inset)+'px':'0 '+inset+'px'};${box}${type}">${chapter?'■ ':''}${body}</div>`;
   const title=b.htmlSummary||'문단 '+(i+1);
   // The open content covers + with −, keeping the copied fragment entirely inline and script-free.
-  return `<details style="margin:0 4px ${gapAfter}px 0;border:2px solid #34362f;border-radius:14px;background-color:rgba(255,255,255,0.06);box-shadow:4px 4px 0 #34362f;"><summary title="${escapeHTML(title)}" style="display:flex;align-items:center;gap:12px;box-sizing:border-box;height:48px;padding:0 16px;border-radius:12px;background-color:${header};list-style:none;cursor:pointer;font-family:${escapeHTML(fonts[b.font]||fonts.sans)};font-size:12pt;font-weight:500;line-height:1.6;color:${ink};"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${textHTML(title)}</span><span aria-hidden="true" style="flex:none;${toggle}">+</span></summary><div aria-hidden="true" style="box-sizing:border-box;height:48px;margin-top:-48px;padding:10px 16px;text-align:right;line-height:0;pointer-events:none;"><span style="${toggle}">−</span></div><div style="padding:20px 18px 22px;border-top:2px solid #34362f;">${html}</div></details>`;
+  return `<details style="margin:0 4px ${gapAfter}px 0;border:2px solid #34362f;border-radius:14px;overflow:hidden;background-color:${surface};box-shadow:4px 4px 0 #34362f;"><summary title="${escapeHTML(title)}" style="display:flex;align-items:center;gap:12px;box-sizing:border-box;height:48px;padding:0 16px;border-radius:12px 12px 0 0;background-color:${header};list-style:none;cursor:pointer;outline-offset:-4px;font-family:${escapeHTML(fonts[b.font]||fonts.sans)};font-size:12pt;font-weight:500;line-height:1.6;color:${ink};"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${textHTML(title)}</span><span aria-hidden="true" style="flex:none;${toggle}">+</span></summary><div aria-hidden="true" style="box-sizing:border-box;height:48px;margin-top:-48px;padding:10px 16px;text-align:right;line-height:0;pointer-events:none;"><span style="${toggle}">−</span></div><div style="padding:20px 18px 22px;border-top:2px solid #34362f;">${html}</div></details>`;
  }).join('\n');
- return `<div lang="ko" style="box-sizing:border-box;width:100%;max-width:${width}px;margin:0 auto;padding:${padding}px;${background}color:${color(state.textColor)};">${content}</div>`;
+ return `<div lang="ko" style="box-sizing:border-box;width:100%;max-width:${width}px;margin:0 auto;padding:${padding}px;color:${ink};">${content}</div>`;
 }

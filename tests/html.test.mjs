@@ -53,8 +53,11 @@ test('HTML settings and titles round trip in drafts while legacy drafts remain v
  for(const invalid of [{width:0,padding:0,gap:0},{width:500,padding:-1,gap:24},{width:500,padding:28,gap:121}])assert.equal(parseDraft(JSON.stringify({version:1,state:{...state,htmlSettings:invalid}})),null);
 });
 
-test('radial backgrounds and local noise need no external stylesheet or script',()=>{
- const html=exportHTML({...state,background:'radial'},'data:image/png;base64,AAAA');
- assert.match(html,/background-image:url\('data:image\/png;base64,AAAA'\),radial-gradient/);
- assert.doesNotMatch(exportHTML(state,'https://example.com/track.png'),/track\.png/);
+test('HTML has a transparent exterior and solid cards regardless of PNG gradients and noise',()=>{
+ const s={...state,background:'radial',colors:['#2d3643','#57545f'],noise:40},before=structuredClone(s),html=exportHTML(s);
+ assert.doesNotMatch(html.match(/^<div[^>]+>/)[0],/background/);
+ assert.doesNotMatch(html,/gradient|background-image|data:image/);
+ assert.match(html,/<details[^>]+background-color:#2d3643;/);
+ assert.equal(html,exportHTML({...s,background:'solid',noise:0,colors:['#2d3643','#ffffff']}));
+ assert.deepEqual(s,before);
 });
