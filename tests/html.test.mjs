@@ -17,7 +17,7 @@ test('HTML is a responsive inline fragment, independent of PNG positions, widths
 test('each paragraph becomes a closed details with an editable, escaped summary',()=>{
  const html=exportHTML({...state,blocks:[block,{...block,id:'b2',htmlSummary:'대화 <&> "제목"'}]});
  assert.equal((html.match(/<details /g)||[]).length,2);assert.equal((html.match(/<summary /g)||[]).length,2);
- assert.match(html,/>문단 1<\/span>/);assert.match(html,/대화 &lt;&amp;&gt; &quot;제목&quot;/);assert.doesNotMatch(html,/<details[^>]*\bopen\b/);
+ assert.match(html,/>ONLINE<\/span>/);assert.match(html,/대화 &lt;&amp;&gt; &quot;제목&quot;/);assert.doesNotMatch(html,/<details[^>]*\bopen\b/);
 });
 
 test('rich marks, quotes and reversible substitutions survive export as inline formatting',()=>{

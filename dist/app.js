@@ -103,7 +103,7 @@ function renderList(){
   card.querySelector('.paragraph-delete').setAttribute('aria-label',label+' 삭제');
   for(const move of card.querySelectorAll('[data-move]')){const up=move.dataset.move==='-1';move.disabled=up?i===0:i===state.blocks.length-1;move.title=up?'위로 이동':'아래로 이동';move.setAttribute('aria-label',label+' '+move.title);}
   button.textContent=label+(editorMode==='png'&&b.group?' · 묶음':'');button.setAttribute('aria-label',button.textContent+' 선택');button.setAttribute('aria-pressed',selected.has(b.id));card.classList.toggle('selected',selected.has(b.id));
-  const summary=card.querySelector('.html-summary-field');if(summary){summary.hidden=editorMode!=='html';const field=summary.querySelector('input');field.value=b.htmlSummary||'';field.placeholder='문단 '+(i+1);field.setAttribute('aria-label','문단 '+(i+1)+' 접기 제목');}
+  const summary=card.querySelector('.html-summary-field');if(summary){summary.hidden=editorMode!=='html';const field=summary.querySelector('input');field.value=b.htmlSummary||'';field.placeholder='ONLINE';field.setAttribute('aria-label','문단 '+(i+1)+' 접기 제목');}
   const input=card.querySelector('.paragraph-input');if(input){syncPresentationControls(card,b,i);input.setAttribute('aria-label','문단 '+(i+1)+' 내용');syncEditor(input,b);}
   if(list.children[i]!==card)list.insertBefore(card,list.children[i]||null);
  });
