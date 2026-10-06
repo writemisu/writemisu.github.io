@@ -17,7 +17,7 @@ test('HTML is a responsive inline fragment, independent of PNG positions, widths
 test('each paragraph becomes a closed details with an editable, escaped summary',()=>{
  const html=exportHTML({...state,blocks:[block,{...block,id:'b2',htmlSummary:'대화 <&> "제목"'}]});
  assert.equal((html.match(/<details /g)||[]).length,2);assert.equal((html.match(/<summary /g)||[]).length,2);
- assert.match(html,/>문단 1<\/summary>/);assert.match(html,/대화 &lt;&amp;&gt; &quot;제목&quot;/);assert.doesNotMatch(html,/<details[^>]*\bopen\b/);
+ assert.match(html,/>문단 1<\/span>/);assert.match(html,/대화 &lt;&amp;&gt; &quot;제목&quot;/);assert.doesNotMatch(html,/<details[^>]*\bopen\b/);
 });
 
 test('rich marks, quotes and reversible substitutions survive export as inline formatting',()=>{
@@ -25,7 +25,7 @@ test('rich marks, quotes and reversible substitutions survive export as inline f
  const original=structuredClone(s),html=exportHTML(s);
  for(const value of ['font-weight:700','font-style:italic','underline line-through','rgba(51,51,51,0.08)','{{user}}','width:1em'])assert.ok(html.includes(value),value);
  assert.deepEqual(s,original);assert.ok(exportHTML({...s,replacementRules:[]}).includes('미수'));
- assert.match(html,/>{{user}}의 대화<\/summary>/);
+ assert.match(html,/>{{user}}의 대화<\/span>/);
 });
 
 test('chat direction controls the bubble row independently of text alignment',()=>{

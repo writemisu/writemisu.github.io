@@ -19,6 +19,8 @@ export function exportHTML(state,texture=''){
  if(/^data:image\/png;base64,[\w+/=]+$/.test(texture))backgrounds.push(`url('${texture}')`);
  if(state.background==='radial')backgrounds.push(gradientCSS(colors));
  const background=`background-color:${colors[0]};`+(backgrounds.length?`background-image:${backgrounds.join(',')};`:'');
+ const ink=color(state.textColor),header='#'+[1,3,5].map(i=>Math.round(parseInt(colors[0].slice(i,i+2),16)*.94+parseInt(ink.slice(i,i+2),16)*.06).toString(16).padStart(2,'0')).join('');
+ const toggle=`display:inline-block;box-sizing:border-box;width:28px;height:28px;background-color:${header};font:400 22px/28px Arial,sans-serif;text-align:center;color:${ink};`;
  const content=blocks.map((b,i)=>{
   const align=['left','center','right','justify'].includes(b.align)?b.align:'left',gapAfter=i<blocks.length-1?gap:0,space=b.type==='line'?gapAfter:0;
   if(b.type==='line')return `<div style="margin:0 0 ${space}px;padding:11px 0;"><div style="width:33%;margin:${align==='right'?'0 0 0 auto':align==='center'?'0 auto':'0'};border-top:1px solid ${color(b.color)};"></div></div>`;
@@ -37,7 +39,8 @@ export function exportHTML(state,texture=''){
    html=`<div style="box-sizing:border-box;margin:0 0 ${space}px;padding:16px ${20+inset}px;border-radius:14px;${box}${type}"><table role="presentation" style="width:100%;border:0;border-collapse:collapse;margin:0 0 10px;${header}"><tbody><tr><td style="padding:0 12px 0 0;border:0;text-align:left;vertical-align:top;">${textHTML(b.messageTitle??'메시지')}</td><td style="width:30%;padding:0;border:0;text-align:right;vertical-align:top;color:${rgba(c.color,55)};">${textHTML(b.messageTime??'지금')}</td></tr></tbody></table><div style="${type}">${body}</div></div>`;
   }else html=`<div style="box-sizing:border-box;margin:0 0 ${space}px;padding:${chapter?'12px '+(18+inset)+'px':'0 '+inset+'px'};${box}${type}">${chapter?'■ ':''}${body}</div>`;
   const title=b.htmlSummary||'문단 '+(i+1);
-  return `<details style="margin:0 0 ${gapAfter}px;"><summary style="cursor:pointer;font-family:${escapeHTML(fonts[b.font]||fonts.sans)};font-size:12pt;font-weight:600;line-height:1.6;color:${color(state.textColor)};overflow-wrap:anywhere;">${textHTML(title)}</summary><div style="padding-top:12px;">${html}</div></details>`;
+  // The open content covers + with −, keeping the copied fragment entirely inline and script-free.
+  return `<details style="margin:0 0 ${gapAfter}px;border-radius:18px 18px 6px 6px;background-color:rgba(255,255,255,0.06);box-shadow:0 4px 12px rgba(0,0,0,0.08);"><summary title="${escapeHTML(title)}" style="display:flex;align-items:center;gap:12px;box-sizing:border-box;height:48px;padding:0 16px;border-radius:18px 18px 6px 6px;background-color:${header};list-style:none;cursor:pointer;font-family:${escapeHTML(fonts[b.font]||fonts.sans)};font-size:12pt;font-weight:500;line-height:1.6;color:${ink};"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${textHTML(title)}</span><span aria-hidden="true" style="flex:none;${toggle}">+</span></summary><div aria-hidden="true" style="box-sizing:border-box;height:48px;margin-top:-48px;padding:10px 16px;text-align:right;line-height:0;pointer-events:none;"><span style="${toggle}">−</span></div><div style="padding:20px 18px 22px;">${html}</div></details>`;
  }).join('\n');
  return `<div lang="ko" style="box-sizing:border-box;width:100%;max-width:${width}px;margin:0 auto;padding:${padding}px;${background}color:${color(state.textColor)};">${content}</div>`;
 }
