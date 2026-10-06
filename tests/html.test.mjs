@@ -57,7 +57,20 @@ test('HTML has a transparent exterior and solid cards regardless of PNG gradient
  const s={...state,background:'radial',colors:['#2d3643','#57545f'],noise:40},before=structuredClone(s),html=exportHTML(s);
  assert.doesNotMatch(html.match(/^<div[^>]+>/)[0],/background/);
  assert.doesNotMatch(html,/gradient|background-image|data:image/);
- assert.match(html,/<details[^>]+background-color:#2d3643;/);
+ assert.match(html,/<div[^>]+background-color:#2d3643;/);
  assert.equal(html,exportHTML({...s,background:'solid',noise:0,colors:['#2d3643','#ffffff']}));
  assert.deepEqual(s,before);
+});
+
+test('HTML export avoids CSS forbidden by the supplied Arca guide',()=>{
+ const html=exportHTML({...state,blocks:['plain','chat','notification','chapter'].map((presentation,i)=>({...block,id:'b'+(i+1),presentation,htmlSummary:'길어도 줄바꿈되는 접기 제목'}))});
+ const blocked=/^(?:position|z-index|overflow(?:-[xy])?|gap|grid-.*|transform|animation|transition|opacity|filter|backdrop-filter|clip-path|mask|cursor|pointer-events|user-select|resize|writing-mode|content|mix-blend-mode|isolation|outline(?:-offset)?|-webkit-.*)$/;
+ for(const [,style] of html.matchAll(/style="([^"]*)"/g))for(const declaration of style.split(';')){
+  const colon=declaration.indexOf(':');if(colon<0)continue;
+  const property=declaration.slice(0,colon).trim(),value=declaration.slice(colon+1).trim();
+  assert.ok(!blocked.test(property),property);
+  if(property==='display')assert.ok(!['flex','grid','inline-grid'].includes(value),value);
+  assert.doesNotMatch(value,/url\(|conic-gradient\(/);
+ }
+ assert.doesNotMatch(html,/<(?:style|script|link|button|input|svg)\b|<!--|\bon\w+=/);
 });
