@@ -116,6 +116,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:9px 14px;background:var(--accent);border-color:var(--accent);color:#fff;font-size:12px;box-shadow:0 1px 2px #27394912}
 .primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:#fff}
 .png-save-tools{display:flex;align-items:center;gap:6px}
+.brand-tools,.html-save-tools{display:flex;align-items:center;gap:12px}
+.mode-tabs,.html-view-tools{padding:3px;border:1px solid #e1e5e9;border-radius:7px;background:#f6f8fa;gap:2px}
+.mode-tabs button,.html-view-tools button{padding:6px 12px;border-radius:4px;font-size:12px;color:var(--muted)}
+.mode-tabs button[aria-pressed=true],.html-view-tools button[aria-pressed=true]{background:#fff;color:var(--accent);box-shadow:0 1px 3px #27394918}
+.html-save-tools>button{border-radius:6px;font-size:12px}
+.html-summary-field{display:flex;align-items:center;gap:14px;margin:0 4px 10px;color:#7c8790;font-size:11px}
+.html-summary-field input{width:0;flex:1;min-width:0;padding:7px 10px;border:1px solid #e0e6eb;border-radius:5px;background:#fafbfc;color:#3b4751;font-size:12px}
+#htmlStage{width:100%;min-height:100%}
+#htmlPreview{display:block;width:100%;min-height:120px;margin:0 auto;border:0;background:transparent;box-shadow:0 8px 28px #2739490c}
+#htmlCode{display:block;width:100%;min-height:480px;resize:vertical;padding:18px;border:1px solid #dfe5e9;border-radius:8px;background:#fff;color:#374550;font:12px/1.7 Consolas,monospace;tab-size:2}
+.html-mode .stage-scroll{background-image:none}
+@media(max-width:580px){.topbar{flex-wrap:wrap!important;height:auto!important;min-height:100px!important;padding:12px 14px!important;gap:10px}.brand-tools{gap:10px}.mode-tabs button{padding:5px 10px}.top-actions{margin-left:auto}.html-save-tools{gap:6px}}
 #pngScale{display:flex;align-items:center;gap:8px;min-height:36px;padding:8px 10px;border-radius:6px;color:#536574;font-size:12px}
 .png-scale-menu{position:fixed;inset:auto;margin:0;padding:5px;border:1px solid #e1e5e9;border-radius:9px;background:#fff;color:#374550;box-shadow:0 8px 24px #27394916}
 .png-scale-menu button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 8px;border:0;border-radius:5px;font-size:12px;text-align:left}

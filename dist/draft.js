@@ -11,10 +11,12 @@ export function parseDraft(raw){
   const q=s.quoteStyle;
   if(q!==undefined&&(!q||typeof q.enabled!=='boolean'||q.color!=null&&!color(q.color)||!color(q.highlight)||!number(q.highlightOpacity)||q.highlightOpacity>100||['bold','italic','underline','strike'].some(key=>typeof q[key]!=='boolean')))return null;
   if(s.replacementRules!==undefined&&(!Array.isArray(s.replacementRules)||s.replacementRules.some(rule=>!rule||typeof rule.find!=='string'||typeof rule.replace!=='string')))return null;
+  if(s.htmlSettings!==undefined&&(!s.htmlSettings||!number(s.htmlSettings.width,280)||s.htmlSettings.width>1600||!number(s.htmlSettings.padding)||s.htmlSettings.padding>120||!number(s.htmlSettings.gap)||s.htmlSettings.gap>120))return null;
   const ids=new Set();let counter=number(draft.counter)?draft.counter:0;
   for(const b of s.blocks){
    if(!b||!/^b\d+$/.test(b.id)||ids.has(b.id)||!['text','line'].includes(b.type)||typeof b.text!=='string'||!['x','y','padding'].every(key=>number(b[key]))||!['w','size','lineHeight'].every(key=>number(b[key],.01))||!Object.hasOwn(fonts,b.font)||!color(b.color)||!color(b.box)||!number(b.opacity)||!['left','center','right','justify'].includes(b.align))return null;
    if(b.presentation!==undefined&&!['plain','chapter','notification','chat'].includes(b.presentation))return null;
+   if(b.htmlSummary!==undefined&&typeof b.htmlSummary!=='string')return null;
    if(['messageColor','messageBox'].some(key=>b[key]!==undefined&&!color(b[key])))return null;
    if(b.runs!==undefined&&(!Array.isArray(b.runs)||b.runs.some(run=>!run||typeof run.text!=='string')))return null;
    if(b.group!=null&&!/^g\d+$/.test(b.group))return null;

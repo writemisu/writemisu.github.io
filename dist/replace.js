@@ -18,7 +18,7 @@ export function replaceBlocks(blocks,rules){
   if(block.type!=='text')return block;
   const before=count,runs=replaceRuns(blockRuns(block)),next={...block};
   if(count>before){next.runs=runs;next.text=runs.map(r=>r.text).join('');}
-  if(block.presentation==='notification')for(const key of ['messageTitle','messageSender','messageTime'])if(typeof block[key]==='string')next[key]=replaceRuns([{text:block[key]}]).map(r=>r.text).join('');
+  for(const key of ['htmlSummary',...(block.presentation==='notification'?['messageTitle','messageSender','messageTime']:[])])if(typeof block[key]==='string')next[key]=replaceRuns([{text:block[key]}]).map(r=>r.text).join('');
   return count>before?next:block;
  });
  return {blocks:count?result:blocks,count};
