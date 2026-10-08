@@ -121,8 +121,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .mode-tabs button,.html-view-tools button{padding:6px 12px;border-radius:4px;font-size:12px;color:var(--muted)}
 .mode-tabs button[aria-pressed=true],.html-view-tools button[aria-pressed=true]{background:#fff;color:var(--accent);box-shadow:0 1px 3px #27394918}
 .html-save-tools>button{border-radius:6px;font-size:12px}
-.html-summary-field{display:flex;align-items:center;gap:14px;margin:0 4px 10px;color:#7c8790;font-size:11px}
+.html-summary-field,.html-initial-state{display:flex;align-items:center;gap:14px;margin:0 4px 10px;color:#7c8790;font-size:11px}
 .html-summary-field input{width:0;flex:1;min-width:0;padding:7px 10px;border:1px solid #e0e6eb;border-radius:5px;background:#fafbfc;color:#3b4751;font-size:12px}
+.html-initial-state .segmented{flex:1}
+.html-initial-state button{flex:1;padding:5px}
 #htmlStage{width:100%;min-height:100%}
 #htmlPreview{display:block;width:100%;min-height:120px;margin:0 auto;border:0;background:transparent}
 #htmlCode{display:block;width:100%;min-height:480px;resize:vertical;padding:18px;border:1px solid #dfe5e9;border-radius:8px;background:#fff;color:#374550;font:12px/1.7 Consolas,monospace;tab-size:2}

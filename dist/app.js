@@ -95,7 +95,10 @@ function renderList(){
    if(b.type==='text'){
     const label=document.createElement('label');label.className='html-summary-field';label.textContent='접기 제목';label.dataset.htmlOnly='';
     const input=document.createElement('input');input.type='text';input.onfocus=()=>{endTyping();if(!selected.has(id))select(id);};input.onblur=endTyping;input.onkeydown=textKeyDown;
-    input.oninput=()=>{const block=state.blocks.find(x=>x.id===id),before=snapshot();block.htmlSummary=input.value;if(!typing)record(before);typing=true;clearTimeout(typingTimer);typingTimer=setTimeout(endTyping,700);scheduleDraw();queueDraftSave();};label.append(input);card.append(label,createPresentationControls(id));
+    input.oninput=()=>{const block=state.blocks.find(x=>x.id===id),before=snapshot();block.htmlSummary=input.value;if(!typing)record(before);typing=true;clearTimeout(typingTimer);typingTimer=setTimeout(endTyping,700);scheduleDraw();queueDraftSave();};label.append(input);
+    const initial=document.createElement('div');initial.className='html-initial-state';initial.dataset.htmlOnly='';initial.innerHTML='<span>처음 표시</span><div class="segmented"><button type="button" data-html-open="false">접힘</button><button type="button" data-html-open="true">펼침</button></div>';
+    for(const toggle of initial.querySelectorAll('button'))toggle.onclick=()=>{endTyping();change(()=>{state.blocks.find(x=>x.id===id).htmlOpen=toggle.dataset.htmlOpen==='true';});};
+    card.append(label,initial,createPresentationControls(id));
    }
    if(b.type==='text')card.append(createEditor(id,{getBlock:key=>state.blocks.find(x=>x.id===key),select:key=>{if(!selected.has(key))select(key);},onChange:updateText,onKeyDown:textKeyDown,onBlur:endTyping}));
   }
@@ -104,6 +107,7 @@ function renderList(){
   for(const move of card.querySelectorAll('[data-move]')){const up=move.dataset.move==='-1';move.disabled=up?i===0:i===state.blocks.length-1;move.title=up?'위로 이동':'아래로 이동';move.setAttribute('aria-label',label+' '+move.title);}
   button.textContent=label+(editorMode==='png'&&b.group?' · 묶음':'');button.setAttribute('aria-label',button.textContent+' 선택');button.setAttribute('aria-pressed',selected.has(b.id));card.classList.toggle('selected',selected.has(b.id));
   const summary=card.querySelector('.html-summary-field');if(summary){summary.hidden=editorMode!=='html';const field=summary.querySelector('input');field.value=b.htmlSummary||'';field.placeholder='ONLINE';field.setAttribute('aria-label','문단 '+(i+1)+' 접기 제목');}
+  const initial=card.querySelector('.html-initial-state');if(initial){initial.hidden=editorMode!=='html';for(const toggle of initial.querySelectorAll('button')){toggle.setAttribute('aria-label',label+' 처음 표시 '+toggle.textContent);toggle.setAttribute('aria-pressed',Boolean(b.htmlOpen)===(toggle.dataset.htmlOpen==='true'));}}
   const input=card.querySelector('.paragraph-input');if(input){syncPresentationControls(card,b,i);input.setAttribute('aria-label','문단 '+(i+1)+' 내용');syncEditor(input,b);}
   if(list.children[i]!==card)list.insertBefore(card,list.children[i]||null);
  });
@@ -221,14 +225,18 @@ for(const [id,icon] of [['undo','undo-2'],['redo','redo-2']])$(id).innerHTML=ico
 const saveButtonContent=icons.download+'<span>PNG 저장</span>';
 $('savePNG').innerHTML=saveButtonContent;$('savePNG').onclick=savePNG;
 let htmlCodeView=false,htmlPreviewObserver;
-const htmlOpenIds=new Set();
 function resizeHTMLPreview(){const root=$('htmlPreview').contentDocument?.body.firstElementChild;if(root)$('htmlPreview').style.height=Math.max(120,Math.ceil(root.getBoundingClientRect().height))+'px';}
 function renderHTMLPreview(){
  const html=exportHTML(state),settings=htmlSettings(state),frame=$('htmlPreview');
  $('htmlCode').value=html;$('htmlSizeLabel').textContent='최대 '+settings.width+'px · HTML + 인라인';frame.style.maxWidth=settings.width+'px';
  const body=frame.contentDocument?.body;if(!body||!frame.dataset.ready)return;
  htmlPreviewObserver?.disconnect();body.innerHTML=html;
- const blocks=state.blocks.filter(b=>b.type==='text');body.querySelectorAll('details').forEach((details,i)=>{const id=blocks[i].id;details.open=htmlOpenIds.has(id);details.ontoggle=()=>{if(details.open)htmlOpenIds.add(id);else htmlOpenIds.delete(id);resizeHTMLPreview();};});
+ const blocks=state.blocks.filter(b=>b.type==='text');body.querySelectorAll('details').forEach((details,i)=>{const id=blocks[i].id;details.ontoggle=()=>{
+  if(!details.isConnected)return;
+  const block=state.blocks.find(b=>b.id===id);
+  if(block&&Boolean(block.htmlOpen)!==details.open){endTyping();const before=snapshot();block.htmlOpen=details.open;record(before);$('htmlCode').value=exportHTML(state);renderList();}
+  resizeHTMLPreview();
+ };});
  htmlPreviewObserver.observe(body.firstElementChild);resizeHTMLPreview();
 }
 function setHTMLView(code){htmlCodeView=code;$('htmlCode').hidden=!code;$('htmlPreview').hidden=code;$('htmlPreviewTab').setAttribute('aria-pressed',!code);$('htmlCodeTab').setAttribute('aria-pressed',code);if(!code)resizeHTMLPreview();}

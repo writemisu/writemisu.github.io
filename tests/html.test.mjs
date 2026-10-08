@@ -20,6 +20,15 @@ test('each paragraph becomes a closed details with an editable, escaped summary'
  assert.match(html,/>ONLINE<\/span>/);assert.match(html,/대화 &lt;&amp;&gt; &quot;제목&quot;/);assert.doesNotMatch(html,/<details[^>]*\bopen\b/);
 });
 
+test('initial open state is exported independently for each paragraph and survives draft restore',()=>{
+ const s={...state,blocks:[{...block,htmlOpen:true},{...block,id:'b2',htmlOpen:false},{...block,id:'b3'}]},before=structuredClone(s);
+ const restored=parseDraft(JSON.stringify({version:1,state:s})).state;
+ assert.deepEqual(restored,s);
+ const details=Array.from(exportHTML(restored).matchAll(/<details\b([^>]*)>/g),match=>/\bopen\b/.test(match[1]));
+ assert.deepEqual(details,[true,false,false]);assert.deepEqual(s,before);
+ for(const htmlOpen of ['true','false',1,null])assert.equal(parseDraft(JSON.stringify({version:1,state:{...state,blocks:[{...block,htmlOpen}]}})),null);
+});
+
 test('rich marks, quotes and reversible substitutions survive export as inline formatting',()=>{
  const s={...state,blocks:[{...block,htmlSummary:'미수의 대화',text:'“미수 test”\n　끝',runs:[{text:'“미수 test”',bold:true,italic:true,underline:true,strike:true},{text:'\n　끝'}]}],replacementRules:[{find:'미수',replace:'{{user}}'}],quoteStyle:{enabled:true,highlight:'#333333',highlightOpacity:8}};
  const original=structuredClone(s),html=exportHTML(s);

@@ -17,6 +17,7 @@ export function parseDraft(raw){
    if(!b||!/^b\d+$/.test(b.id)||ids.has(b.id)||!['text','line'].includes(b.type)||typeof b.text!=='string'||!['x','y','padding'].every(key=>number(b[key]))||!['w','size','lineHeight'].every(key=>number(b[key],.01))||!Object.hasOwn(fonts,b.font)||!color(b.color)||!color(b.box)||!number(b.opacity)||!['left','center','right','justify'].includes(b.align))return null;
    if(b.presentation!==undefined&&!['plain','chapter','notification','chat'].includes(b.presentation))return null;
    if(b.htmlSummary!==undefined&&typeof b.htmlSummary!=='string')return null;
+   if(b.htmlOpen!==undefined&&typeof b.htmlOpen!=='boolean')return null;
    if(['messageColor','messageBox'].some(key=>b[key]!==undefined&&!color(b[key])))return null;
    if(b.runs!==undefined&&(!Array.isArray(b.runs)||b.runs.some(run=>!run||typeof run.text!=='string')))return null;
    if(b.group!=null&&!/^g\d+$/.test(b.group))return null;
