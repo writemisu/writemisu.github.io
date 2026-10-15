@@ -13,15 +13,17 @@ export function normalizeRuns(runs){
 export function blockRuns(block){return block.runs||[{text:block.text,bold:!!block.bold}];}
 export function quoteRuns(runs,style){
  if(!style?.enabled)return runs;
- const text=runs.map(r=>r.text).join(''),ranges=Array.from(text.matchAll(/"([^"]*)"|“([^”]*)”/g),m=>({start:m.index+1,end:m.index+m[0].length-1})).filter(r=>r.end>r.start);
+ const text=runs.map(r=>r.text).join(''),ranges=Array.from(text.matchAll(/"([^"]*)"|“([^”]*)”/g),m=>({start:m.index,end:m.index+m[0].length})).filter(r=>r.end-r.start>2);
  if(!ranges.length)return runs;
  let offset=0,index=0;
  return normalizeRuns(runs.flatMap(run=>{
   const start=offset,end=start+run.text.length,parts=[];
   while(offset<end){
    while(ranges[index]?.end<=offset)index++;
-   const range=ranges[index],quoted=range&&offset>=range.start,to=Math.min(end,range?(quoted?range.end:range.start):end),part={...run,text:run.text.slice(offset-start,to-start)};
-   if(quoted){for(const key of marks)if(style[key])part[key]=true;if(style.color)part.color=style.color;if(style.highlight&&style.highlightOpacity>0){part.highlight=style.highlight;part.highlightOpacity=style.highlightOpacity;}}
+   const range=ranges[index],quoted=range&&offset>=range.start,inside=quoted&&offset>range.start&&offset<range.end-1;
+   const boundary=!range?end:!quoted?range.start:offset===range.start?range.start+1:inside?range.end-1:range.end,to=Math.min(end,boundary),part={...run,text:run.text.slice(offset-start,to-start)};
+   if(inside){for(const key of marks)if(style[key])part[key]=true;if(style.color)part.color=style.color;}
+   if(quoted&&style.highlight&&style.highlightOpacity>0){part.highlight=style.highlight;part.highlightOpacity=style.highlightOpacity;}
    parts.push(part);offset=to;
   }
   return parts;

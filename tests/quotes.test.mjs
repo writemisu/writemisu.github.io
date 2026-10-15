@@ -6,9 +6,10 @@ import {blockMetrics} from '../dist/messages.js';
 const style={enabled:true,color:'#40566b',highlight:'#333333',highlightOpacity:8,bold:true,italic:false,underline:false,strike:false};
 const text=runs=>runs.map(r=>r.text).join('');
 
-test('only paired straight and curly quote interiors receive automatic formatting',()=>{
+test('paired straight and curly highlights include delimiters while other formatting stays inside',()=>{
  const input=[{text:'앞 "첫 대사" 지문 “둘째\n대사” 뒤 "미완성'}],before=structuredClone(input),result=quoteRuns(input,style);
- assert.deepEqual(result.filter(r=>r.highlight).map(r=>r.text),['첫 대사','둘째\n대사']);
+ assert.equal(result.filter(r=>r.highlight).map(r=>r.text).join(''),'"첫 대사"“둘째\n대사”');
+ const delimiters=result.filter(r=>['"','“','”'].includes(r.text));assert.equal(delimiters.length,4);assert.ok(delimiters.every(r=>r.highlight&&!r.bold&&!r.color));
  assert.equal(text(result),text(input));assert.deepEqual(input,before);
  assert.ok(result.filter(r=>!r.highlight).every(r=>!r.bold&&!r.color));
  assert.strictEqual(quoteRuns(input,{...style,enabled:false}),input);
@@ -16,7 +17,7 @@ test('only paired straight and curly quote interiors receive automatic formattin
 
 test('empty quotes, apostrophes and unmatched quotes do not color narration',()=>{
  const input=[{text:'"" 지문 "대사" ‘’ 작은따옴표 “미완성'}],result=quoteRuns(input,style);
- assert.deepEqual(result.filter(r=>r.highlight).map(r=>r.text),['대사']);
+ assert.equal(result.filter(r=>r.highlight).map(r=>r.text).join(''),'"대사"');
  assert.strictEqual(quoteRuns([{text:'평범한 글'}],undefined)[0].text,'평범한 글');
 });
 
@@ -24,7 +25,7 @@ test('quote ranges cross manual format boundaries without replacing original mar
  const input=[{text:'앞 “👨‍👩‍👧‍👦가',italic:true},{text:'나다',underline:true},{text:'” 뒤',strike:true}],before=structuredClone(input);
  const result=quoteRuns(input,{...style,bold:false,color:null});
  assert.equal(text(result),text(input));assert.deepEqual(input,before);
- assert.equal(result.find(r=>r.text==='👨‍👩‍👧‍👦가').italic,true);
+ assert.equal(result.find(r=>r.text.includes('👨‍👩‍👧‍👦가')).italic,true);
  assert.equal(result.find(r=>r.text==='나다').underline,true);
  assert.equal(result.at(-1).strike,true);assert.ok(result.every(r=>!r.color&&!r.bold));
  assert.deepEqual(quoteRuns(input,{...style,enabled:false}),before);
