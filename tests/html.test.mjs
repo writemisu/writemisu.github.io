@@ -12,7 +12,7 @@ const restore=s=>parseDraft(JSON.stringify({version:1,state:s}))?.state;
 test('new HTML uses Champagne Noir with inline responsive layout and no generated metadata',()=>{
  const before=structuredClone(state),html=exportHTML(state),s=htmlSettings(state),b=htmlBlock(state,block);
  assert.deepEqual([s.width,s.padding,s.gap,s.frame,s.radius,s.decoration,s.decorationStyle],[680,44,24,false,10,false,'hairline']);
- for(const color of ['#101217','#1d2027','#e8e5e1','#bda47b'])assert.ok(html.includes(color),color);
+ for(const color of ['#101217','#1d2027','#e8e5e1'])assert.ok(html.includes(color),color);assert.equal(s.accent,'#bda47b');
  assert.match(html,/max-width:680px/);assert.match(html,/padding:12px 22px 28px;padding-left:clamp\(22px,calc\(11% - 30.8px\),44px\)/);
  assert.match(html,/첫 문장<br>다음 문장/);assert.deepEqual([b.font,b.size,b.lineHeight,b.align],['pretendard',16,1.85,'left']);
  assert.doesNotMatch(html,/ONLINE|문단 1|END OF EXCERPT|<h[1-6]\b/);
@@ -98,7 +98,7 @@ test('decoration positions and frame-independent insets also work with collapse 
 });
 
 test('HTML colors are adjustable and independent of PNG gradients and noise',()=>{
- const htmlSettings={background:'#fffdf5',surface:'#f6f1e6',textColor:'#292522',accent:'#82603e',muted:'#6d655e'},s={...state,background:'radial',noise:40,htmlSettings},before=structuredClone(s),html=exportHTML(s);
+ const htmlSettings={background:'#fffdf5',surface:'#f6f1e6',textColor:'#292522',accent:'#82603e',muted:'#6d655e'},s={...state,background:'radial',noise:40,htmlSettings,blocks:[{...block,htmlSummary:'EXCERPT'}]},before=structuredClone(s),html=exportHTML(s);
  for(const value of Object.values(htmlSettings).slice(0,4))assert.ok(html.includes(value),value);assert.doesNotMatch(html,/gradient|background-image|data:image/);
  assert.equal(html,exportHTML({...s,background:'solid',noise:0,colors:['#000000','#ffffff']}));assert.deepEqual(s,before);
 });
