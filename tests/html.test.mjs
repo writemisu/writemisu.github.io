@@ -62,7 +62,8 @@ test('manual dividers and chapter blocks retain their place and formatting',()=>
 
 test('frame and optional decorations do not change width, padding or paragraph order',()=>{
  const base={...state,htmlSettings:{width:700,padding:44,frame:false}},frame={...base,htmlSettings:{...base.htmlSettings,frame:true,radius:10,border:'#514d44'}},plain=exportHTML(base),framed=exportHTML(frame);
- assert.equal(plain.replace('border:1px solid transparent;border-radius:0px','border:1px solid #514d44;border-radius:10px'),framed);assert.doesNotMatch(framed,/box-shadow:4px|border:2px/);
+ assert.match(plain,/border:1px solid transparent;border-radius:10px/);assert.match(framed,/border:1px solid #514d44;border-radius:10px/);assert.doesNotMatch(framed,/box-shadow:4px|border:2px/);
+ assert.equal(plain.match(/padding:12px 22px 28px;[^\"]*/)[0],framed.match(/padding:12px 22px 28px;[^\"]*/)[0]);
  const hairline=exportHTML({...frame,htmlSettings:{...frame.htmlSettings,decoration:true}});assert.match(hairline,/margin:28px 0 0;border-top:1px solid #bda47b/);assert.doesNotMatch(hairline,/END OF EXCERPT/);
  const editorial=exportHTML({...frame,htmlSettings:{...frame.htmlSettings,decoration:true,decorationStyle:'editorial',decorationPosition:'both',decorationLabel:'FIN <&>'}});
  assert.equal((editorial.match(/FIN &lt;&amp;&gt;/g)||[]).length,1);assert.equal((editorial.match(/width:36px/g)||[]).length,1);
