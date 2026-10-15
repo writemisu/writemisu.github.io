@@ -63,7 +63,7 @@ export function exportHTML(state){
   // Shadow strokes keep the chevrons font-independent and the summary fully clickable.
   const chevron=(offset,up=false)=>Array.from({length:25},(_,j)=>{
    const x=j/2,y=j<=12?x:12-x;
-   return `${x}px ${offset+(up?6-y:y)}px .25px .1px ${s.textColor}`;
+   return `${x}px ${offset+(up?6-y:y)}px .25px .1px ${color(b.color)}`;
   }).join(',');
   const edge=s.frame?0:1,headerPadding=s.frame?15:14,radius=s.frame?s.radius:10,rise=headerPadding+edge+22;
   const mark='display:inline-block;width:1px;height:1px;margin:0 12px 0 0;font-size:0;line-height:0;vertical-align:top;';
@@ -71,5 +71,5 @@ export function exportHTML(state){
   return `<div style="${frame}"><details${b.htmlOpen===true?' open':''} style="display:block;margin:0;padding:0;border:0;background:transparent;box-shadow:none;"><summary aria-label="${escapeHTML(title||'펼치기 / 접기')}" style="display:block;box-sizing:border-box;margin:0;padding:${headerPadding}px 20px;border:${edge}px solid ${s.border};border-radius:${radius}px;background-color:${surface};box-shadow:inset 0 1px 0 ${rgba(s.textColor,3)};list-style:none;font-family:${escapeHTML(family)};font-weight:400;line-height:22px;text-align:left;"><span style="display:table;width:100%;table-layout:fixed;border:0;border-collapse:collapse;"><span style="display:table-cell;padding-right:20px;vertical-align:middle;overflow-wrap:anywhere;${titleStyle}">${title?textHTML(title):'<span aria-hidden="true">&nbsp;</span>'}</span><span aria-hidden="true" style="display:table-cell;width:14px;vertical-align:bottom;font-size:0;line-height:22px;"><span style="${mark}margin-top:9px;box-shadow:${chevron(0)};">&nbsp;</span></span></span></summary><div aria-hidden="true" style="box-sizing:border-box;height:0;margin:0;padding:0 ${20+edge}px;text-align:right;font-size:0;line-height:0;"><span style="display:inline-block;width:14px;height:22px;vertical-align:top;box-shadow:0 -${rise}px 0 ${surface};"><span style="${mark}box-shadow:${chevron(-rise+9,true)};">&nbsp;</span></span></div>${bodyHTML}</details></div>`;
 
  }).join('\n');
- return `<div lang="ko" style="box-sizing:border-box;width:100%;max-width:${width}px;margin:0 auto;padding:16px 0;background-color:${s.background};color:${s.textColor};">${content}</div>`;
+ return `<div lang="ko" style="box-sizing:border-box;width:100%;max-width:${width}px;margin:0 auto;padding:0;border-radius:10px;background-color:${s.background};color:${s.textColor};">${content}</div>`;
 }

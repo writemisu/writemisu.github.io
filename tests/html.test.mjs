@@ -14,6 +14,7 @@ test('new HTML uses Champagne Noir with inline responsive layout and no generate
  assert.deepEqual([s.width,s.padding,s.gap,s.frame,s.radius,s.decoration,s.decorationStyle],[680,44,24,false,10,false,'hairline']);
  for(const color of ['#101217','#1d2027','#e8e5e1'])assert.ok(html.includes(color),color);assert.equal(s.accent,'#bda47b');
  assert.match(html,/max-width:680px/);assert.match(html,/padding:12px 22px 28px;padding-left:clamp\(22px,calc\(11% - 30.8px\),44px\)/);
+ assert.match(html.split('>')[0],/padding:0;border-radius:10px;background-color:#101217/);
  assert.match(html,/첫 문장<br>다음 문장/);assert.deepEqual([b.font,b.size,b.lineHeight,b.align],['pretendard',16,1.85,'left']);
  assert.doesNotMatch(html,/ONLINE|문단 1|END OF EXCERPT|<h[1-6]\b/);
  assert.doesNotMatch(html,/<(?:script|style|link|canvas|iframe)\b|\b(?:class|id|on\w+)=|position:|transform:|219px|409px|117px/);
@@ -25,6 +26,11 @@ test('each excerpt has its own optional title and native open or closed state',(
  assert.deepEqual(details(html),[true,false,false]);assert.equal((html.match(/<summary /g)||[]).length,3);
  assert.match(html,/대화 &lt;&amp;&gt; &quot;제목&quot;/);assert.match(html,/aria-label="펼치기 \/ 접기"/);assert.deepEqual(restore(s),s);
  for(const htmlOpen of ['true','false',1,null])assert.equal(restore({...state,blocks:[{...block,htmlOpen}]}),undefined);
+});
+
+test('disclosure arrows follow the effective text color in restored light drafts',()=>{
+ const html=exportHTML({...state,htmlSettings:{surface:'#f5f5f5',textColor:'#e8e5e1'},blocks:[{...block,htmlStyle:{color:'#333333'},htmlOpen:true}]}),header=html.slice(html.indexOf('<summary'),html.indexOf('padding:12px 22px 28px'));
+ assert.match(header,/box-shadow:0 -37px 0 #f5f5f5/);assert.match(header,/\.25px \.1px #333333/);assert.doesNotMatch(header,/\.25px \.1px #e8e5e1/);
 });
 
 test('turning collapse off removes only that excerpt header while retaining all text and order',()=>{

@@ -193,6 +193,7 @@ function renderSettings(){
  $('backgroundTitle').textContent=isHTML?'배경 및 색상':'배경';$('color2').closest('label').hidden=!isHTML&&state.background==='solid';
  $('color1').closest('label').firstChild.textContent=isHTML?'본문 배경':state.background==='solid'?'바탕색':'색 1';$('color2').closest('label').firstChild.textContent=isHTML?'바깥 배경':'색 2';
  $('color1').value=isHTML?html.surface:state.colors[0];$('color2').value=isHTML?html.background:state.colors[1];
+ for(const [id,key] of [['color1','surface'],['color2','background'],['htmlTextColor','textColor'],['htmlAccent','accent'],['htmlMuted','muted'],['htmlBorder','border']]){$(id+'Value').textContent=html[key].toUpperCase();if(isHTML)$(id).value=html[key];}
  $('noise').value=state.noise;$('noiseValue').textContent=state.noise+'%';$('pageWidth').value=state.width;$('pageMargin').value=state.margin;
  for(const [id,key] of [['htmlWidth','width'],['htmlPadding','padding'],['htmlGap','gap'],['htmlAccent','accent'],['htmlMuted','muted'],['htmlBorder','border'],['htmlRadius','radius'],['htmlDecorationStyle','decorationStyle'],['htmlDecorationPosition','decorationPosition'],['htmlDecorationLabel','decorationLabel']])$(id).value=html[key];
  $('htmlGapValue').textContent=html.gap+'px';$('htmlFrame').checked=html.frame;$('htmlFrameFields').hidden=!html.frame;$('htmlDecoration').checked=html.decoration;$('htmlDecorationFields').hidden=!html.decoration;$('htmlDecorationLabel').closest('label').hidden=html.decorationStyle!=='editorial';
@@ -274,6 +275,7 @@ $('htmlPreviewTab').onclick=()=>setHTMLView(false);$('htmlCodeTab').onclick=()=>
 for(const [id,key,min,max] of [['htmlWidth','width',280,1600],['htmlPadding','padding',0,120],['htmlRadius','radius',0,40]])$(id).onchange=e=>change(()=>setHTMLSetting(key,clamp(+e.target.value,min,max)));
 for(const [id,key] of [['htmlAccent','accent'],['htmlMuted','muted'],['htmlBorder','border'],['htmlDecorationStyle','decorationStyle'],['htmlDecorationPosition','decorationPosition'],['htmlDecorationLabel','decorationLabel']])$(id).onchange=e=>change(()=>setHTMLSetting(key,e.target.value));
 for(const [id,key] of [['htmlFrame','frame'],['htmlDecoration','decoration']])$(id).onchange=e=>change(()=>setHTMLSetting(key,e.target.checked));
+$('htmlTextColor').onchange=e=>change(()=>{setHTMLSetting('textColor',e.target.value);state.blocks.forEach(b=>{setFormat(b,'color',e.target.value);if(b.presentation&&b.presentation!=='plain')setFormat(b,'messageColor',e.target.value);});});
 $('htmlReset').onclick=()=>{endTyping();change(()=>{state.htmlSettings=htmlSettings({});state.blocks.forEach(b=>delete b.htmlStyle);});};
 bindSlider($('htmlGap'),value=>state.htmlSettings={...htmlSettings(state),gap:value},value=>$('htmlGapValue').textContent=value+'px');
 async function copyHTML(formatted=false){

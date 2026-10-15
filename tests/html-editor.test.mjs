@@ -38,7 +38,7 @@ test('restoring HTML defaults is undoable and retains source text, titles and PN
  const before=structuredClone(s),elements={htmlReset:{}},undo=[];
  const source=app.slice(app.indexOf("$('htmlReset').onclick="),app.indexOf("\nbindSlider($('htmlGap')"));
  const env={state:s,htmlSettings,$:id=>elements[id],endTyping(){},change(fn){undo.push(JSON.stringify(s));fn();}};runInNewContext(source,env);elements.htmlReset.onclick();
- assert.equal(s.htmlSettings.surface,'#1d2027');assert.equal(s.htmlSettings.width,680);assert.equal(s.blocks[0].htmlStyle,undefined);
+ assert.deepEqual(['background','surface','textColor','muted','accent','border'].map(key=>s.htmlSettings[key]),['#101217','#1d2027','#e8e5e1','#92949c','#bda47b','#44464c']);assert.equal(s.htmlSettings.width,680);assert.equal(s.blocks[0].htmlStyle,undefined);
  for(const key of Object.keys(before.blocks[0]).filter(key=>key!=='htmlStyle'))assert.deepEqual(s.blocks[0][key],before.blocks[0][key],key);
  assert.deepEqual(JSON.parse(undo[0]),before);assert.deepEqual(s.colors,before.colors);
 });
