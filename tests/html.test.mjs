@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {exportHTML,htmlSettings,htmlBlock,initializeHTML} from '../dist/html.js';
+import {exportHTML,htmlSettings,htmlBlock,initializeHTML,initializeHTMLTabs} from '../dist/html.js';
 import {parseDraft} from '../dist/draft.js';
 import {blockMetrics,presentationColors} from '../dist/messages.js';
 
@@ -29,7 +29,7 @@ test('each excerpt has its own optional title and native open or closed state',(
 });
 
 test('disclosure arrows follow the effective text color in restored light drafts',()=>{
- const html=exportHTML({...state,htmlSettings:{surface:'#f5f5f5',textColor:'#e8e5e1'},blocks:[{...block,htmlStyle:{color:'#333333'},htmlOpen:true}]}),header=html.slice(html.indexOf('<summary'),html.indexOf('padding:12px 22px 28px'));
+ const html=exportHTML({...state,htmlSettings:{surface:'#f5f5f5',background:'#f5f5f5',textColor:'#e8e5e1'},blocks:[{...block,htmlStyle:{color:'#333333'},htmlOpen:true}]}),header=html.slice(html.indexOf('<summary'),html.indexOf('padding:12px 22px 28px'));
  assert.match(header,/box-shadow:0 -37px 0 #f5f5f5/);assert.match(header,/\.25px \.1px #333333/);assert.doesNotMatch(header,/\.25px \.1px #e8e5e1/);
 });
 
@@ -69,7 +69,7 @@ test('manual dividers and chapter blocks retain their place and formatting',()=>
 test('frame and optional decorations do not change width, padding or paragraph order',()=>{
  const base={...state,htmlSettings:{width:700,padding:44,frame:false}},frame={...base,htmlSettings:{...base.htmlSettings,frame:true,radius:10,border:'#514d44'}},plain=exportHTML(base),framed=exportHTML(frame);
  assert.match(plain,/border:1px solid transparent;border-radius:10px/);assert.match(framed,/border:1px solid #514d44;border-radius:10px/);assert.doesNotMatch(framed,/box-shadow:4px|border:2px/);
- assert.equal(plain.match(/padding:12px 22px 28px;[^\"]*/)[0],framed.match(/padding:12px 22px 28px;[^\"]*/)[0]);
+ assert.equal(plain.match(/padding:12px 22px 28px;[^\"]*?border:0;/)[0],framed.match(/padding:12px 22px 28px;[^\"]*?border:0;/)[0]);
  const hairline=exportHTML({...frame,htmlSettings:{...frame.htmlSettings,decoration:true}});assert.match(hairline,/margin:28px 0 0;border-top:1px solid #bda47b/);assert.doesNotMatch(hairline,/END OF EXCERPT/);
  const editorial=exportHTML({...frame,htmlSettings:{...frame.htmlSettings,decoration:true,decorationStyle:'editorial',decorationPosition:'both',decorationLabel:'FIN <&>'}});
  assert.equal((editorial.match(/FIN &lt;&amp;&gt;/g)||[]).length,1);assert.equal((editorial.match(/width:36px/g)||[]).length,1);
@@ -98,7 +98,7 @@ test('decoration positions and frame-independent insets also work with collapse 
   assert.equal((html.match(/width:36px;margin:0 0 14px/g)||[]).length,position==='footer'?0:1);
   assert.equal((html.match(/END OF EXCERPT/g)||[]).length,position==='header'?0:1);assert.deepEqual(details(html),[]);
   const framed=exportHTML({...s,htmlSettings:{...s.htmlSettings,frame:true}});
-  assert.equal(html.replace('border:1px solid transparent;border-radius:0px','border:1px solid #44464c;border-radius:10px'),framed);
+  assert.match(framed,/border:1px solid #44464c;border-radius:10px/);assert.match(framed,/padding:28px 22px 28px;padding-left:clamp/);
   assert.match(html,/padding:28px 22px 28px;padding-left:clamp/);
  }
 });
@@ -147,3 +147,25 @@ test('HTML export avoids CSS and resources forbidden by the supplied Arca guide'
  }
  assert.doesNotMatch(html,/<(?:style|script|link|button|input|svg)\b|<!--|\bon\w+=/);
 });
+
+ test('HTML tabs contain several paragraphs with one summary and one pair of decorations',()=>{
+  const s=structuredClone(state),before=structuredClone(s);s.blocks.push({...block,id:'b2',text:'두 번째 문단',presentation:'chat',messageSide:'right'});
+  assert.equal(initializeHTMLTabs(s),true);assert.equal(initializeHTMLTabs(s),false);
+  s.htmlTabs[0].title='한 탭의 기록';s.htmlTabs[0].open=true;
+  s.htmlSettings={...htmlSettings(s),frame:true,decoration:true,headerDecoration:'hairline',footerDecoration:'editorial'};
+  const html=exportHTML(s);assert.deepEqual(details(html),[true]);assert.equal((html.match(/<summary /g)||[]).length,1);
+  assert.ok(html.indexOf('첫 문장')<html.indexOf('두 번째 문단'));assert.equal((html.match(/END OF EXCERPT/g)||[]).length,1);assert.equal((html.match(/width:36px;margin:0 0 14px/g)||[]).length,1);
+  assert.match(html,/text-align:right/);assert.deepEqual(restore(s),s);
+  for(const key of Object.keys(before.blocks[0]))assert.deepEqual(s.blocks[0][key],before.blocks[0][key]);
+  s.htmlTabs.push({id:'t2',title:'다른 탭',open:false,collapse:true});s.blocks.push({...block,id:'b3',text:'다른 로그',htmlTabId:'t2'});
+  assert.deepEqual(details(exportHTML(s)),[true,false]);assert.deepEqual(restore(s),s);
+  assert.equal(restore({...s,htmlTabs:[...s.htmlTabs,s.htmlTabs[0]]}),undefined);
+  assert.equal(restore({...s,blocks:[{...s.blocks[0],htmlTabId:'t99'}]}),undefined);
+ });
+ test('top and bottom decorations can be enabled independently and retain old choices',()=>{
+  for(const headerDecoration of ['none','hairline'])for(const footerDecoration of ['none','hairline','editorial']){
+   const s={...state,htmlSettings:{decoration:true,headerDecoration,footerDecoration}},html=exportHTML(s);
+   assert.equal(html.includes('width:36px;margin:0 0 14px'),headerDecoration==='hairline');assert.equal(html.includes('END OF EXCERPT'),footerDecoration==='editorial');
+  }
+  for(const patch of [{headerDecoration:'bad'},{footerDecoration:'bad'}])assert.equal(restore({...state,htmlSettings:{width:680,padding:44,gap:24,...patch}}),undefined);
+ });
