@@ -14,7 +14,7 @@ test('new HTML uses Champagne Noir with inline responsive layout and no generate
  assert.deepEqual([s.width,s.padding,s.gap,s.frame,s.radius,s.decoration,s.decorationStyle],[680,44,24,false,10,false,'hairline']);
  for(const color of ['#101217','#1d2027','#e8e5e1'])assert.ok(html.includes(color),color);assert.equal(s.accent,'#bda47b');
  assert.match(html,/max-width:680px/);assert.match(html,/padding:12px 22px 28px;padding-left:clamp\(22px,calc\(11% - 30.8px\),44px\)/);
- assert.match(html.split('>')[0],/padding:0;border-radius:10px;background-color:#101217/);
+ assert.match(html.split('>')[0],/padding:0;background-color:transparent/);
  assert.match(html,/첫 문장<br>다음 문장/);assert.deepEqual([b.font,b.size,b.lineHeight,b.align],['pretendard',16,1.85,'left']);
  assert.doesNotMatch(html,/ONLINE|문단 1|END OF EXCERPT|<h[1-6]\b/);
  assert.doesNotMatch(html,/<(?:script|style|link|canvas|iframe)\b|\b(?:class|id|on\w+)=|position:|transform:|219px|409px|117px/);
@@ -169,3 +169,14 @@ test('HTML export avoids CSS and resources forbidden by the supplied Arca guide'
   }
   for(const patch of [{headerDecoration:'bad'},{footerDecoration:'bad'}])assert.equal(restore({...state,htmlSettings:{width:680,padding:44,gap:24,...patch}}),undefined);
  });
+
+test('multiple tabs share header insets and leave transparent space between cards',()=>{
+ const s={...state,htmlSettings:{background:'#61739f'},htmlTabs:[{id:'t1',title:'같은 제목',open:false,collapse:true},{id:'t2',title:'같은 제목',open:true,collapse:true}],blocks:[{...block,htmlTabId:'t1'},{...block,id:'b2',htmlTabId:'t2'}]},html=exportHTML(s),root=html.split('>')[0];
+ assert.match(root,/background-color:transparent/);assert.doesNotMatch(root,/#61739f/);
+ const excerpts=Array.from(html.matchAll(/<details\b[\s\S]*?<\/details>/g),m=>m[0]);
+ assert.equal(excerpts.length,2);assert.equal(excerpts[0].replace('<details','<details open'),excerpts[1]);
+ for(const excerpt of excerpts){
+  const summary=excerpt.match(/<summary[^>]*style="([^"]*)"/)[1],projected=excerpt.match(/display:block;box-sizing:border-box;padding:15px [^"]*/)[0];
+  assert.equal(summary.match(/padding:15px [^;]*;padding-left:[^;]*;padding-right:[^;]*;/)[0],projected.match(/padding:15px [^;]*;padding-left:[^;]*;padding-right:[^;]*;/)[0]);
+ }
+});
