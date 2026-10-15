@@ -95,7 +95,6 @@ to{opacity:1;translate:0 0}
 .left-panel{max-height:none}
 .block-list{flex-direction:column;overflow:visible}
 }
-.typography-group h3{margin-bottom:12px}
 .typography-group .full-field{margin-top:0}
 .typography-group .align-buttons button{padding:7px 4px;font-size:11px}
 .typography-group .align-buttons{gap:4px}
@@ -193,8 +192,7 @@ h3{display:flex;align-items:center;font-size:13px;font-weight:700;letter-spacing
 .text-formatting button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
 .text-formatting button:hover:not(:disabled){background:var(--accent-soft)}
 .quote-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.quote-heading h3{margin:0}
-.quote-heading h3 span{margin-left:5px;font-size:10px;font-weight:400;color:var(--muted)}
+.quote-heading>span{font-size:11px;font-weight:400;color:var(--muted)}
 .quote-switch{min-width:42px;padding:5px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--faint-line);color:var(--muted);border:0}
 .quote-switch[aria-checked=true]{background:var(--accent);color:#fff}
 #quoteFields{margin-top:16px}
@@ -268,6 +266,11 @@ input[type=range]{accent-color:var(--accent-line);height:4px;margin:10px 0 2px;c
 .field-grid input{border-color:var(--line);border-radius:5px;font-size:12px}
 summary{font-size:12px;color:var(--muted);font-weight:600}
 details[open] summary{margin-bottom:10px}
+.design-group>summary{display:flex;align-items:center;gap:12px;min-height:22px;margin:0;list-style:none;color:var(--ink);font-size:13px;font-weight:650}
+.design-group>summary::-webkit-details-marker{display:none}
+.design-group>summary::after{content:'';width:7px;height:7px;margin:-3px 3px 0 auto;flex-shrink:0;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg)}
+.design-group[open]>summary{margin-bottom:14px}
+.design-group[open]>summary::after{transform:rotate(225deg);margin-top:3px}
 .message-side{margin-top:8px}
 .message-side button{flex:1;padding:5px;font-size:11px}
 .notification-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:10px}
