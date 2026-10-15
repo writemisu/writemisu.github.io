@@ -63,7 +63,7 @@ export function exportHTML(state,{preview=false}={}){
   let html;
   if(chat){
    const bubble=`display:inline-block;box-sizing:border-box;max-width:82%;padding:11px ${14+inset}px;border-radius:${right?'14px 4px 14px 14px':'4px 14px 14px 14px'};vertical-align:top;${box}${type}`;
-   html=`<div style="margin:0 0 ${space}px;text-align:${right?'right':'left'};"><div style="${bubble}">${body}</div></div>`;
+   html=`<div${preview?' data-chat-row="true"':''} style="margin:0 0 ${space}px;text-align:${right?'right':'left'};"><div${preview?' data-chat-id="'+escapeHTML(b.id)+'"':''} style="${bubble}${preview?'cursor:grab;touch-action:pan-y;':''}">${body}</div></div>`;
   }else if(notification){
    const headerSize=Math.max(11,size*.72),header=`font-size:${headerSize}px;font-weight:400;line-height:1.4;white-space:normal;overflow-wrap:anywhere;`;
    html=`<div style="box-sizing:border-box;margin:0 0 ${space}px;padding:16px ${20+inset}px;border-radius:10px;${box}${type}"><table role="presentation" style="width:100%;table-layout:fixed;border:0;border-collapse:collapse;margin:0 0 10px;${header}"><tbody><tr style="border:0;"><td style="padding:0 12px 0 0;border:0;text-align:left;vertical-align:top;">${textHTML(b.messageTitle??'메시지')}</td><td style="width:30%;padding:0;border:0;text-align:right;vertical-align:top;color:${s.muted};">${textHTML(b.messageTime??'지금')}</td></tr></tbody></table><div style="${type}">${body}</div></div>`;
