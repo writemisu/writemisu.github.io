@@ -10,14 +10,17 @@ const chat={id:'b1',type:'text',text:'원래 대화',runs:[{text:'원래 대화'
 test('stage plus alternates blank bubbles in the active tab and keeps their typography',()=>{
  const state={blocks:[structuredClone(chat),{...chat,id:'other',messageSide:'right',htmlTabId:'t2'}],htmlTabs:[{id:'t1',open:false},{id:'t2',open:false}],margin:80};
  let counter=2,edits=0,history=0;const button={};
- const env={state,editorMode:'html',activeHTMLTab:'t1',htmlCodeView:false,selected:new Set(),finishInlineEdit(){},endTyping(){},newBlock:()=>({id:'b'+(++counter),type:'text',text:'',x:80,htmlTabId:'t1'}),change(fn){history++;fn();},metrics:()=>({h:50}),pinMessage(){},beginInlineEdit(){edits++;},$:id=>id==='addChat'?button:id==='htmlPreview'?{contentDocument:{querySelector:()=>null},scrollIntoView(){}}:null};
+ const env={state,editorMode:'html',activeHTMLTab:'t1',htmlCodeView:false,selected:new Set(),finishInlineEdit(){},endTyping(){},newBlock:()=>({id:'b'+(++counter),type:'text',text:'',x:80,htmlTabId:env.activeHTMLTab}),change(fn){history++;fn();},bodyWidth:()=>480,metrics:()=>({h:50}),pinMessage(){},beginInlineEdit(){edits++;},$:id=>id==='addChat'?button:id==='htmlPreview'?{contentDocument:{querySelector:()=>null},scrollIntoView(){}}:null};
  runInNewContext(app.slice(app.indexOf('function chatMembers('),app.indexOf('const addChat='))+'\nthis.add=addChatBubble;this.update=renderChatAdd;',env);
  env.update();assert.equal(button.hidden,false);assert.equal(button.ariaLabel,'오른쪽 말풍선 추가');
  env.add();env.add();assert.equal(history,2);assert.equal(edits,2);assert.equal(state.htmlTabs[0].open,true);assert.equal(state.htmlTabs[1].open,false);
  assert.deepEqual(state.blocks.map(b=>b.id),['b1','b3','b4','other']);
  assert.deepEqual(state.blocks.slice(0,3).map(b=>b.messageSide),['left','right','left']);
  for(const b of state.blocks.slice(1,3)){assert.equal(b.text,'');assert.equal(b.runs,undefined);assert.equal(b.htmlTabId,'t1');assert.equal(b.htmlStyle.size,20);assert.equal(b.messageColor,'#eeeeee');assert.equal(b.messageFit,true);}
- env.activeHTMLTab='empty';env.update();assert.equal(button.hidden,true);
+ env.activeHTMLTab='empty';env.update();assert.equal(button.hidden,false);assert.equal(button.ariaLabel,'왼쪽 말풍선 추가');env.add();
+ assert.equal(state.blocks.at(-1).htmlTabId,'empty');assert.equal(state.blocks.at(-1).messageSide,'left');
+ env.htmlCodeView=true;env.update();assert.equal(button.hidden,true);
+ env.editorMode='png';state.blocks=[];env.update();assert.equal(button.hidden,true);
 });
 
 test('PNG chat dragging changes direction and snaps to that side without changing text; resize and cancel do not flip it',()=>{

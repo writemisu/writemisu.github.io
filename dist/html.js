@@ -62,7 +62,7 @@ export function exportHTML(state,{preview=false}={}){
   if(notification&&b.messageSender)body='<strong style="font-weight:700;">'+textHTML(b.messageSender)+': </strong>'+body;
   let html;
   if(chat){
-   const bubble=`display:inline-block;box-sizing:border-box;max-width:82%;padding:11px ${14+inset}px;border-radius:${right?'14px 4px 14px 14px':'4px 14px 14px 14px'};vertical-align:top;${box}${type}`;
+   const bubble=`display:inline-block;box-sizing:border-box;min-width:min(140px,82%);max-width:82%;padding:11px ${14+inset}px;border-radius:${right?'14px 4px 14px 14px':'4px 14px 14px 14px'};vertical-align:top;${box}${type}`;
    html=`<div${preview?' data-chat-row="true"':''} style="margin:0 0 ${space}px;text-align:${right?'right':'left'};"><div${preview?' data-chat-id="'+escapeHTML(b.id)+'"':''} style="${bubble}${preview?'cursor:grab;touch-action:pan-y;':''}">${body}</div></div>`;
   }else if(notification){
    const headerSize=Math.max(11,size*.72),header=`font-size:${headerSize}px;font-weight:400;line-height:1.4;white-space:normal;overflow-wrap:anywhere;`;

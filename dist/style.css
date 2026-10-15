@@ -33,6 +33,9 @@ h1,h2,p{margin:0}
 .stage-chat-add{display:flex;align-items:center;justify-content:center;width:36px;height:36px;margin:18px auto 0;padding:8px;border-radius:50%;color:var(--accent);background:var(--paper);border-color:var(--accent-line);box-shadow:0 3px 12px #202a4410}
 .stage-chat-add:hover{background:var(--accent-soft)}
 .stage-chat-add[hidden]{display:none}
+.stage-chat-add span{display:none}
+.html-mode .stage-chat-add{width:auto;height:28px;margin:0;padding:4px 9px;gap:5px;border-radius:6px;box-shadow:none;font-size:11px}
+.html-mode .stage-chat-add span{display:inline}
 .block-overlay{position:absolute;background:transparent;border:1px solid transparent;border-radius:0;pointer-events:auto;cursor:grab;touch-action:none;padding:0;min-height:22px}
 .block-overlay:hover{border:1px dashed #ffffff70}
 .block-overlay.selected{background:transparent}
@@ -259,7 +262,10 @@ h3{display:flex;align-items:center;font-size:13px;font-weight:700;letter-spacing
 .background-colors output{font:11px ui-monospace,Consolas,monospace;color:var(--muted);text-align:right}
 #htmlReset{width:100%;margin-top:12px;font-size:12px}
 .html-tab-tools{padding:12px;margin:0 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
-.html-tabs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.html-tabs-header{display:flex;align-items:center;gap:8px;margin:0;min-height:28px;list-style:none;cursor:pointer}
+.html-tab-tools[open]>.html-tabs-header{margin-bottom:10px}
+.html-tabs-header button{margin-left:auto}
+.html-tabs-header>.summary-chevron{order:-1;margin-left:0}
 .html-tabs-header h3{margin:0;font-size:12px;color:var(--ink)}
 .html-tabs-header button,.html-tab-row button,#addReplacement{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:6px;border:0;border-radius:5px;background:transparent;color:var(--muted)}
 .html-tabs-header button:hover:not(:disabled),.html-tab-row button:hover:not(:disabled),#addReplacement:hover:not(:disabled){background:var(--accent-soft);color:var(--ink)}

@@ -109,7 +109,7 @@ function renderHTMLTabs(){
  $('htmlTabOpen').checked=state.htmlTabs.find(t=>t.id===activeHTMLTab).open;$('addHTMLTab').disabled=state.htmlTabs.length>=3;
 }
 $('addHTMLTab').innerHTML=icons.plus;
-$('addHTMLTab').onclick=()=>{if(state.htmlTabs.length>=3)return;endTyping();change(()=>{activeHTMLTab='t'+(Math.max(0,...state.htmlTabs.map(t=>+t.id.slice(1)))+1);state.htmlTabs.push({id:activeHTMLTab,title:'',open:false,collapse:true});const b=newBlock();state.blocks.push(b);selected=new Set([b.id]);});$('htmlTabList').querySelector('[data-tab="'+activeHTMLTab+'"] input').focus();};
+$('addHTMLTab').onclick=e=>{e.preventDefault();if(state.htmlTabs.length>=3)return;$('htmlTabTools').open=true;endTyping();change(()=>{activeHTMLTab='t'+(Math.max(0,...state.htmlTabs.map(t=>+t.id.slice(1)))+1);state.htmlTabs.push({id:activeHTMLTab,title:'',open:false,collapse:true});const b=newBlock();state.blocks.push(b);selected=new Set([b.id]);});$('htmlTabList').querySelector('[data-tab="'+activeHTMLTab+'"] input').focus();};
 function removeHTMLTab(id){if(state.htmlTabs.length===1)return;endTyping();change(()=>{state.blocks=state.blocks.filter(b=>b.htmlTabId!==id);state.htmlTabs=state.htmlTabs.filter(t=>t.id!==id);if(activeHTMLTab===id)activeHTMLTab=state.htmlTabs[0].id;selected=new Set(state.blocks.filter(b=>b.htmlTabId===activeHTMLTab).slice(0,1).map(b=>b.id));});}
 $('htmlTabOpen').onchange=e=>{endTyping();change(()=>state.htmlTabs.find(t=>t.id===activeHTMLTab).open=e.target.checked);};
 function renderList(){
@@ -293,24 +293,24 @@ function editBlock(id){finishInlineEdit();const input=$('blockList').querySelect
 function chatMembers(){return state.blocks.filter(b=>editorMode!=='html'||b.htmlTabId===activeHTMLTab);}
 function renderChatAdd(){
  const last=chatMembers().findLast(b=>b.type==='text'&&b.presentation==='chat');
- $('addChat').hidden=!last||editorMode==='html'&&htmlCodeView;
- if(last)$('addChat').title=$('addChat').ariaLabel=(last.messageSide==='right'?'왼쪽':'오른쪽')+' 말풍선 추가';
+ $('addChat').hidden=editorMode==='html'?htmlCodeView:!last;
+ $('addChat').title=$('addChat').ariaLabel=(last&&last.messageSide!=='right'?'오른쪽':'왼쪽')+' 말풍선 추가';
 }
 function addChatBubble(){
- finishInlineEdit();endTyping();const members=chatMembers(),last=members.findLast(b=>b.type==='text'&&b.presentation==='chat');if(!last)return;
+ finishInlineEdit();endTyping();const members=chatMembers(),last=members.findLast(b=>b.type==='text'&&b.presentation==='chat'),template=last||members.findLast(b=>b.type==='text');if(!last&&editorMode!=='html')return;
  let id;change(()=>{
   const b=newBlock();id=b.id;
-  for(const key of ['font','size','lineHeight','color','bold','align','padding','messageColor','messageBox','messageOpacity'])if(last[key]!==undefined)b[key]=last[key];
-  if(last.htmlStyle)b.htmlStyle={...last.htmlStyle};
-  Object.assign(b,{presentation:'chat',messageSide:last.messageSide==='right'?'left':'right',w:last.w,messageFit:true,messagePinned:true,auto:!state.blocks.some(b=>b.auto===false)});
+  for(const key of ['font','size','lineHeight','color','bold','align','padding','messageColor','messageBox','messageOpacity'])if(template?.[key]!==undefined)b[key]=template[key];
+  if(template?.htmlStyle)b.htmlStyle={...template.htmlStyle};
+  Object.assign(b,{presentation:'chat',messageSide:last&&last.messageSide!=='right'?'right':'left',w:template?.w??Math.round(bodyWidth()*.78),messageFit:true,messagePinned:true,auto:!state.blocks.some(b=>b.auto===false)});
   b.y=Math.max(state.margin,...state.blocks.map(b=>b.y+metrics(b).h+32));pinMessage(b);
-  state.blocks.splice(state.blocks.indexOf(members.at(-1))+1,0,b);selected=new Set([id]);
+  state.blocks.splice(members.length?state.blocks.indexOf(members.at(-1))+1:state.blocks.length,0,b);selected=new Set([id]);
   if(editorMode==='html'){const tab=state.htmlTabs.find(t=>t.id===activeHTMLTab);if(tab)tab.open=true;}
  });
  const target=editorMode==='html'?$('htmlPreview').contentDocument.querySelector('[data-block-id="'+id+'"]'):$('overlays').querySelector('.block-overlay[data-id="'+id+'"]');
  if(editorMode==='html')$('htmlPreview').scrollIntoView({block:'end',inline:'nearest'});target?.scrollIntoView({block:'nearest',inline:'nearest'});beginInlineEdit(id);
 }
-const addChat=document.createElement('button');addChat.id='addChat';addChat.type='button';addChat.className='stage-chat-add';addChat.hidden=true;addChat.innerHTML=icons.plus;addChat.onclick=addChatBubble;$('stageScroll').append(addChat);
+const addChat=document.createElement('button');addChat.id='addChat';addChat.type='button';addChat.className='stage-chat-add';addChat.hidden=true;addChat.innerHTML=icons.plus+'<span>말풍선</span>';addChat.onclick=addChatBubble;$('stageScroll').append(addChat);
 const fontLoads=new Map();
 function loadUsedFonts(){const jobs=[];for(const source of state.blocks){const b=displayBlock(source);if(b.type!=='text')continue;const family=fonts[b.font]||fonts.noto,weights=new Set([400,...(b.presentation==='chapter'||b.presentation==='notification'&&b.messageSender||quoteSettings().enabled&&quoteSettings().bold?[700]:[]),...blockRuns(b).map(r=>r.bold||b.bold?700:400)]);for(const weight of weights){const key=family+':'+weight;if(!fontLoads.has(key)){const job=document.fonts.load(weight+' 22px '+family,b.text||'한글').then(()=>{metricCache.clear();scheduleDraw();}).catch(error=>{notify('글꼴을 불러오지 못했어. 연결을 확인해 줘.');throw error;});fontLoads.set(key,job);job.catch(()=>{});}jobs.push(fontLoads.get(key));}}return Promise.all(jobs);}
 function insertParagraphs(text,{eachLine=false,append=false}={}){const paragraphs=splitParagraphs(text,eachLine);if(!paragraphs.length){notify('붙여 넣을 글을 입력하세요.');return false;}change(()=>{const fresh=paragraphs.map(t=>newBlock(t)),color=state.blocks.find(b=>b.type==='text')?.color||state.textColor;fresh.forEach(b=>{b.w=bodyWidth();b.color=color;});if(append&&!state.demo){let y=Math.max(state.margin,...state.blocks.map(b=>b.y+metrics(b).h+32));fresh.forEach(b=>{b.x=(state.width-bodyWidth())/2;b.y=y;y+=metrics(b).h+32;});state.blocks.push(...fresh);fitHeight();}else{state.blocks=editorMode==='html'?[...state.blocks.filter(b=>b.htmlTabId!==activeHTMLTab),...fresh]:fresh;if(editorMode==='png')autoLayout();}state.demo=false;selected=new Set([fresh[0].id]);});$('stageScroll').scrollTop=0;notify(`${paragraphs.length}개 문단 추가됨`);return true;}
@@ -376,6 +376,7 @@ function renderHTMLPreview(){
 function setHTMLView(code){htmlCodeView=code;$('htmlCode').hidden=!code;$('htmlPreview').hidden=code;$('htmlPreviewTab').setAttribute('aria-pressed',!code);$('htmlCodeTab').setAttribute('aria-pressed',code);renderChatAdd();if(!code)resizeHTMLPreview();}
 function renderMode(){
  const html=editorMode==='html';document.body.classList.toggle('html-mode',html);
+ (html?document.querySelector('.stage-footer'):$('stageScroll')).append($('addChat'));
  for(const element of document.querySelectorAll('[data-png-only]'))element.hidden=html;
  for(const element of document.querySelectorAll('[data-html-only]'))element.hidden=!html;
  $('pngMode').setAttribute('aria-pressed',!html);$('htmlMode').setAttribute('aria-pressed',html);$('stageTitle').textContent=html?'HTML':'지면';

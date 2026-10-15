@@ -19,9 +19,18 @@ test('plain paragraphs retain their dimensions and colors without opting in',()=
  const m=blockMetrics(base,measure);assert.equal(m.w,480);assert.equal(m.h,33.300000000000004);assert.equal(m.paddingX,0);assert.equal(m.headerHeight,0);assert.deepEqual(presentationColors(base),{color:base.color,box:base.box,opacity:0});
 });
 test('chat bubbles fit short text, wrap long text, and keep explicit blank lines and marks',()=>{
- const chat={...base,presentation:'chat'},m=blockMetrics(chat,measure);assert.equal(m.w,86);assert.equal(m.h,base.size*base.lineHeight+22);
+ const chat={...base,presentation:'chat'},m=blockMetrics(chat,measure);assert.equal(m.w,140);assert.equal(m.h,base.size*base.lineHeight+22);
  const long={...chat,w:140,text:'',runs:[{text:'가나다라마바사아자차카타파하',italic:true},{text:'\n\n끝',bold:true}]},before=structuredClone(long),wrapped=blockMetrics(long,measure);
  assert.ok(wrapped.w<=140);assert.ok(wrapped.lines.every(l=>l.width<=wrapped.textWidth));assert.equal(wrapped.lines.at(-2).runs.length,0);assert.equal(wrapped.lines[0].runs[0].italic,true);assert.equal(wrapped.lines.at(-1).runs[0].bold,true);assert.deepEqual(long,before);
+});
+
+test('new and short bubbles leave room to type without wrapping each Korean syllable',()=>{
+ for(const side of ['left','right'])for(const text of ['','본','본문']){
+  const m=blockMetrics({...base,presentation:'chat',messageSide:side,text},measure);
+  assert.ok(m.textWidth>=100);assert.equal(m.lines.length,1);assert.ok(m.textWidth>=measure('본문',{}));
+ }
+ assert.equal(blockMetrics({...base,presentation:'chat',w:80,text:''},measure).w,80);
+ assert.equal(blockMetrics({...base,presentation:'chat',w:100,text:'본문',messageFit:false},measure).w,100);
 });
 
 test('left and right tails reserve the same wrapping space and manual width stays fixed',()=>{
