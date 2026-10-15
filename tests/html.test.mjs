@@ -13,7 +13,7 @@ test('new HTML uses Champagne Noir with inline responsive layout and no generate
  const before=structuredClone(state),html=exportHTML(state),s=htmlSettings(state),b=htmlBlock(state,block);
  assert.deepEqual([s.width,s.padding,s.gap,s.frame,s.radius,s.decoration,s.decorationStyle],[680,44,24,false,10,false,'hairline']);
  for(const color of ['#101217','#1d2027','#e8e5e1','#bda47b'])assert.ok(html.includes(color),color);
- assert.match(html,/max-width:680px/);assert.match(html,/padding:28px 22px;padding-left:clamp\(22px,calc\(11% - 30.8px\),44px\)/);
+ assert.match(html,/max-width:680px/);assert.match(html,/padding:12px 22px 28px;padding-left:clamp\(22px,calc\(11% - 30.8px\),44px\)/);
  assert.match(html,/첫 문장<br>다음 문장/);assert.deepEqual([b.font,b.size,b.lineHeight,b.align],['pretendard',16,1.85,'left']);
  assert.doesNotMatch(html,/ONLINE|문단 1|END OF EXCERPT|<h[1-6]\b/);
  assert.doesNotMatch(html,/<(?:script|style|link|canvas|iframe)\b|\b(?:class|id|on\w+)=|position:|transform:|219px|409px|117px/);
@@ -63,10 +63,37 @@ test('manual dividers and chapter blocks retain their place and formatting',()=>
 test('frame and optional decorations do not change width, padding or paragraph order',()=>{
  const base={...state,htmlSettings:{width:700,padding:44,frame:false}},frame={...base,htmlSettings:{...base.htmlSettings,frame:true,radius:10,border:'#514d44'}},plain=exportHTML(base),framed=exportHTML(frame);
  assert.equal(plain.replace('border:1px solid transparent;border-radius:0px','border:1px solid #514d44;border-radius:10px'),framed);assert.doesNotMatch(framed,/box-shadow:4px|border:2px/);
- const hairline=exportHTML({...frame,htmlSettings:{...frame.htmlSettings,decoration:true}});assert.match(hairline,/width:36px;border-top:1px solid #bda47b/);assert.doesNotMatch(hairline,/END OF EXCERPT/);
+ const hairline=exportHTML({...frame,htmlSettings:{...frame.htmlSettings,decoration:true}});assert.match(hairline,/margin:28px 0 0;border-top:1px solid #bda47b/);assert.doesNotMatch(hairline,/END OF EXCERPT/);
  const editorial=exportHTML({...frame,htmlSettings:{...frame.htmlSettings,decoration:true,decorationStyle:'editorial',decorationPosition:'both',decorationLabel:'FIN <&>'}});
- assert.equal((editorial.match(/FIN &lt;&amp;&gt;/g)||[]).length,2);assert.equal((editorial.match(/width:36px/g)||[]).length,4);
+ assert.equal((editorial.match(/FIN &lt;&amp;&gt;/g)||[]).length,1);assert.equal((editorial.match(/width:36px/g)||[]).length,1);
+ assert.equal((editorial.match(/width:76%;border-top/g)||[]).length,2);assert.equal((editorial.match(/width:16%;border-top/g)||[]).length,2);
  assert.doesNotMatch(exportHTML({...frame,htmlSettings:{...frame.htmlSettings,decoration:false,decorationStyle:'editorial'}}),/END OF EXCERPT|width:36px/);
+});
+
+test('intro and closing decorations belong to each excerpt body and collapse with it',()=>{
+ const s={...state,htmlSettings:{frame:true,decoration:true,decorationStyle:'editorial',decorationPosition:'both'},blocks:[{...block,text:'첫 장면 본문',htmlSummary:'첫 장면 제목',htmlOpen:true},{...block,id:'b2',type:'line'},{...block,id:'b3',text:'두 번째 장면 본문',htmlSummary:'두 번째 장면 제목'}]},html=exportHTML(s);
+ const excerpts=Array.from(html.matchAll(/<details\b[^>]*>[\s\S]*?<\/details>/g),match=>match[0]);assert.equal(excerpts.length,2);
+ for(const [i,excerpt] of excerpts.entries()){
+  const summaryEnd=excerpt.indexOf('</summary>'),intro=excerpt.indexOf('width:36px;margin:0 0 14px;border-top:1px'),body=excerpt.indexOf(i===0?'첫 장면 본문':'두 번째 장면 본문'),footer=excerpt.indexOf('END OF EXCERPT');
+  assert.ok(summaryEnd<intro&&intro<body&&body<footer);
+  assert.doesNotMatch(excerpt.slice(0,summaryEnd),/width:36px|END OF EXCERPT/);
+  assert.match(excerpt,/display:table;table-layout:fixed;width:100%;margin:28px 0 0/);
+ }
+ assert.equal((html.match(/border:1px solid #44464c;border-radius:10px/g)||[]).length,2);
+ assert.equal((html.match(/END OF EXCERPT/g)||[]).length,2);
+ assert.ok(html.indexOf('</details>')<html.indexOf('width:33%;'));
+ assert.deepEqual(details(html),[true,false]);
+});
+
+test('decoration positions and frame-independent insets also work with collapse disabled',()=>{
+ for(const position of ['header','footer','both']){
+  const s={...state,htmlSettings:{decoration:true,decorationStyle:'editorial',decorationPosition:position},blocks:[{...block,htmlCollapse:false}]},html=exportHTML(s);
+  assert.equal((html.match(/width:36px;margin:0 0 14px/g)||[]).length,position==='footer'?0:1);
+  assert.equal((html.match(/END OF EXCERPT/g)||[]).length,position==='header'?0:1);assert.deepEqual(details(html),[]);
+  const framed=exportHTML({...s,htmlSettings:{...s.htmlSettings,frame:true}});
+  assert.equal(html.replace('border:1px solid transparent;border-radius:0px','border:1px solid #44464c;border-radius:10px'),framed);
+  assert.match(html,/padding:28px 22px 28px;padding-left:clamp/);
+ }
 });
 
 test('HTML colors are adjustable and independent of PNG gradients and noise',()=>{

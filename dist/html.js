@@ -22,9 +22,11 @@ export function htmlBlock(state,block){
 }
 function decorationHTML(s,position){
  if(!s.decoration||![position,'both'].includes(s.decorationPosition))return '';
- const line=`display:inline-block;width:36px;border-top:1px solid ${s.accent};vertical-align:middle;`;
+ if(position==='header')return `<div aria-hidden="true" style="width:36px;margin:0 0 14px;border-top:1px solid ${s.accent};font-size:0;line-height:0;">&nbsp;</div>`;
  const label=s.decorationStyle==='editorial'?s.decorationLabel:'';
- return `<div aria-hidden="true" style="margin:${position==='header'?'0 0 28px':'28px 0 0'};text-align:center;color:${s.accent};font-family:Arial,sans-serif;font-size:10px;line-height:20px;letter-spacing:1.5px;overflow-wrap:anywhere;"><span style="${line}">&nbsp;</span>${label?`<span style="padding:0 12px;">${textHTML(label)}</span><span style="${line}">&nbsp;</span>`:''}</div>`;
+ if(!label)return `<div aria-hidden="true" style="margin:28px 0 0;border-top:1px solid ${s.accent};font-size:0;line-height:0;">&nbsp;</div>`;
+ const line=width=>`display:inline-block;width:${width}%;border-top:1px solid ${s.accent};vertical-align:middle;font-size:0;line-height:0;`;
+ return `<div aria-hidden="true" style="display:table;table-layout:fixed;width:100%;margin:28px 0 0;border:0;border-collapse:collapse;color:${s.accent};font-family:Georgia,serif;font-size:10px;line-height:1.8;letter-spacing:1.8px;overflow-wrap:anywhere;"><span style="display:table-cell;vertical-align:middle;"><span style="${line(76)}">&nbsp;</span><span style="${line(16)}margin-left:8%;">&nbsp;</span></span><span style="display:table-cell;box-sizing:border-box;width:32%;padding:0 2%;text-align:center;vertical-align:middle;">${textHTML(label)}</span><span style="display:table-cell;vertical-align:middle;"><span style="${line(16)}margin-right:8%;">&nbsp;</span><span style="${line(76)}">&nbsp;</span></span></div>`;
 }
 function textHTML(text){return escapeHTML(text).replace(/\r\n?/g,'\n').replace(/\n/g,'<br>').replace(/\u3000/g,'<span style="display:inline-block;width:1em;white-space:pre;"> </span>');}
 function runsHTML(runs){return runs.map(run=>{
@@ -34,10 +36,12 @@ function runsHTML(runs){return runs.map(run=>{
 
 export function exportHTML(state){
  const s=htmlSettings(state),{width,padding,gap,surface}=s,blocks=replaceBlocks(state.blocks,state.replacementRules||[]).blocks;
+ const mobile=Math.min(22,padding),start=Math.min(480,width-160),slope=(padding-mobile)/(width-start),fluid=padding===mobile?padding+'px':`clamp(${mobile}px,calc(${Math.round(slope*100000)/1000}% - ${Math.round((slope*start-mobile)*1000)/1000}px),${padding}px)`;
+ const insetCSS=`padding-left:${fluid};padding-right:${fluid};`;
  const content=blocks.map((source,i)=>{
   const b=htmlBlock(state,source);
   const align=['left','center','right','justify'].includes(b.align)?b.align:'left',gapAfter=i<blocks.length-1?gap:0,space=b.type==='line'?gapAfter:0;
-  if(b.type==='line')return `<div style="margin:0 0 ${space}px;padding:11px 0;"><div style="width:33%;margin:${align==='right'?'0 0 0 auto':align==='center'?'0 auto':'0'};border-top:1px solid ${color(b.color)};"></div></div>`;
+  if(b.type==='line')return `<div style="margin:0 0 ${space}px;padding:11px ${mobile}px;${insetCSS}"><div style="width:33%;margin:${align==='right'?'0 0 0 auto':align==='center'?'0 auto':'0'};border-top:1px solid ${color(b.color)};"></div></div>`;
   const chat=b.presentation==='chat',notification=b.presentation==='notification',chapter=b.presentation==='chapter',right=b.messageSide==='right',c=presentationColors(b);
   const size=number(b.size,16,1,200),lineHeight=number(b.lineHeight,1.85,1,3),inset=number(b.padding,0,0,60);
   const family=b.font==='pretendard'?"'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif":fonts[b.font]||fonts.sans;
@@ -53,12 +57,12 @@ export function exportHTML(state){
    const headerSize=Math.max(11,size*.72),header=`font-size:${headerSize}px;font-weight:400;line-height:1.4;white-space:normal;overflow-wrap:anywhere;`;
    html=`<div style="box-sizing:border-box;margin:0 0 ${space}px;padding:16px ${20+inset}px;border-radius:10px;${box}${type}"><table role="presentation" style="width:100%;table-layout:fixed;border:0;border-collapse:collapse;margin:0 0 10px;${header}"><tbody><tr style="border:0;"><td style="padding:0 12px 0 0;border:0;text-align:left;vertical-align:top;">${textHTML(b.messageTitle??'메시지')}</td><td style="width:30%;padding:0;border:0;text-align:right;vertical-align:top;color:${s.muted};">${textHTML(b.messageTime??'지금')}</td></tr></tbody></table><div style="${type}">${body}</div></div>`;
   }else html=`<div style="box-sizing:border-box;margin:0 0 ${space}px;padding:${chapter?'12px '+(18+inset)+'px':'0 '+inset+'px'};${box}${type}">${chapter?'■ ':''}${body}</div>`;
-  const title=b.htmlSummary||'',margin=`margin:0 0 ${gapAfter}px;`;
-  if(b.htmlCollapse===false)return `<div style="${margin}">${html}</div>`;
+  const title=b.htmlSummary||'',frame=`box-sizing:border-box;width:100%;margin:0 0 ${gapAfter}px;border:1px solid ${s.frame?s.border:'transparent'};border-radius:${s.frame?s.radius:0}px;background-color:${surface};`;
+  const bodyHTML=`<div style="box-sizing:border-box;margin:0;padding:${b.htmlCollapse===false?28:12}px ${mobile}px 28px;${insetCSS}border:0;">${decorationHTML(s,'header')}${html}${decorationHTML(s,'footer')}</div>`;
+  if(b.htmlCollapse===false)return `<div style="${frame}">${bodyHTML}</div>`;
   // Shadows paint the minus above its own hit box so the summary stays clickable.
-  return `<details${b.htmlOpen===true?' open':''} style="display:block;${margin}padding:0;border:0;background:transparent;box-shadow:none;"><summary aria-label="${escapeHTML(title||'펼치기 / 접기')}" style="display:block;box-sizing:border-box;margin:0;padding:8px 0;border:0;background:transparent;list-style:none;font-family:${escapeHTML(family)};font-size:10.5pt;font-weight:500;line-height:24px;color:${color(b.color)};text-align:left;"><span style="display:table;width:100%;table-layout:fixed;border:0;border-collapse:collapse;"><span style="display:table-cell;padding-right:12px;vertical-align:middle;overflow-wrap:anywhere;">${title?textHTML(title):'<span aria-hidden="true">&nbsp;</span>'}</span><span aria-hidden="true" style="display:table-cell;width:28px;vertical-align:bottom;text-align:center;font-family:Arial,sans-serif;font-size:20px;font-weight:400;line-height:24px;color:${s.accent};">+</span></span></summary><div aria-hidden="true" style="height:0;margin:0;text-align:right;font-size:0;line-height:0;"><span style="display:inline-block;width:10px;height:2px;margin-right:9px;vertical-align:top;box-shadow:0 -21px 0 ${s.accent},0 -21px 0 9px ${surface};">&nbsp;</span></div><div style="margin:0;padding:12px 0 0;border:0;">${html}</div></details>`;
+  return `<div style="${frame}"><details${b.htmlOpen===true?' open':''} style="display:block;margin:0;padding:0;border:0;background:transparent;box-shadow:none;"><summary aria-label="${escapeHTML(title||'펼치기 / 접기')}" style="display:block;box-sizing:border-box;margin:0;padding:12px ${mobile}px;${insetCSS}border:0;background:transparent;list-style:none;font-family:${escapeHTML(family)};font-size:10.5pt;font-weight:500;line-height:24px;color:${color(b.color)};text-align:left;"><span style="display:table;width:100%;table-layout:fixed;border:0;border-collapse:collapse;"><span style="display:table-cell;padding-right:12px;vertical-align:middle;overflow-wrap:anywhere;">${title?textHTML(title):'<span aria-hidden="true">&nbsp;</span>'}</span><span aria-hidden="true" style="display:table-cell;width:28px;vertical-align:bottom;text-align:center;font-family:Arial,sans-serif;font-size:20px;font-weight:400;line-height:24px;color:${s.accent};">+</span></span></summary><div aria-hidden="true" style="box-sizing:border-box;height:0;margin:0;padding:0 ${mobile}px;${insetCSS}text-align:right;font-size:0;line-height:0;"><span style="display:inline-block;width:10px;height:2px;margin-right:9px;vertical-align:top;box-shadow:0 -25px 0 ${s.accent},0 -25px 0 9px ${surface};">&nbsp;</span></div>${bodyHTML}</details></div>`;
 
  }).join('\n');
- const mobile=Math.min(22,padding),start=Math.min(480,width-160),slope=(padding-mobile)/(width-start),fluid=padding===mobile?padding+'px':`clamp(${mobile}px,calc(${Math.round(slope*100000)/1000}% - ${Math.round((slope*start-mobile)*1000)/1000}px),${padding}px)`;
- return `<div lang="ko" style="box-sizing:border-box;width:100%;max-width:${width}px;margin:0 auto;padding:16px 0;background-color:${s.background};color:${s.textColor};"><div style="box-sizing:border-box;width:100%;margin:0;padding:28px ${mobile}px;padding-left:${fluid};padding-right:${fluid};border:1px solid ${s.frame?s.border:'transparent'};border-radius:${s.frame?s.radius:0}px;background-color:${surface};">${decorationHTML(s,'header')}${content}${decorationHTML(s,'footer')}</div></div>`;
+ return `<div lang="ko" style="box-sizing:border-box;width:100%;max-width:${width}px;margin:0 auto;padding:16px 0;background-color:${s.background};color:${s.textColor};">${content}</div>`;
 }
