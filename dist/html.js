@@ -44,7 +44,7 @@ function runsHTML(runs){return runs.map(run=>{
  const text=textHTML(run.text);return style?`<span style="${style}">${text}</span>`:text;
 }).join('');}
 
-export function exportHTML(state){
+export function exportHTML(state,{preview=false}={}){
  const s=htmlSettings(state),{width,padding,gap,surface}=s,blocks=replaceBlocks(state.blocks,state.replacementRules||[]).blocks;
  const mobile=Math.min(22,padding),start=Math.min(480,width-160),slope=(padding-mobile)/(width-start),fluid=padding===mobile?padding+'px':`clamp(${mobile}px,calc(${Math.round(slope*100000)/1000}% - ${Math.round((slope*start-mobile)*1000)/1000}px),${padding}px)`;
  const insetCSS=`padding-left:${fluid};padding-right:${fluid};`;
@@ -58,6 +58,7 @@ export function exportHTML(state){
   const type=`font-family:${escapeHTML(family)};font-size:${Math.round(size*75)/100}pt;line-height:${lineHeight};font-weight:${chapter||b.bold?700:400};font-style:normal;font-synthesis:style;color:${color(c.color)};text-align:${align};overflow-wrap:anywhere;white-space:pre-wrap;`;
   const box=`background-color:${rgba(c.box,c.opacity)};`,runs=quoteRuns(blockRuns(b),s.quoteStyle??state.quoteStyle);
   let body=runsHTML(chapter?runs.map(r=>({...r,bold:true})):runs)||'<br>';
+  if(preview)body='<span data-block-id="'+escapeHTML(b.id)+'">'+body+'</span>';
   if(notification&&b.messageSender)body='<strong style="font-weight:700;">'+textHTML(b.messageSender)+': </strong>'+body;
   let html;
   if(chat){

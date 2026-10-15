@@ -9,6 +9,12 @@ const state={width:800,height:900,margin:80,padding:0,background:'solid',colors:
 const details=html=>Array.from(html.matchAll(/<details\b([^>]*)>/g),match=>/\bopen\b/.test(match[1]));
 const restore=s=>parseDraft(JSON.stringify({version:1,state:s}))?.state;
 
+test('preview maps each editable paragraph without adding editor metadata to copied HTML',()=>{
+ const s={...state,blocks:['plain','chat','notification','chapter'].map((presentation,i)=>({...block,id:'b'+(i+1),presentation}))},preview=exportHTML(s,{preview:true});
+ for(const b of s.blocks)assert.equal((preview.match(new RegExp('data-block-id="'+b.id+'"','g'))||[]).length,1);
+ assert.doesNotMatch(exportHTML(s),/data-block-id|contenteditable|stage-editor/);
+});
+
 test('new HTML uses Champagne Noir with inline responsive layout and no generated metadata',()=>{
  const before=structuredClone(state),html=exportHTML(state),s=htmlSettings(state),b=htmlBlock(state,block);
  assert.deepEqual([s.width,s.padding,s.gap,s.frame,s.radius,s.decoration,s.decorationStyle],[680,44,24,false,10,false,'hairline']);

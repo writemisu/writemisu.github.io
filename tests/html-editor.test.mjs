@@ -31,7 +31,7 @@ test('preview toggles update the right excerpt when disabled collapse and divide
  let nodes=[],history=0,listRenders=0,observed=0;
  const root={getBoundingClientRect:()=>({height:400})},body={firstElementChild:root,querySelectorAll:()=>nodes,set innerHTML(html){nodes=Array.from(html.matchAll(/<details\b([^>]*)>/g),match=>({open:/\bopen\b/.test(match[1]),isConnected:true}));}};
  const elements={htmlPreview:{style:{},dataset:{ready:'true'},contentDocument:{body}},htmlCode:{},htmlSizeLabel:{}};
- const env={state:s,exportHTML,htmlSettings,$:id=>elements[id],htmlPreviewObserver:{disconnect(){},observe(node){assert.equal(node,root);observed++;}},snapshot:()=>JSON.stringify(s),endTyping(){},record(){history++;},renderList(){listRenders++;},Math};
+ const env={state:s,inlineEdit:null,exportHTML,htmlSettings,$:id=>elements[id],htmlPreviewObserver:{disconnect(){},observe(node){assert.equal(node,root);observed++;}},snapshot:()=>JSON.stringify(s),endTyping(){},record(){history++;},renderList(){listRenders++;},Math};
  const source=app.slice(app.indexOf('function resizeHTMLPreview('),app.indexOf('function setHTMLView('));
  runInNewContext(source+'\nthis.preview=renderHTMLPreview;',env);env.preview();
  assert.deepEqual(nodes.map(n=>n.open),[false,true]);assert.equal(observed,1);
@@ -49,4 +49,14 @@ test('restoring HTML defaults is undoable and retains source text, titles and PN
  assert.deepEqual(['background','surface','textColor','muted','accent','border'].map(key=>s.htmlSettings[key]),['#101217','#1d2027','#e8e5e1','#92949c','#bda47b','#44464c']);assert.equal(s.htmlSettings.width,680);assert.equal(s.blocks[0].htmlStyle,undefined);
  for(const key of Object.keys(before.blocks[0]).filter(key=>key!=='htmlStyle'))assert.deepEqual(s.blocks[0][key],before.blocks[0][key],key);
  assert.deepEqual(JSON.parse(undo[0]),before);assert.deepEqual(s.colors,before.colors);
+});
+
+test('typing in the preview updates copied HTML without replacing the focused editor DOM',()=>{
+ const s=state(),body={firstElementChild:{getBoundingClientRect:()=>({height:300})},set innerHTML(value){throw Error('Typing must keep the focused editor');}};
+ const elements={htmlPreview:{style:{},dataset:{ready:'true'},contentDocument:{body}},htmlCode:{},htmlSizeLabel:{}};
+ const env={state:s,inlineEdit:{id:'b1',mode:'html'},exportHTML,htmlSettings,$:id=>elements[id],htmlPreviewObserver:{disconnect(){throw Error('Typing must retain the observer');}},Math};
+ const source=app.slice(app.indexOf('function resizeHTMLPreview('),app.indexOf('function setHTMLView('));
+ runInNewContext(source+'\nthis.preview=renderHTMLPreview;',env);s.blocks[0].text='지면에서 수정';env.preview();
+ assert.ok(elements.htmlCode.value.includes('지면에서 수정'));assert.equal(elements.htmlPreview.style.height,'300px');
+ assert.ok(!elements.htmlCode.value.includes('data-block-id'));
 });

@@ -41,6 +41,13 @@ test('closing before the queued frame updates layout and flushes the latest data
  h.events.pagehide();assert.equal(h.stats.layouts,1);
 });
 
+test('IME saving finds a stage editor by its block id without a sidebar ancestor',()=>{
+ const h=editor(),before=structuredClone(h.state);
+ const input={isConnected:true,dataset:{blockId:'b2'},runs:[{text:'지면에서 조합 중',bold:true}],closest(selector){return selector==='.paragraph-input'?this:null;}};
+ h.events.compositionstart({target:input});h.events.input();h.env.flush();
+ assert.equal(h.saved().blocks[1].text,'지면에서 조합 중');assert.equal(h.saved().blocks[1].runs[0].bold,true);assert.deepEqual(h.state,before);
+});
+
 test('HTML autosaving skips PNG layout and preserves the original coordinates',()=>{
  const h=editor();h.env.editorMode='html';h.env.renderFrame=1;h.state.blocks[0].x=113;h.state.blocks[0].y=241;h.env.queue();h.env.flush();
  assert.equal(h.stats.layouts,0);assert.equal(h.saved().blocks[0].x,113);assert.equal(h.saved().blocks[0].y,241);
