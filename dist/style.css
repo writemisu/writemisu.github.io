@@ -125,6 +125,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .html-summary-field input{width:0;flex:1;min-width:0;padding:7px 10px;border:1px solid var(--line);border-radius:5px;background:var(--paper);color:var(--ink);font-size:12px}
 .html-initial-state .segmented{flex:1}
 .html-initial-state button{flex:1;padding:5px}
+.html-collapse-toggle,.html-option{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px;margin:10px 4px}
+.html-collapse-toggle input,.html-option input{margin:0;accent-color:var(--accent)}
+#htmlDocumentSettings .full-field input,#htmlDecorationLabel{display:block;width:100%;min-width:0;margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font-size:12px}
+#htmlReset{width:100%;margin-top:14px;font-size:11px;color:var(--muted);background:transparent}
 #htmlStage{width:100%;min-height:100%}
 #htmlPreview{display:block;width:100%;min-height:120px;margin:0 auto;border:0;background:transparent}
 #htmlCode{display:block;width:100%;min-height:480px;resize:vertical;padding:18px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font:12px/1.7 Consolas,monospace;tab-size:2}

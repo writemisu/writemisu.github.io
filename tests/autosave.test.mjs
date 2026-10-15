@@ -6,12 +6,12 @@ import {draftKey,writeDraft} from '../dist/draft.js';
 
 const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
 const source=app.slice(app.indexOf('let draftDirty='),app.indexOf('\nrender();document.fonts.ready'));
-function editor(count=100){
+function editor(count=100,htmlMigrated=false){
  const store=()=>({data:new Map(),setItem(key,value){this.data.set(key,value);},removeItem(key){this.data.delete(key);}});
  const localStorage=store(),sessionStorage=store(),events={},stats={reads:0,layouts:0,statusWrites:0,timers:0};let statusText='';
  const status={dataset:{},get textContent(){return statusText;},set textContent(value){statusText=value;stats.statusWrites++;}};
  const state={blocks:Array.from({length:count},(_,i)=>({id:'b'+(i+1),text:'저장할 문단 '+i,runs:[{text:'저장할 문단 '+i,bold:true}]}))};
- const env={state,editorMode:'png',counter:count,restoredDraft:null,renderFrame:0,localStorage,sessionStorage,writeDraft,$:()=>status,notify(){},finishDrag(){},flowLayout(){stats.layouts++;},fitHeight(){},readEditor(input){stats.reads++;return input.runs;},setTimeout(fn,delay){assert.equal(delay,500);stats.timers++;return 1;},clearTimeout(){},document:{addEventListener(name,fn){events[name]=fn;},querySelectorAll(){throw Error('Saving must not scan every editor');}},window:{addEventListener(name,fn){events[name]=fn;}}};
+ const env={state,editorMode:'png',counter:count,restoredDraft:null,htmlMigrated,renderFrame:0,localStorage,sessionStorage,writeDraft,$:()=>status,notify(){},finishDrag(){},flowLayout(){stats.layouts++;},fitHeight(){},readEditor(input){stats.reads++;return input.runs;},setTimeout(fn,delay){assert.equal(delay,500);stats.timers++;return 1;},clearTimeout(){},document:{addEventListener(name,fn){events[name]=fn;},querySelectorAll(){throw Error('Saving must not scan every editor');}},window:{addEventListener(name,fn){events[name]=fn;}}};
  runInNewContext(source+'\nthis.queue=queueDraftSave;this.flush=flushDraft;',env);
  return {env,state,events,stats,localStorage,sessionStorage,saved:()=>JSON.parse(localStorage.data.get(draftKey)).state};
 }
@@ -44,4 +44,8 @@ test('closing before the queued frame updates layout and flushes the latest data
 test('HTML autosaving skips PNG layout and preserves the original coordinates',()=>{
  const h=editor();h.env.editorMode='html';h.env.renderFrame=1;h.state.blocks[0].x=113;h.state.blocks[0].y=241;h.env.queue();h.env.flush();
  assert.equal(h.stats.layouts,0);assert.equal(h.saved().blocks[0].x,113);assert.equal(h.saved().blocks[0].y,241);
+});
+
+test('a migrated HTML design queues one save without scanning editors or changing layout',()=>{
+ const h=editor(1,true);assert.equal(h.stats.timers,1);h.env.flush();assert.deepEqual(h.saved(),h.state);assert.equal(h.stats.reads,0);assert.equal(h.stats.layouts,0);
 });
