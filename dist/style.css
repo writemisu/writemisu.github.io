@@ -160,7 +160,7 @@ h3{display:flex;align-items:center;font-size:13px;font-weight:700;letter-spacing
 .replacement-fields label{min-width:0;font-size:11px;color:var(--muted)}
 .replacement-fields input{display:block;width:100%;min-width:0;margin-top:5px;padding:7px;border:1px solid var(--line);border-radius:5px;background:#fff;font-size:12px;color:var(--ink)}
 .replacement-delete{padding:7px 3px;border:0;background:transparent;font-size:11px;color:var(--muted)}
-#addReplacement{flex-shrink:0;align-self:flex-start;width:28px;height:28px;padding:0;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--accent);font-size:17px}
+#addReplacement{flex-shrink:0;margin-left:auto}
 .paragraph-editor{flex-shrink:0;padding:9px;border:1px solid var(--line);border-radius:9px;background:#fff;box-shadow:none}
 .paragraph-editor.selected{border-color:var(--accent-line);background:#fff;box-shadow:none}
 .paragraph-heading{display:flex;align-items:center;gap:4px;padding:0;min-height:30px;list-style:none;cursor:pointer}
@@ -258,8 +258,8 @@ h3{display:flex;align-items:center;font-size:13px;font-weight:700;letter-spacing
 .html-tab-tools{padding:12px;margin:0 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
 .html-tabs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .html-tabs-header h3{margin:0;font-size:12px;color:var(--ink)}
-.html-tabs-header button,.html-tab-row button{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:6px;border:0;border-radius:5px;background:transparent;color:var(--muted)}
-.html-tabs-header button:hover:not(:disabled),.html-tab-row button:hover:not(:disabled){background:var(--accent-soft);color:var(--ink)}
+.html-tabs-header button,.html-tab-row button,#addReplacement{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:6px;border:0;border-radius:5px;background:transparent;color:var(--muted)}
+.html-tabs-header button:hover:not(:disabled),.html-tab-row button:hover:not(:disabled),#addReplacement:hover:not(:disabled){background:var(--accent-soft);color:var(--ink)}
 .html-tabs-header svg,.html-tab-row svg{width:15px;height:15px}
 .html-tab-list{display:flex;flex-direction:column;gap:5px}
 .html-tab-row{display:flex;align-items:center;gap:6px;padding:3px 5px;border:1px solid transparent;border-radius:6px}
@@ -406,3 +406,5 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .selection-help summary{border:0}
 .selection-help summary svg{width:19px;height:19px}
 .workspace select{appearance:none;background-image:var(--select-chevron);background-repeat:no-repeat;background-position:right 8px center;background-size:14px;padding-right:28px}
+
+.replacement-tools>summary>.summary-chevron{order:-1;margin-left:0}

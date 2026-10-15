@@ -205,7 +205,7 @@ function renderReplacements(){
   row.querySelector('button').setAttribute('aria-label','치환 '+(i+1)+' 삭제');
  });
 }
-$('addReplacement').onclick=()=>{endTyping();change(()=>{state.replacementRules=[...replacementRules(),{find:'',replace:''}];});const input=$('replacementRows').lastElementChild.querySelector('input');input.focus();input.scrollIntoView({block:'nearest'});};
+$('addReplacement').onclick=()=>{$('replacementTools').open=true;endTyping();change(()=>{state.replacementRules=[...replacementRules(),{find:'',replace:''}];});const input=$('replacementRows').lastElementChild.querySelector('input');input.focus();input.scrollIntoView({block:'nearest'});};
 function renderSettings(){
  const html=htmlSettings(state),isHTML=editorMode==='html';
  $('backgroundTitle').textContent=isHTML?'배경 및 색상':'배경';$('color2').closest('label').hidden=!isHTML&&state.background==='solid';
