@@ -136,7 +136,7 @@ export function paintMargin(target,state,layout,background,scale=1,editingId=nul
   c.fillStyle=s.accent;c.strokeStyle=s.accent;c.lineWidth=.5;
   if(s.footerLine){c.beginPath();c.moveTo(g.outer,g.footerY);c.lineTo(g.width/2-10,g.footerY);c.moveTo(g.width/2+10,g.footerY);c.lineTo(g.width-g.outer,g.footerY);c.stroke();}
   star(c,g.width/2,g.footerY,6);
-  c.fillStyle=s.muted;c.font='11px Georgia,serif';c.textBaseline='top';
+  c.fillStyle=s.muted;c.font='400 11px '+fonts.pretendard;c.textBaseline='top';
   const textY=g.footerY+14,max=(g.width-g.outer*2)*.7;
   c.save();c.beginPath();c.rect(g.outer,textY,max,20);c.clip();tracked(c,s.footerText,g.outer,textY,1.7);c.restore();
   if(s.page){c.textAlign='right';c.fillText(s.pageText,g.width-g.outer,textY);}
