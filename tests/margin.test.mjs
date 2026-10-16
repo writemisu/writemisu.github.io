@@ -12,8 +12,8 @@ const measure=(b,text)=>Array.from(text).length*b.size*.52;
 
 test('MARGIN fixes spacing and persistent decorations while linking frame and section switches',()=>{
  for(const enabled of [false,true]){
-  const s=state();s.marginLayout={texture:3,paragraphGap:60,dialogueIndent:30,dialogueGap:20,marginWidth:100,frame:enabled,corners:!enabled,numbers:enabled,diamonds:!enabled,chapterStar:true,footerStar:false,page:false};const before=structuredClone(s),m=marginSettings(s);
-  assert.deepEqual([m.texture,m.paragraphGap,m.dialogueIndent,m.dialogueGap,m.marginWidth],[15,22,8,2,62]);
+  const s=state();s.marginLayout={headerScale:150,headerGap:0,texture:3,paragraphGap:60,dialogueIndent:30,dialogueGap:20,marginWidth:100,frame:enabled,corners:!enabled,numbers:enabled,diamonds:!enabled,chapterStar:true,footerStar:false,page:false};const before=structuredClone(s),m=marginSettings(s);
+  assert.deepEqual([m.headerScale,m.headerGap,m.texture,m.paragraphGap,m.dialogueIndent,m.dialogueGap,m.marginWidth],[100,50,15,22,8,2,62]);
   assert.equal(m.corners,enabled);assert.equal(m.diamonds,enabled);assert.equal(m.chapterStar,false);assert.ok(m.footerStar&&m.page);assert.deepEqual(s,before);
  }
 });

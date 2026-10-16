@@ -4,11 +4,11 @@ import {blockRuns,sliceRuns,positionedRuns,fillTextWithSpaces} from './richtext.
 import {replaceBlocks} from './replace.js';
 
 const limits={width:[400,1600],outer:[16,160],bodyWidth:[120,1400],marginWidth:[24,180],texture:[0,60],size:[12,64],lineHeight:[1,3],paragraphGap:[0,100],dialogueIndent:[0,64],dialogueGap:[0,64],headerScale:[50,150],headerGap:[0,120]};
-const defaults={outer:44,bodyWidth:560,marginWidth:62,background:'#eee8d8',color:'#383027',muted:'#968a75',frameColor:'#baad91',accent:'#a89775',numberColor:'#8c806b',texture:15,font:'kopubBatang',size:20,lineHeight:1.85,paragraphGap:22,dialogueIndent:8,dialogueGap:2,frame:true,corners:true,header:true,chapter:'01',subtitle:'THE THINGS WE NEVER SAID',title:'비가 그친 자리',description:'젖은 거리와, 끝내 건네지 못한 말들에 대하여.',headerScale:100,headerGap:36,chapterStar:false,numbers:true,diamonds:true,guide:true,footer:true,footerText:'THE SPACE BETWEEN US',page:true,pageText:'01 — 01',footerStar:true,footerLine:true};
+const defaults={outer:44,bodyWidth:560,marginWidth:62,background:'#eee8d8',color:'#383027',muted:'#968a75',frameColor:'#baad91',accent:'#a89775',numberColor:'#8c806b',texture:15,font:'kopubBatang',size:20,lineHeight:1.85,paragraphGap:22,dialogueIndent:8,dialogueGap:2,frame:true,corners:true,header:true,chapter:'01',subtitle:'THE THINGS WE NEVER SAID',title:'비가 그친 자리',description:'젖은 거리와, 끝내 건네지 못한 말들에 대하여.',headerScale:100,headerGap:50,chapterStar:false,numbers:true,diamonds:true,guide:true,footer:true,footerText:'THE SPACE BETWEEN US',page:true,pageText:'01 — 01',footerStar:true,footerLine:true};
 export function marginSettings(state){
  const stored=state.marginLayout||{},s={...defaults,width:state.width||800,...stored,blocks:stored.blocks||{}};
  for(const [key,[min,max]] of Object.entries(limits)){const value=s[key];s[key]=Number.isFinite(value)?Math.max(min,Math.min(max,value)):defaults[key]??800;}
- s.texture=15;s.paragraphGap=22;s.dialogueIndent=8;s.dialogueGap=2;s.marginWidth=62;s.corners=s.frame;s.diamonds=s.numbers;s.chapterStar=false;s.footerStar=true;s.page=true;
+ s.headerScale=100;s.headerGap=50;s.texture=15;s.paragraphGap=22;s.dialogueIndent=8;s.dialogueGap=2;s.marginWidth=62;s.corners=s.frame;s.diamonds=s.numbers;s.chapterStar=false;s.footerStar=true;s.page=true;
  s.outer=Math.min(s.outer,s.width/4);s.marginWidth=Math.min(s.marginWidth,Math.max(24,s.width-s.outer*2-120));s.bodyWidth=Math.min(s.bodyWidth,s.width-s.outer*2-s.marginWidth);
  return s;
 }
@@ -62,7 +62,7 @@ export function marginLayout(state,measure){
  let headerHeight=0;
  if(s.header){
   let y=outer+6*hs;
-  for(const [key,size,gap,tracking] of [['subtitle',8*hs,12*hs,1.7*hs],['title',28*hs,12*hs,0],['description',12*hs,0,0]]){
+  for(const [key,size,gap,tracking] of [['subtitle',8*hs,12*hs,1.7*hs],['title',28*hs,10*hs,0],['description',12*hs,0,0]]){
    if(!s[key])continue;const b={font:'pretendard',size,bold:false};
    const lines=wrapText(s[key],headerWidth,text=>measure(b,text)+(Math.max(0,Array.from(text).length-1)*tracking));
    headerRows.push({key,x:headerX,y,size,tracking,lines,font:b.font,lineHeight:1.4});y+=lines.length*size*1.4+gap;
