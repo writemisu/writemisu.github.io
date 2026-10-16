@@ -1,5 +1,5 @@
 import {escapeHTML,fonts} from './core.js';
-import {blockRuns,quoteRuns,runCSS} from './richtext.js';
+import {blockRuns,quoteRuns,runCSS,sliceRuns} from './richtext.js';
 import {presentationColors} from './messages.js';
 import {replaceBlocks} from './replace.js';
 
@@ -44,7 +44,7 @@ function runsHTML(runs){return runs.map(run=>{
  const text=textHTML(run.text);return style?`<span style="${style}">${text}</span>`:text;
 }).join('');}
 
-export function exportHTML(state,{preview=false}={}){
+export function exportHTML(state,{preview=false,selectedLine=null}={}){
  const s=htmlSettings(state),{width,padding,gap,surface}=s,blocks=replaceBlocks(state.blocks,state.replacementRules||[]).blocks;
  const mobile=Math.min(22,padding),start=Math.min(480,width-160),slope=(padding-mobile)/(width-start),fluid=padding===mobile?padding+'px':`clamp(${mobile}px,calc(${Math.round(slope*100000)/1000}% - ${Math.round((slope*start-mobile)*1000)/1000}px),${padding}px)`;
  const insetCSS=`padding-left:${fluid};padding-right:${fluid};`;
@@ -57,8 +57,16 @@ export function exportHTML(state,{preview=false}={}){
   const family=b.font==='pretendard'?"'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif":fonts[b.font]||fonts.sans;
   const type=`font-family:${escapeHTML(family)};font-size:${Math.round(size*75)/100}pt;line-height:${lineHeight};font-weight:${chapter||b.bold?700:400};font-style:normal;font-synthesis:style;color:${color(c.color)};text-align:${align};overflow-wrap:anywhere;white-space:pre-wrap;`;
   const box=`background-color:${rgba(c.box,c.opacity)};`,runs=quoteRuns(blockRuns(b),s.quoteStyle??state.quoteStyle);
-  let body=runsHTML(chapter?runs.map(r=>({...r,bold:true})):runs)||'<br>';
-  if(preview)body='<span data-block-id="'+escapeHTML(b.id)+'">'+body+'</span>';
+  const displayedRuns=chapter?runs.map(r=>({...r,bold:true})):runs;
+  let body=runsHTML(displayedRuns)||'<br>';
+  if(preview){
+   let offset=0;
+   body='<span data-block-id="'+escapeHTML(b.id)+'" style="display:block;">'+b.text.split('\n').map((text,index)=>{
+    const html=runsHTML(sliceRuns(displayedRuns,offset,offset+text.length));offset+=text.length+1;
+    const selected=selectedLine?.id===b.id&&selectedLine.index===index;
+    return '<span data-line-index="'+index+'"'+(selected?' data-line-selected="true"':'')+' tabindex="0" role="button" aria-pressed="'+selected+'" aria-label="텍스트 블록 '+(index+1)+' 선택 · 더블클릭하여 수정" style="display:block;min-height:1em;">'+(html||'<br>')+'</span>';
+   }).join('')+'</span>';
+  }
   if(notification&&b.messageSender)body='<strong style="font-weight:700;">'+textHTML(b.messageSender)+': </strong>'+body;
   let html;
   if(chat){

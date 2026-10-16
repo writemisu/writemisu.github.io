@@ -15,6 +15,12 @@ test('preview maps each editable paragraph without adding editor metadata to cop
  assert.doesNotMatch(exportHTML(s),/data-block-id|contenteditable|stage-editor/);
 });
 
+test('preview selects individual newline blocks while copied HTML retains its original line breaks',()=>{
+ const s={...state,blocks:[{...block,text:'같은 말\n\n같은 말\n끝'}],replacementRules:[{find:'말',replace:'표시할 말'}]},before=structuredClone(s),preview=exportHTML(s,{preview:true,selectedLine:{id:'b1',index:2}});
+ assert.equal((preview.match(/data-line-index=/g)||[]).length,4);assert.match(preview,/data-line-index="2" data-line-selected="true"/);assert.match(preview,/data-line-index="1"[^>]*><br><\/span>/);
+ const html=exportHTML(s);assert.match(html,/같은 표시할 말<br><br>같은 표시할 말<br>끝/);assert.doesNotMatch(html,/data-line-|tabindex|aria-pressed/);assert.deepEqual(s,before);
+});
+
 test('new HTML uses Champagne Noir with inline responsive layout and no generated metadata',()=>{
  const before=structuredClone(state),html=exportHTML(state),s=htmlSettings(state),b=htmlBlock(state,block);
  assert.deepEqual([s.width,s.padding,s.gap,s.frame,s.radius,s.decoration,s.decorationStyle],[680,44,24,false,10,false,'hairline']);

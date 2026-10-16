@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {draftKey,writeDraft} from '../dist/draft.js';
+import {blockRuns,spliceRuns} from '../dist/richtext.js';
 
 const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
 const source=app.slice(app.indexOf('let draftDirty='),app.indexOf('\nrender();document.fonts.ready'));
@@ -11,7 +12,7 @@ function editor(count=100,htmlMigrated=false){
  const localStorage=store(),sessionStorage=store(),events={},stats={reads:0,layouts:0,statusWrites:0,timers:0};let statusText='';
  const status={dataset:{},get textContent(){return statusText;},set textContent(value){statusText=value;stats.statusWrites++;}};
  const state={blocks:Array.from({length:count},(_,i)=>({id:'b'+(i+1),text:'저장할 문단 '+i,runs:[{text:'저장할 문단 '+i,bold:true}]}))};
- const env={state,editorMode:'png',counter:count,restoredDraft:null,htmlMigrated,renderFrame:0,localStorage,sessionStorage,writeDraft,$:()=>status,notify(){},finishDrag(){},flowLayout(){stats.layouts++;},fitHeight(){},readEditor(input){stats.reads++;return input.runs;},setTimeout(fn,delay){assert.equal(delay,500);stats.timers++;return 1;},clearTimeout(){},document:{addEventListener(name,fn){events[name]=fn;},querySelectorAll(){throw Error('Saving must not scan every editor');}},window:{addEventListener(name,fn){events[name]=fn;}}};
+ const env={state,editorMode:'png',inlineEdit:null,blockRuns,spliceRuns,counter:count,restoredDraft:null,htmlMigrated,renderFrame:0,localStorage,sessionStorage,writeDraft,$:()=>status,notify(){},finishDrag(){},flowLayout(){stats.layouts++;},fitHeight(){},readEditor(input){stats.reads++;return input.runs;},setTimeout(fn,delay){assert.equal(delay,500);stats.timers++;return 1;},clearTimeout(){},document:{addEventListener(name,fn){events[name]=fn;},querySelectorAll(){throw Error('Saving must not scan every editor');}},window:{addEventListener(name,fn){events[name]=fn;}}};
  runInNewContext(source+'\nthis.queue=queueDraftSave;this.flush=flushDraft;',env);
  return {env,state,events,stats,localStorage,sessionStorage,saved:()=>JSON.parse(localStorage.data.get(draftKey)).state};
 }
@@ -51,6 +52,13 @@ test('IME saving finds a stage editor by its block id without a sidebar ancestor
 test('HTML autosaving skips PNG layout and preserves the original coordinates',()=>{
  const h=editor();h.env.editorMode='html';h.env.renderFrame=1;h.state.blocks[0].x=113;h.state.blocks[0].y=241;h.env.queue();h.env.flush();
  assert.equal(h.stats.layouts,0);assert.equal(h.saved().blocks[0].x,113);assert.equal(h.saved().blocks[0].y,241);
+});
+
+test('IME autosave merges a partial HTML editor without replacing the rest of its paragraph',()=>{
+ const h=editor(1);h.env.editorMode='html';h.state.blocks[0]={id:'b1',text:'앞\n중간\n끝',runs:[{text:'앞\n',bold:true},{text:'중간'},{text:'\n끝',underline:true}]};const before=structuredClone(h.state);
+ const input={isConnected:true,dataset:{blockId:'b1'},runs:[{text:'조합 중인 글자'}],closest(){return this;}};
+ h.env.inlineEdit={input,range:{start:2,end:4}};h.events.compositionstart({target:input});h.events.input();h.env.flush();
+ assert.equal(h.saved().blocks[0].text,'앞\n조합 중인 글자\n끝');assert.equal(h.saved().blocks[0].runs[0].bold,true);assert.equal(h.saved().blocks[0].runs.at(-1).underline,true);assert.deepEqual(h.state,before);
 });
 
 test('a migrated HTML design queues one save without scanning editors or changing layout',()=>{

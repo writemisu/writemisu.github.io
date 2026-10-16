@@ -30,6 +30,7 @@ export function quoteRuns(runs,style){
  }));
 }
 export function sliceRuns(runs,start,end){let offset=0;return normalizeRuns(runs.flatMap(run=>{const from=Math.max(0,start-offset),to=Math.min(run.text.length,end-offset);offset+=run.text.length;return to>from?[{...run,text:run.text.slice(from,to)}]:[];}));}
+export function spliceRuns(runs,start,end,replacement){return normalizeRuns([...sliceRuns(runs,0,start),...replacement,...sliceRuns(runs,end,Infinity)]);}
 export function rangeHasMark(runs,start,end,key){const selected=sliceRuns(runs,start,end);return selected.length>0&&selected.every(run=>run[key]);}
 export function toggleMark(runs,start,end,key){
  if(start===end)return runs;const enabled=!rangeHasMark(runs,start,end,key),length=runs.reduce((n,r)=>n+r.text.length,0);

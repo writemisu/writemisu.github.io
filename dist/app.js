@@ -1,4 +1,4 @@
-import {blockRuns,positionedRuns,fillTextWithSpaces,lineHighlights} from './richtext.js';
+import {blockRuns,positionedRuns,fillTextWithSpaces,lineHighlights,sliceRuns,spliceRuns} from './richtext.js';
 import {blockMetrics,presentationColors,messageX,chatPath} from './messages.js';
 import {createEditor,syncEditor,readEditor} from './editor.js';
 import {readDraft,writeDraft} from './draft.js';
@@ -278,19 +278,27 @@ function positionInlineEdit(){
  Object.assign(wrapper.style,{position:'absolute',left:b.x+m.paddingX+m.textOffset+'px',top:b.y+m.paddingY+m.headerHeight+'px',width:m.textWidth+'px'});
  input.style.height='auto';input.style.minHeight=b.size*b.lineHeight+'px';input.style.height=Math.max(input.scrollHeight,m.h-m.paddingY*2-m.headerHeight)+'px';
 }
-function beginInlineEdit(id,event){
- const b=state.blocks.find(b=>b.id===id);if(!b||b.type!=='text'||inlineEdit?.id===id)return;
+function beginInlineEdit(id,event,lineIndex=0){
+ const b=state.blocks.find(b=>b.id===id);if(!b||b.type!=='text'||inlineEdit?.id===id&&(editorMode!=='html'||inlineEdit.range?.index===lineIndex))return;
  finishInlineEdit();endTyping();
- const mode=editorMode,doc=mode==='html'?$('htmlPreview').contentDocument:document,host=mode==='html'?doc?.querySelector('[data-block-id="'+id+'"]'):$('overlays');if(!host)return;
+ const mode=editorMode,doc=mode==='html'?$('htmlPreview').contentDocument:document;
+ let range=null;
+ if(mode==='html'){
+  const lines=b.text.split('\n'),index=clamp(lineIndex,0,lines.length-1),start=lines.slice(0,index).reduce((n,text)=>n+text.length+1,0);
+  range={index,start,end:start+lines[index].length};htmlLineSelection={id,index};
+ }
+ const host=mode==='html'?doc?.querySelector('[data-block-id="'+id+'"] [data-line-index="'+range.index+'"]'):$('overlays');if(!host)return;
  selected=new Set([id]);if(mode==='html')activeHTMLTab=b.htmlTabId||activeHTMLTab;
  renderList();renderSelection();
- const wrapper=createEditor(id,{getBlock:key=>state.blocks.find(b=>b.id===key),select(){},onChange:updateText,onKeyDown:inlineKeyDown,onBlur:endTyping,ownerDocument:doc});
+ const getBlock=key=>{const block=state.blocks.find(b=>b.id===key);return block&&range?{...block,text:block.text.slice(range.start,range.end),runs:sliceRuns(blockRuns(block),range.start,range.end)}:block;};
+ const commit=(key,runs)=>{const block=state.blocks.find(b=>b.id===key);if(!block)return;const next=range?spliceRuns(blockRuns(block),range.start,range.end,runs):runs;if(range)range.end=range.start+runs.reduce((n,r)=>n+r.text.length,0);updateText(key,next);};
+ const wrapper=createEditor(id,{getBlock,select(){},onChange:commit,onKeyDown:inlineKeyDown,onBlur:endTyping,ownerDocument:doc});
  wrapper.className='stage-editor';wrapper.dataset.id=id;wrapper.style.cssText='box-sizing:border-box;min-width:20px;pointer-events:auto;background:transparent;outline:1px solid '+getComputedStyle(document.documentElement).getPropertyValue('--accent-line').trim()+';outline-offset:3px;border-radius:2px;';
  wrapper.querySelector('.text-formatting').style.display='none';wrapper.onpointerdown=e=>e.stopPropagation();wrapper.ondblclick=e=>e.stopPropagation();
  const input=wrapper.querySelector('.paragraph-input'),view=displayBlock(b),colors=presentationColors(view);
- input.dataset.blockId=id;input.setAttribute('aria-label','지면 문단 수정');
+ input.dataset.blockId=id;input.setAttribute('aria-label',mode==='html'?'텍스트 블록 '+(range.index+1)+' 수정':'지면 문단 수정');
  input.style.cssText=`box-sizing:border-box;display:block;width:100%;min-height:1em;height:auto;margin:0;padding:0;border:0;outline:none;resize:none;overflow:visible;background:transparent;color:${colors.color};font-family:${fonts[view.font]||fonts.noto};font-size:${view.size}px;font-weight:${view.bold||view.presentation==='chapter'?700:400};line-height:${view.lineHeight};text-align:${view.align};white-space:pre-wrap;overflow-wrap:anywhere;font-synthesis:style;cursor:text;`;
- inlineEdit={id,mode,wrapper,input};
+ inlineEdit={id,mode,wrapper,input,range,commit};
  input.addEventListener('blur',finishInlineEdit);
  input.addEventListener('compositionstart',()=>{composingInput=input;});
  input.addEventListener('compositionend',()=>{if(composingInput===input)composingInput=null;});
@@ -304,13 +312,13 @@ function beginInlineEdit(id,event){
 function inlineKeyDown(e){
  if(e.isComposing)return;
  const mod=e.ctrlKey||e.metaKey,key=e.key.toLowerCase();
- if(mod&&(key==='z'||key==='y')){e.preventDefault();e.stopPropagation();const id=inlineEdit.id;finishInlineEdit();historyBack(key==='y'||e.shiftKey);beginInlineEdit(id);return;}
+ if(mod&&(key==='z'||key==='y')){e.preventDefault();e.stopPropagation();const id=inlineEdit.id,index=inlineEdit.range?.index||0;finishInlineEdit();historyBack(key==='y'||e.shiftKey);beginInlineEdit(id,undefined,index);return;}
  if(e.key==='Escape'||mod&&e.key==='Enter'){e.preventDefault();e.stopPropagation();finishInlineEdit();}
 }
 function finishInlineEdit(){
  if(!inlineEdit)return;
  const current=inlineEdit;inlineEdit=null;
- if(state.blocks.some(b=>b.id===current.id))updateText(current.id,readEditor(current.input));
+ if(state.blocks.some(b=>b.id===current.id))current.commit(current.id,readEditor(current.input));
  if(composingInput===current.input)composingInput=null;
  current.wrapper.remove();endTyping();render();
 }
@@ -362,7 +370,7 @@ $('pngScale').querySelector('.presentation-chevron').innerHTML=icons['chevron-do
 for(const [id,icon] of [['undo','undo-2'],['redo','redo-2']])$(id).innerHTML=icons[icon];
 const saveButtonContent=icons.download+'<span>PNG 저장</span>';
 $('savePNG').innerHTML=saveButtonContent;$('savePNG').onclick=savePNG;
-let htmlCodeView=false,htmlPreviewObserver;
+let htmlCodeView=false,htmlPreviewObserver,htmlLineSelection=null;
 function resizeHTMLPreview(){const root=$('htmlPreview').contentDocument?.body.firstElementChild;if(root)$('htmlPreview').style.height=Math.max(120,Math.ceil(root.getBoundingClientRect().height))+'px';}
 function bindHTMLChatDrag(body){
  for(const bubble of body.querySelectorAll('[data-chat-id]')){
@@ -387,8 +395,15 @@ function renderHTMLPreview(){
  $('htmlCode').value=html;$('htmlSizeLabel').textContent='최대 '+settings.width+'px · HTML + 인라인';frame.style.maxWidth=settings.width+'px';
  const body=frame.contentDocument?.body;if(!body||!frame.dataset.ready)return;
  if(inlineEdit?.mode==='html'){resizeHTMLPreview();return;}
- htmlPreviewObserver?.disconnect();body.innerHTML=exportHTML(state,{preview:true});
- body.ondblclick=e=>{const target=e.target.closest('[data-block-id],[data-chat-id]');if(target){e.preventDefault();beginInlineEdit(target.dataset.blockId||target.dataset.chatId,e);}};
+ htmlPreviewObserver?.disconnect();body.innerHTML=exportHTML(state,{preview:true,selectedLine:htmlLineSelection});
+ body.onclick=e=>{
+  const line=e.target.closest('[data-line-index]');if(!line||e.target.closest('.stage-editor'))return;
+  const id=line.closest('[data-block-id]').dataset.blockId,block=state.blocks.find(b=>b.id===id);if(!block)return;
+  const previous=body.querySelector('[data-line-selected]');if(previous){delete previous.dataset.lineSelected;previous.setAttribute('aria-pressed','false');}
+  line.dataset.lineSelected='true';line.setAttribute('aria-pressed','true');htmlLineSelection={id,index:+line.dataset.lineIndex};activeHTMLTab=block.htmlTabId||activeHTMLTab;select(id);
+ };
+ body.ondblclick=e=>{const target=e.target.closest('[data-line-index]');if(target&&!e.target.closest('.stage-editor')){e.preventDefault();beginInlineEdit(target.closest('[data-block-id]').dataset.blockId,e,+target.dataset.lineIndex);}};
+ body.onkeydown=e=>{const target=e.target.closest('[data-line-index]');if(target&&e.target===target&&['Enter','F2'].includes(e.key)){e.preventDefault();beginInlineEdit(target.closest('[data-block-id]').dataset.blockId,undefined,+target.dataset.lineIndex);}};
  bindHTMLChatDrag(body);
  const blocks=state.htmlTabs?htmlGroups(state).filter(t=>t.collapse!==false):state.blocks.filter(b=>b.type==='text'&&b.htmlCollapse!==false);body.querySelectorAll('details').forEach((details,i)=>{const id=blocks[i].id;details.ontoggle=()=>{
   if(!details.isConnected)return;
@@ -408,7 +423,7 @@ function renderMode(){
  const frame=$('htmlPreview');if(html&&!frame.hasAttribute('srcdoc')){
   frame.onload=()=>{frame.dataset.ready='true';htmlPreviewObserver?.disconnect();htmlPreviewObserver=new ResizeObserver(resizeHTMLPreview);renderHTMLPreview();frame.contentDocument.fonts.ready.then(resizeHTMLPreview);};
   const fontURL=new URL('fonts.css',import.meta.url).href;
-  frame.srcdoc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="'+fontURL+'"><style>body{margin:0}summary:focus-visible{outline:2px solid #40566b;outline-offset:3px}</style></head><body></body></html>';
+  frame.srcdoc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="'+fontURL+'"><style>body{margin:0}summary:focus-visible{outline:2px solid #40566b;outline-offset:3px}[data-line-index]{border-radius:3px;cursor:text}[data-line-index]:hover{outline:1px solid #8d9cb566;outline-offset:3px}[data-line-selected],[data-line-index]:focus-visible{outline:1px solid #8799bd;outline-offset:3px}[data-line-index]:has(.stage-editor){outline:none}</style></head><body></body></html>';
  }
  setHTMLView(htmlCodeView);
 }
@@ -455,7 +470,7 @@ function flushDraft(){
  clearTimeout(draftTimer);draftTimer=null;if(!draftDirty)return true;
  if(renderFrame&&editorMode==='png'){flowLayout();fitHeight();}let draftState=state;
  // Only uncommitted IME text needs a DOM read; all other edits are already in state.
- if(composingInput?.isConnected){const id=composingInput.dataset?.blockId||composingInput.closest('.paragraph-editor').dataset.id,runs=readEditor(composingInput),text=runs.map(r=>r.text).join('');draftState={...state,blocks:state.blocks.map(b=>b.id===id?{...b,runs,text}:b)};}
+ if(composingInput?.isConnected){const id=composingInput.dataset?.blockId||composingInput.closest('.paragraph-editor').dataset.id,edited=readEditor(composingInput);draftState={...state,blocks:state.blocks.map(b=>{if(b.id!==id)return b;const range=inlineEdit?.input===composingInput?inlineEdit.range:null,runs=range?spliceRuns(blockRuns(b),range.start,range.end,edited):edited;return {...b,runs,text:runs.map(r=>r.text).join('')};})};}
  const draft={version:1,state:draftState,counter},data=JSON.stringify(draft);
  const saved=writeDraft(()=>localStorage,data),sessionSaved=writeDraft(()=>sessionStorage,saved?data:JSON.stringify({...draft,pending:true}));
  if(!sessionSaved){try{sessionStorage.removeItem('writemisu-draft-v1');}catch{}}

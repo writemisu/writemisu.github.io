@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {exportHTML,htmlSettings,htmlBlock} from '../dist/html.js';
+import {blockRuns,sliceRuns,spliceRuns} from '../dist/richtext.js';
 
 const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
 const block={id:'b1',type:'text',text:'“원문”\n그다음 문장',x:90,y:120,w:310,size:16,lineHeight:1.85,font:'noto',padding:8,color:'#333333',box:'#ffffff',opacity:0,align:'left',auto:false};
@@ -31,7 +32,7 @@ test('preview toggles update the right excerpt when disabled collapse and divide
  let nodes=[],history=0,listRenders=0,observed=0;
  const root={getBoundingClientRect:()=>({height:400})},body={firstElementChild:root,querySelectorAll:()=>nodes,set innerHTML(html){nodes=Array.from(html.matchAll(/<details\b([^>]*)>/g),match=>({open:/\bopen\b/.test(match[1]),isConnected:true}));}};
  const elements={htmlPreview:{style:{},dataset:{ready:'true'},contentDocument:{body}},htmlCode:{},htmlSizeLabel:{}};
- const env={state:s,inlineEdit:null,exportHTML,htmlSettings,$:id=>elements[id],htmlPreviewObserver:{disconnect(){},observe(node){assert.equal(node,root);observed++;}},snapshot:()=>JSON.stringify(s),endTyping(){},record(){history++;},renderList(){listRenders++;},Math};
+ const env={state:s,inlineEdit:null,htmlLineSelection:null,exportHTML,htmlSettings,$:id=>elements[id],htmlPreviewObserver:{disconnect(){},observe(node){assert.equal(node,root);observed++;}},snapshot:()=>JSON.stringify(s),endTyping(){},record(){history++;},renderList(){listRenders++;},Math};
  const source=app.slice(app.indexOf('function resizeHTMLPreview('),app.indexOf('function setHTMLView('));
  runInNewContext(source+'\nthis.preview=renderHTMLPreview;',env);env.preview();
  assert.deepEqual(nodes.map(n=>n.open),[false,true]);assert.equal(observed,1);
@@ -59,4 +60,16 @@ test('typing in the preview updates copied HTML without replacing the focused ed
  runInNewContext(source+'\nthis.preview=renderHTMLPreview;',env);s.blocks[0].text='지면에서 수정';env.preview();
  assert.ok(elements.htmlCode.value.includes('지면에서 수정'));assert.equal(elements.htmlPreview.style.height,'300px');
  assert.ok(!elements.htmlCode.value.includes('data-block-id'));
+});
+
+test('HTML inline editing changes only the clicked occurrence and keeps neighboring rich text and blank lines',()=>{
+ const s=state();s.blocks[0].text='앞\n같은 말\n\n같은 말\n끝';s.blocks[0].runs=[{text:'앞\n같은 말\n\n',bold:true},{text:'같은 말',italic:true},{text:'\n끝',underline:true}];
+ let options,selector;
+ const input={dataset:{},style:{},setAttribute(){},addEventListener(){},focus(){}},wrapper={dataset:{},style:{},querySelector:q=>q==='.paragraph-input'?input:{style:{}}},host={style:{},replaceChildren(){}};
+ const doc={querySelector:q=>{selector=q;return host;},createRange:()=>({selectNodeContents(){},collapse(){}}),getSelection:()=>({removeAllRanges(){},addRange(){}})};
+ const env={state:s,editorMode:'html',inlineEdit:null,htmlLineSelection:null,activeHTMLTab:'t1',selected:new Set(),blockRuns,sliceRuns,spliceRuns,clamp:(n,min,max)=>Math.max(min,Math.min(max,n)),finishInlineEdit(){},endTyping(){},renderList(){},renderSelection(){},displayBlock:b=>htmlBlock(s,b),presentationColors:b=>({color:b.color}),fonts:{},$:()=>({contentDocument:doc}),document:{documentElement:{}},getComputedStyle:()=>({getPropertyValue:()=> '#8799bd'}),inlineKeyDown(){},createEditor(id,config){options=config;return wrapper;},updateText(id,runs){s.blocks[0].runs=runs;s.blocks[0].text=runs.map(r=>r.text).join('');}};
+ const source=app.slice(app.indexOf('function beginInlineEdit('),app.indexOf('function inlineKeyDown('));runInNewContext(source+'\nthis.begin=beginInlineEdit;',env);env.begin('b1',undefined,3);
+ assert.match(selector,/data-line-index="3"/);assert.equal(options.getBlock('b1').text,'같은 말');assert.equal(options.getBlock('b1').runs[0].italic,true);
+ options.onChange('b1',[{text:'고친 말\n새 줄',italic:true}]);assert.equal(s.blocks[0].text,'앞\n같은 말\n\n고친 말\n새 줄\n끝');assert.equal(s.blocks[0].runs[0].bold,true);assert.equal(s.blocks[0].runs.at(-1).underline,true);
+ options.onChange('b1',[{text:'짧게'}]);assert.equal(s.blocks[0].text,'앞\n같은 말\n\n짧게\n끝');assert.equal(options.getBlock('b1').text,'짧게');
 });
