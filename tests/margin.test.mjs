@@ -44,6 +44,14 @@ test('dialogue segmentation handles nested quotes, multiline dialogue, blank lin
  const escaped='그는 \\"인용\\"이라고 적었다.';assert.equal(marginSegments(escaped).length,1);assert.equal(marginSegments(escaped)[0].dialogue,false);
 });
 
+test('separated dialogue adds one body line above and below on top of the configured spacing',()=>{
+ for(const [size,lineHeight,gap] of [[20,1.85,8],[24,2,0]]){
+  const s=state();s.blocks=[block('b1','앞의 지문. "대사." 뒤의 지문.')];s.marginLayout={size,lineHeight,dialogueGap:gap};const before=structuredClone(s);
+  const [first,dialogue,last]=marginLayout(s,measure).blocks[0].parts,expected=size*lineHeight+gap;
+  assert.ok(Math.abs(dialogue.y-first.y-first.metrics.h-expected)<1e-8);assert.ok(Math.abs(last.y-dialogue.y-dialogue.metrics.h-expected)<1e-8);assert.deepEqual(s,before);
+ }
+});
+
 test('long logs grow the page without shrinking type or overlapping header, paragraphs and footer',()=>{
  const s=state(),short=marginLayout(s,measure);s.blocks=Array.from({length:60},(_,i)=>block('b'+(i+1),'짧은 침묵이 흘렀다. '.repeat(15)));
  const long=marginLayout(s,measure);assert.ok(long.height>short.height*5);assert.ok(long.bodyTop>=long.outer+long.headerHeight);assert.ok(long.footerY>long.bodyBottom);assert.ok(long.footerY<long.height);

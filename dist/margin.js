@@ -69,16 +69,16 @@ export function marginLayout(state,measure){
   headerHeight=Math.max(y-outer,(s.chapterStar?112:104)*hs);
  }
  let y=outer+(s.header?headerHeight+s.headerGap:0),number=0,pending=false;
- const bodyTop=y,blocks=[];
+ const bodyTop=y,blocks=[],dialogueGap=s.size*s.lineHeight+s.dialogueGap;
  for(const source of replaceBlocks(state.blocks,state.replacementRules||[]).blocks){
   if(source.type==='line'){pending=true;continue;}
   const options=s.blocks[source.id]||{},b=textBlock(s,source),parts=[],runs=blockRuns(b);
   for(const segment of marginSegments(b.text,options.role||'auto')){
    if(segment.blank){y+=s.paragraphGap;continue;}
    const {start,end,dialogue}=segment,indent=dialogue?Math.min(s.dialogueIndent,bodyWidth/4):0;
-   if(dialogue)y+=s.dialogueGap;
+   if(dialogue)y+=dialogueGap;
    const part={...b,text:b.text.slice(start,end),runs:sliceRuns(runs,start,end),x:bodyX+indent,y,w:bodyWidth-indent};
-   part.metrics=blockMetrics(part,(text,run)=>measure(part,text,run));parts.push(part);y+=part.metrics.h+(dialogue?s.dialogueGap:0);
+   part.metrics=blockMetrics(part,(text,run)=>measure(part,text,run));parts.push(part);y+=part.metrics.h+(dialogue?dialogueGap:0);
   }
   if(!parts.length)continue;
   const section=blocks.length===0||pending||options.sectionStart;pending=false;if(section)number++;
