@@ -37,7 +37,7 @@ export function marginLayout(state,measure){
    const lines=wrapText(s[key],headerWidth,text=>measure(b,text)+(Math.max(0,Array.from(text).length-1)*tracking));
    headerRows.push({key,x:headerX,y,size,tracking,lines,font:b.font,lineHeight:1.45});y+=lines.length*size*1.45+gap;
   }
-  headerHeight=Math.max(y-outer,104*hs);
+  headerHeight=Math.max(y-outer,(s.chapterStar?112:104)*hs);
  }
  let y=outer+(s.header?headerHeight+s.headerGap:0),number=0,pending=false;
  const bodyTop=y,blocks=[];
