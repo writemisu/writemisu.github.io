@@ -462,6 +462,7 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .film-paragraphs{display:flex;flex-direction:column;gap:8px;max-height:190px;overflow-y:auto}
 .film-paragraphs label{display:flex;align-items:center;gap:8px;min-width:0;font-size:11px}
 .film-paragraphs span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.film-subtitles h3{margin:0 0 14px;font-size:12px;font-weight:600;color:var(--ink)}
 .film-warning{margin:12px 0;color:#a15e34;font-size:11px;line-height:1.7}
 .film-mode #backgroundGroup,.film-mode #quoteGroup,.film-mode .presentation-controls,.film-mode .typography-advanced .color-row label:last-child,.film-mode .typography-advanced .range-label,.film-mode #addLine,.film-mode #pageSettings{display:none}
 #filmScreenSize .full-field{margin-top:0}

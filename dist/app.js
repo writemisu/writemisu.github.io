@@ -7,6 +7,7 @@ import {exportHTML,htmlSettings,htmlBlock,initializeHTML,initializeHTMLTabs,html
 import {icons} from './icons.js';
 import {paragraphFormat,applyParagraphFormat} from './paragraph-format.js';
 import {filmSettings,filmSize,filmLayout,filmImageRect,paintFilm} from './film.js';
+import {playerTime,playerSeconds} from './film-player.js';
 import {storeFilmImage,readFilmImage} from './film-image.js';
 import {splitParagraphs,constrainDelta,fonts,radialGeometry,gradientCSS,alignedX,resizeWidths,verticalPositions,reorderBlocks,snapEdge} from './core.js';
 const $=id=>document.getElementById(id),canvas=$('artwork'),ctx=canvas.getContext('2d');
@@ -269,8 +270,10 @@ function renderFilmSettings(){
  $('pngLayout').value=state.pngLayout||'plain';$('autoLayout').textContent=active?'자막 자동 배치':'문단 자동 배치';
  if(!active)return;
  for(const [id,key] of [['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText']])if(document.activeElement!==$(id))$(id).value=s[key];
- for(const [id,key] of [['filmLetterbox','letterbox'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']])$(id).checked=s[key];
- for(const [id,key,unit] of [['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']]){$(id).value=s[key];$(id+'Value').textContent=s[key]+unit;}
+ for(const [id,key] of [['filmLetterbox','letterbox'],['filmPlayer','player'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']])$(id).checked=s[key];
+ for(const [id,key,unit] of [['filmBarPercent','barPercent','%'],['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']]){$(id).value=s[key];$(id+'Value').textContent=s[key]+unit;}
+ $('filmBarFields').hidden=!s.letterbox;$('filmPlayerFields').hidden=!s.player;
+ for(const [id,key] of [['filmPlayerElapsed','playerElapsed'],['filmPlayerDuration','playerDuration']])if(document.activeElement!==$(id))$(id).value=playerTime(s[key]);
  $('filmMetadataFields').hidden=!s.metadataOn;
  $('filmUpload').innerHTML=icons.plus+'<span>'+(s.imageId?'이미지 교체':'이미지 선택')+'</span>';$('filmRemove').innerHTML=icons['trash-2'];$('filmRemove').disabled=!s.imageId;$('filmCenter').disabled=!s.imageId;
  $('filmImageStatus').textContent=!s.imageId?'선택한 이미지 없음 · 새로고침하면 다시 올려 주세요.':filmImageError?'이미지를 열지 못했어요 · 다시 선택해 주세요.':!filmImage?'이미지 불러오는 중…':s.imageName;
@@ -329,8 +332,13 @@ $('filmFile').onchange=async e=>{
 $('filmRemove').onclick=()=>change(()=>{state.film={...filmSettings(state),imageId:null,imageName:''};});
 $('filmCenter').onclick=()=>change(()=>{state.film={...filmSettings(state),x:.5,y:.5};});
 for(const [id,key] of [['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText']])$(id).onchange=e=>{endTyping();change(()=>setFilmSetting(key,e.target.value));};
-for(const [id,key] of [['filmLetterbox','letterbox'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']])$(id).onchange=e=>change(()=>setFilmSetting(key,e.target.checked));
-for(const [id,key,unit] of [['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']])bindSlider($(id),v=>setFilmSetting(key,v),v=>$(id+'Value').textContent=v+unit);
+for(const [id,key] of [['filmLetterbox','letterbox'],['filmPlayer','player'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']])$(id).onchange=e=>change(()=>setFilmSetting(key,e.target.checked));
+for(const [id,key,unit] of [['filmBarPercent','barPercent','%'],['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']])bindSlider($(id),v=>setFilmSetting(key,v),v=>$(id+'Value').textContent=v+unit);
+for(const [id,key] of [['filmPlayerElapsed','playerElapsed'],['filmPlayerDuration','playerDuration']])$(id).onchange=e=>{
+ const seconds=playerSeconds(e.target.value);
+ if(seconds===null||seconds>86400||key==='playerDuration'&&seconds===0){e.target.value=playerTime(filmSettings(state)[key]);notify('시간은 분:초로 입력해 줘. 예: 0:15');return;}
+ endTyping();change(()=>{setFilmSetting(key,seconds);state.film=filmSettings(state);});e.target.value=playerTime(filmSettings(state)[key]);
+};
 function renderSettings(){
  renderFilmSettings();const html=htmlSettings(state),isHTML=editorMode==='html',film=!isHTML&&state.pngLayout==='film';
  $('backgroundTitle').textContent=isHTML?'배경 및 색상':'배경';$('color2').closest('label').hidden=!isHTML&&state.background==='solid';
