@@ -4,11 +4,11 @@ import {blockRuns,sliceRuns,positionedRuns,fillTextWithSpaces} from './richtext.
 import {replaceBlocks} from './replace.js';
 
 const limits={width:[400,1600],outer:[16,160],bodyWidth:[120,1400],marginWidth:[24,180],texture:[0,60],size:[12,64],lineHeight:[1,3],paragraphGap:[0,100],dialogueIndent:[0,64],dialogueGap:[0,64],headerScale:[50,150],headerGap:[0,120]};
-const defaults={outer:44,bodyWidth:560,marginWidth:62,background:'#eee8d8',color:'#383027',muted:'#968a75',frameColor:'#baad91',accent:'#a89775',numberColor:'#8c806b',texture:15,font:'kopubBatang',size:20,lineHeight:1.85,paragraphGap:22,dialogueIndent:8,dialogueGap:2,frame:true,corners:true,header:true,chapter:'01',subtitle:'THE THINGS WE NEVER SAID',title:'비가 그친 자리',description:'젖은 거리와, 끝내 건네지 못한 말들에 대하여.',headerScale:100,headerGap:36,chapterStar:true,numbers:true,diamonds:true,guide:true,footer:true,footerText:'THE SPACE BETWEEN US',page:true,pageText:'01 — 01',footerStar:true,footerLine:true};
+const defaults={outer:44,bodyWidth:560,marginWidth:62,background:'#eee8d8',color:'#383027',muted:'#968a75',frameColor:'#baad91',accent:'#a89775',numberColor:'#8c806b',texture:15,font:'kopubBatang',size:20,lineHeight:1.85,paragraphGap:22,dialogueIndent:8,dialogueGap:2,frame:true,corners:true,header:true,chapter:'01',subtitle:'THE THINGS WE NEVER SAID',title:'비가 그친 자리',description:'젖은 거리와, 끝내 건네지 못한 말들에 대하여.',headerScale:100,headerGap:36,chapterStar:false,numbers:true,diamonds:true,guide:true,footer:true,footerText:'THE SPACE BETWEEN US',page:true,pageText:'01 — 01',footerStar:true,footerLine:true};
 export function marginSettings(state){
  const stored=state.marginLayout||{},s={...defaults,width:state.width||800,...stored,blocks:stored.blocks||{}};
  for(const [key,[min,max]] of Object.entries(limits)){const value=s[key];s[key]=Number.isFinite(value)?Math.max(min,Math.min(max,value)):defaults[key]??800;}
- s.texture=15;s.paragraphGap=22;s.dialogueIndent=8;s.dialogueGap=2;s.marginWidth=62;s.corners=s.frame;s.diamonds=s.numbers;s.chapterStar=true;s.footerStar=true;s.page=true;
+ s.texture=15;s.paragraphGap=22;s.dialogueIndent=8;s.dialogueGap=2;s.marginWidth=62;s.corners=s.frame;s.diamonds=s.numbers;s.chapterStar=false;s.footerStar=true;s.page=true;
  s.outer=Math.min(s.outer,s.width/4);s.marginWidth=Math.min(s.marginWidth,Math.max(24,s.width-s.outer*2-120));s.bodyWidth=Math.min(s.bodyWidth,s.width-s.outer*2-s.marginWidth);
  return s;
 }
@@ -58,16 +58,16 @@ export function marginSegments(text,role='auto'){
 }
 export function marginLayout(state,measure){
  const s=marginSettings(state),width=s.width,outer=Math.min(s.outer,width/4),available=width-outer*2-s.marginWidth,bodyWidth=Math.max(80,Math.min(s.bodyWidth,available)),bodyX=outer+s.marginWidth+(available-bodyWidth)/2;
- const hs=s.headerScale/100,headerX=outer+108*hs,headerWidth=Math.max(70,width-outer-headerX),headerRows=[];
+ const hs=s.headerScale/100,headerX=outer+80*hs,headerWidth=Math.max(70,width-outer-headerX),headerRows=[];
  let headerHeight=0;
  if(s.header){
-  let y=outer;
-  for(const [key,size,gap,tracking] of [['subtitle',10*hs,12*hs,2*hs],['title',44*hs,12*hs,0],['description',17*hs,0,0]]){
-   if(!s[key])continue;const b={font:key==='subtitle'?'serif':'kopubBatang',size,bold:false};
+  let y=outer+6*hs;
+  for(const [key,size,gap,tracking] of [['subtitle',8*hs,12*hs,1.7*hs],['title',28*hs,12*hs,0],['description',12*hs,0,0]]){
+   if(!s[key])continue;const b={font:'pretendard',size,bold:false};
    const lines=wrapText(s[key],headerWidth,text=>measure(b,text)+(Math.max(0,Array.from(text).length-1)*tracking));
-   headerRows.push({key,x:headerX,y,size,tracking,lines,font:b.font,lineHeight:1.45});y+=lines.length*size*1.45+gap;
+   headerRows.push({key,x:headerX,y,size,tracking,lines,font:b.font,lineHeight:1.4});y+=lines.length*size*1.4+gap;
   }
-  headerHeight=Math.max(y-outer,(s.chapterStar?112:104)*hs);
+  headerHeight=Math.max(y-outer,90*hs);
  }
  let y=outer+(s.header?headerHeight+s.headerGap:0),number=0,pending=false,previous=null,blankGap=0;
  const bodyTop=y,blocks=[],dialogueGap=s.size*s.lineHeight+s.dialogueGap;
@@ -119,11 +119,10 @@ export function paintMargin(target,state,layout,background,scale=1,editingId=nul
  const c=target.getContext('2d'),s=marginSettings(state),g=layout,hs=s.headerScale/100;
  c.save();c.setTransform(scale,0,0,scale,0,0);c.clearRect(0,0,g.width,g.height);c.drawImage(background,0,0,g.width,g.height);c.textAlign='left';c.textBaseline='top';frame(c,s,g.width,g.height);
  if(s.header){
-  c.fillStyle=s.muted;c.font=(9*hs)+'px Georgia,serif';tracked(c,'CHAPTER',g.outer,g.outer+2*hs,1.6*hs);
-  c.font=(62*hs)+'px "Times New Roman",Times,serif';c.fillText(s.chapter,g.outer,g.outer+16*hs,82*hs);
-  c.fillStyle=s.accent;if(s.chapterStar)star(c,g.outer+33*hs,g.outer+99*hs,11*hs);
-  c.strokeStyle=s.frameColor;c.lineWidth=.8;c.beginPath();c.moveTo(g.headerX-24*hs,g.outer);c.lineTo(g.headerX-24*hs,g.outer+g.headerHeight);c.stroke();
-  for(const row of g.headerRows){c.fillStyle=row.key==='title'?s.color:s.muted;c.font='400 '+row.size+'px '+(row.key==='subtitle'?'Georgia,serif':fonts[row.font]);row.lines.forEach((text,i)=>tracked(c,text,row.x,row.y+i*row.size*row.lineHeight,row.tracking));}
+  c.fillStyle=s.muted;c.font='400 '+(8*hs)+'px '+fonts.pretendard;tracked(c,'CHAPTER',g.outer,g.outer+6*hs,1.6*hs);
+  c.font='400 '+(36*hs)+'px '+fonts.pretendard;c.fillText(s.chapter,g.outer+4*hs,g.outer+25*hs,56*hs);
+  c.strokeStyle=s.frameColor;c.lineWidth=.6;c.beginPath();c.moveTo(g.headerX-12*hs,g.outer);c.lineTo(g.headerX-12*hs,g.outer+g.headerHeight);c.stroke();
+  for(const row of g.headerRows){c.fillStyle=row.key==='title'?s.color:s.muted;c.font='400 '+row.size+'px '+fonts[row.font];row.lines.forEach((text,i)=>tracked(c,text,row.x,row.y+i*row.size*row.lineHeight,row.tracking));}
  }
  if(s.guide&&g.blocks.length){c.strokeStyle=s.frameColor;c.globalAlpha=.45;c.lineWidth=.6;c.beginPath();c.moveTo(g.outer+s.marginWidth*.7,g.bodyTop);c.lineTo(g.outer+s.marginWidth*.7,g.bodyBottom);c.stroke();c.globalAlpha=1;}
  for(const b of g.blocks){
