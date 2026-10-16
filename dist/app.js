@@ -305,9 +305,9 @@ function beginInlineEdit(id,event,lineIndex=0){
  input.addEventListener('input',()=>{if(composingInput===input)queueDraftSave();});
  if(mode==='html'){host.replaceChildren(wrapper);host.style.display='block';}else{host.append(wrapper);updateCanvas();renderOverlays();}
  input.focus({preventScroll:true});
- const range=doc.createRange();range.selectNodeContents(input);range.collapse(false);
- if(event){const point=doc.caretPositionFromPoint?.(event.clientX,event.clientY),hit=point?{node:point.offsetNode,offset:point.offset}:null,fallback=!hit&&doc.caretRangeFromPoint?.(event.clientX,event.clientY),node=hit?.node||fallback?.startContainer,offset=hit?.offset??fallback?.startOffset;if(node&&input.contains(node)){range.setStart(node,offset);range.collapse(true);}}
- const selection=doc.getSelection();selection.removeAllRanges();selection.addRange(range);
+ const caretRange=doc.createRange();caretRange.selectNodeContents(input);caretRange.collapse(false);
+ if(event){const point=doc.caretPositionFromPoint?.(event.clientX,event.clientY),hit=point?{node:point.offsetNode,offset:point.offset}:null,fallback=!hit&&doc.caretRangeFromPoint?.(event.clientX,event.clientY),node=hit?.node||fallback?.startContainer,offset=hit?.offset??fallback?.startOffset;if(node&&input.contains(node)){caretRange.setStart(node,offset);caretRange.collapse(true);}}
+ const selection=doc.getSelection();selection.removeAllRanges();selection.addRange(caretRange);
 }
 function inlineKeyDown(e){
  if(e.isComposing)return;
