@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
-import {marginSettings,marginLayout,paintMargin,validMargin} from '../dist/margin.js';
+import {marginSettings,marginSegments,marginLayout,paintMargin,validMargin} from '../dist/margin.js';
 import {parseDraft} from '../dist/draft.js';
 import {exportHTML} from '../dist/html.js';
 
@@ -22,6 +22,26 @@ test('section starts label paragraph groups while explicit roles retain the orig
  const s=state();s.blocks.push(block('b3','“이번에는 네가 먼저 가.”'));s.marginLayout={blocks:{b1:{role:'narration'},b2:{sectionStart:true},b3:{role:'dialogue'}}};
  const g=marginLayout(s,measure);assert.deepEqual(g.blocks.map(b=>b.section),[1,2,null]);assert.equal(g.blocks[0].parts[1].x,g.bodyX);assert.equal(g.blocks[2].parts[0].x,g.bodyX+6);
  for(let i=1;i<g.blocks.length;i++)assert.ok(g.blocks[i].y>=g.blocks[i-1].y+g.blocks[i-1].metrics.h);
+});
+
+test('MARGIN puts inline dialogue on separate lines while preserving source text and rich-text ranges',()=>{
+ const s=state(),text='그가 말했다. "기다려." 문이 닫혔다. “다시 올게.”';s.blocks=[block('b1',text)];
+ const quoteStart=text.indexOf('"'),quoteEnd=text.indexOf('"',quoteStart+1)+1;
+ s.blocks[0].runs=[{text:text.slice(0,quoteStart)},{text:text.slice(quoteStart,quoteEnd),italic:true},{text:text.slice(quoteEnd)}];const before=structuredClone(s);
+ const g=marginLayout(s,measure),parts=g.blocks[0].parts;
+ assert.deepEqual(parts.map(p=>p.text),['그가 말했다.','"기다려."','문이 닫혔다.','“다시 올게.”']);
+ assert.equal(parts[0].x,g.bodyX);assert.equal(parts[1].x,g.bodyX+6);assert.equal(parts[2].x,g.bodyX);assert.ok(parts[1].runs.every(r=>r.italic));assert.ok(parts[2].runs.every(r=>!r.italic));
+ for(let i=1;i<parts.length;i++)assert.ok(parts[i].y>=parts[i-1].y+parts[i-1].metrics.h);
+ assert.ok(parts.every(p=>p.size===20));assert.deepEqual(s,before);
+});
+
+test('dialogue segmentation handles nested quotes, multiline dialogue, blank lines and explicit roles',()=>{
+ const text='지문 “그는 "안녕"이라 했다.\n다시 만났다.” 뒤의 지문\n\n「다음 대사」';
+ const parts=marginSegments(text),visible=parts.filter(p=>!p.blank);
+ assert.deepEqual(visible.map(p=>text.slice(p.start,p.end)),['지문','“그는 "안녕"이라 했다.','다시 만났다.”','뒤의 지문','「다음 대사」']);
+ assert.deepEqual(visible.map(p=>p.dialogue),[false,true,true,false,true]);assert.equal(parts.filter(p=>p.blank).length,1);
+ assert.equal(marginSegments('말했다. "대사" 지문','narration').length,1);assert.equal(marginSegments('"닫히지 않은 대사')[0].dialogue,false);
+ const escaped='그는 \\"인용\\"이라고 적었다.';assert.equal(marginSegments(escaped).length,1);assert.equal(marginSegments(escaped)[0].dialogue,false);
 });
 
 test('long logs grow the page without shrinking type or overlapping header, paragraphs and footer',()=>{

@@ -26,6 +26,35 @@ export function validMargin(s){
  return true;
 }
 function textBlock(s,source){return {...source,type:'text',presentation:'plain',font:s.font,size:s.size,lineHeight:s.lineHeight,color:s.color,align:'left',bold:false,padding:0,opacity:0,group:null,runs:source.runs||[{text:source.text}]};}
+export function marginSegments(text,role='auto'){
+ const ranges=[],stack=[],pairs={'"':'"','“':'”','‘':'’','「':'」','『':'』'};let quoteStart=0;
+ if(role==='auto')for(let i=0;i<text.length;i++){
+  const ch=text[i];if(ch==='\\'){i++;continue;}
+  if(stack.length&&ch===stack.at(-1)){stack.pop();if(!stack.length)ranges.push({start:quoteStart,end:i+1});}
+  else if(pairs[ch]){if(!stack.length)quoteStart=i;stack.push(pairs[ch]);}
+ }
+ if(!text.trim())return [{start:0,end:0,dialogue:role==='dialogue'}];
+ const segments=[];let offset=0,index=0;
+ const emit=(start,end,dialogue)=>{
+  const raw=text.slice(start,end),leading=raw.match(/^\s*/)[0].length,trailing=raw.match(/\s*$/)[0].length;
+  if(raw.trim())segments.push({start:start+leading,end:end-trailing,dialogue});
+ };
+ for(const line of text.split('\n')){
+  const end=offset+line.length;
+  if(!line.trim())segments.push({start:offset,end,blank:true});
+  else if(role!=='auto')segments.push({start:offset,end,dialogue:role==='dialogue'});
+  else{
+   while(ranges[index]?.end<=offset)index++;let cursor=offset;
+   for(let i=index;i<ranges.length&&ranges[i].start<end;i++){
+    const range=ranges[i],from=Math.max(offset,range.start),to=Math.min(end,range.end);
+    emit(cursor,from,false);emit(from,to,true);cursor=to;
+   }
+   emit(cursor,end,false);
+  }
+  offset=end+1;
+ }
+ return segments;
+}
 export function marginLayout(state,measure){
  const s=marginSettings(state),width=s.width,outer=Math.min(s.outer,width/4),available=width-outer*2-s.marginWidth,bodyWidth=Math.max(80,Math.min(s.bodyWidth,available)),bodyX=outer+s.marginWidth+(available-bodyWidth)/2;
  const hs=s.headerScale/100,headerX=outer+108*hs,headerWidth=Math.max(70,width-outer-headerX),headerRows=[];
@@ -43,14 +72,13 @@ export function marginLayout(state,measure){
  const bodyTop=y,blocks=[];
  for(const source of replaceBlocks(state.blocks,state.replacementRules||[]).blocks){
   if(source.type==='line'){pending=true;continue;}
-  const options=s.blocks[source.id]||{},b=textBlock(s,source),parts=[],runs=blockRuns(b);let offset=0;
-  for(const line of b.text.split('\n')){
-   const end=offset+line.length;
-   if(!line.trim()&&b.text.trim()){y+=s.paragraphGap;offset=end+1;continue;}
-   const dialogue=options.role==='dialogue'||options.role!=='narration'&&/^[\s]*["“「『‘]/.test(line),indent=dialogue?Math.min(s.dialogueIndent,bodyWidth/4):0;
+  const options=s.blocks[source.id]||{},b=textBlock(s,source),parts=[],runs=blockRuns(b);
+  for(const segment of marginSegments(b.text,options.role||'auto')){
+   if(segment.blank){y+=s.paragraphGap;continue;}
+   const {start,end,dialogue}=segment,indent=dialogue?Math.min(s.dialogueIndent,bodyWidth/4):0;
    if(dialogue)y+=s.dialogueGap;
-   const part={...b,text:line,runs:sliceRuns(runs,offset,end),x:bodyX+indent,y,w:bodyWidth-indent};
-   part.metrics=blockMetrics(part,(text,run)=>measure(part,text,run));parts.push(part);y+=part.metrics.h+(dialogue?s.dialogueGap:0);offset=end+1;
+   const part={...b,text:b.text.slice(start,end),runs:sliceRuns(runs,start,end),x:bodyX+indent,y,w:bodyWidth-indent};
+   part.metrics=blockMetrics(part,(text,run)=>measure(part,text,run));parts.push(part);y+=part.metrics.h+(dialogue?s.dialogueGap:0);
   }
   if(!parts.length)continue;
   const section=blocks.length===0||pending||options.sectionStart;pending=false;if(section)number++;
