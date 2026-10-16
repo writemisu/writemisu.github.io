@@ -148,7 +148,7 @@ function renderList(){
 function renderOverlays(){
  renderChatAdd();
  const host=$('overlays');if(editorMode==='html'){host.replaceChildren();return;}host.querySelectorAll('.guide,.multi-selection').forEach(e=>e.remove());
- const sources=state.pngLayout==='film'?(filmGeometry||filmLayout(state,measureRun)).blocks.filter(b=>b.visible):state.blocks;
+ const sources=state.pngLayout==='film'?(filmGeometry||filmLayout(state,measureRun)).blocks:state.blocks;
  for(const child of Array.from(host.children))if(!sources.some(b=>b.id===child.dataset.id))child.remove();
  for(const b of sources){let overlay=host.querySelector('.block-overlay[data-id="'+b.id+'"]');if(!overlay){overlay=document.createElement('div');overlay.dataset.id=b.id;overlay.tabIndex=0;overlay.setAttribute('role','button');overlay.innerHTML='<span class="drag-label"></span><span class="resize-handle" data-resize="true" title="문단 너비"></span>';overlay.onpointerdown=e=>startDrag(e,b.id);overlay.ondblclick=e=>{e.preventDefault();beginInlineEdit(b.id,e);};overlay.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();beginInlineEdit(b.id);}};host.append(overlay);}overlay.className='block-overlay'+(selected.has(b.id)?' selected':'');overlay.setAttribute('aria-label',(b.type==='line'?'구분선':b.text.slice(0,40))+'. 드래그해서 이동, 더블클릭 또는 Enter로 바로 수정');overlay.hidden=inlineEdit?.mode==='png'&&inlineEdit.id===b.id;overlay.style.cssText='left:'+b.x+'px;top:'+b.y+'px;width:'+metrics(b).w+'px;height:'+metrics(b).h+'px';overlay.querySelector('.drag-label').textContent=b.group?'묶음':b.presentation==='chat'?'문자 대화':b.presentation==='notification'?'메시지 알림':b.presentation==='chapter'?'챕터 제목':'문단';overlay.querySelector('.resize-handle').hidden=!(selected.size===1&&selected.has(b.id));}
  const blocks=selection().map(displayBlock).filter(b=>b.visible!==false);if(blocks.length>1){const r=bounds(blocks),frame=document.createElement('div');frame.className='multi-selection';frame.tabIndex=0;frame.setAttribute('role','group');frame.setAttribute('aria-label','선택 문단 전체');frame.style.cssText='left:'+r.x+'px;top:'+r.y+'px;width:'+r.w+'px;height:'+r.h+'px';frame.innerHTML='<span class="resize-handle" data-resize="true" title="선택 문단 너비 함께 조절"></span>';frame.onpointerdown=e=>startDrag(e,blocks[0].id);host.append(frame);}
@@ -261,6 +261,10 @@ function renderFilmWarning(){
  const scene=filmGeometry,warning=$('filmWarning');warning.hidden=!scene?.warnings.length;
  warning.textContent=scene?.warnings.map(item=>'문단 '+(state.blocks.findIndex(b=>b.id===item.id)+1)+': '+(item.lines>3?item.lines+'줄 · 1~2줄 권장':'자막 안전 영역을 벗어났어요.')).join(' / ')||'';
 }
+const filmTextControls=[['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText']];
+const filmToggleControls=[['filmLetterbox','letterbox'],['filmPlayer','player'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']];
+const filmSliderControls=[['filmBarPercent','barPercent','%'],['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']];
+const filmTimeControls=[['filmPlayerElapsed','playerElapsed'],['filmPlayerDuration','playerDuration']];
 function renderFilmSettings(){
  const active=editorMode==='png'&&state.pngLayout==='film',s=filmSettings(state);document.body.classList.toggle('film-mode',active);
  const widthField=$('pageWidth').closest('label'),ratioField=$('filmRatio').closest('label'),widthHost=active?$('filmScreenSize'):$('pageSettings').querySelector('.field-grid');
@@ -269,11 +273,11 @@ function renderFilmSettings(){
  for(const node of document.querySelectorAll('[data-film-only]'))node.hidden=!active;
  $('pngLayout').value=state.pngLayout||'plain';$('autoLayout').textContent=active?'자막 자동 배치':'문단 자동 배치';
  if(!active)return;
- for(const [id,key] of [['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText']])if(document.activeElement!==$(id))$(id).value=s[key];
- for(const [id,key] of [['filmLetterbox','letterbox'],['filmPlayer','player'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']])$(id).checked=s[key];
- for(const [id,key,unit] of [['filmBarPercent','barPercent','%'],['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']]){$(id).value=s[key];$(id+'Value').textContent=s[key]+unit;}
+ for(const [id,key] of filmTextControls)if(document.activeElement!==$(id))$(id).value=s[key];
+ for(const [id,key] of filmToggleControls)$(id).checked=s[key];
+ for(const [id,key,unit] of filmSliderControls){$(id).value=s[key];$(id+'Value').textContent=s[key]+unit;}
  $('filmBarFields').hidden=!s.letterbox;$('filmPlayerFields').hidden=!s.player;
- for(const [id,key] of [['filmPlayerElapsed','playerElapsed'],['filmPlayerDuration','playerDuration']])if(document.activeElement!==$(id))$(id).value=playerTime(s[key]);
+ for(const [id,key] of filmTimeControls)if(document.activeElement!==$(id))$(id).value=playerTime(s[key]);
  $('filmMetadataFields').hidden=!s.metadataOn;
  $('filmUpload').innerHTML=icons.plus+'<span>'+(s.imageId?'이미지 교체':'이미지 선택')+'</span>';$('filmRemove').innerHTML=icons['trash-2'];$('filmRemove').disabled=!s.imageId;$('filmCenter').disabled=!s.imageId;
  $('filmImageStatus').textContent=!s.imageId?'선택한 이미지 없음 · 새로고침하면 다시 올려 주세요.':filmImageError?'이미지를 열지 못했어요 · 다시 선택해 주세요.':!filmImage?'이미지 불러오는 중…':s.imageName;
@@ -287,7 +291,7 @@ function renderFilmSelection(){
 }
 function startFilmDrag(e,id){
  finishInlineEdit();e.preventDefault();if(e.shiftKey||e.ctrlKey||e.metaKey){select(id,true);return;}if(!selected.has(id))select(id);
- const blocks=selection().map(displayBlock).filter(b=>b.visible);if(!blocks.length)return;
+ const blocks=selection().filter(b=>b.type==='text').map(displayBlock);if(!blocks.length)return;
  drag={film:'text',startX:e.clientX,startY:e.clientY,before:snapshot(),original:blocks.map(b=>({...b})),bounds:bounds(blocks),resize:!!e.target.dataset.resize,moved:false,zoom};document.body.style.userSelect='none';
 }
 function startFilmBackground(e){
@@ -301,7 +305,7 @@ function onFilmDrag(e){
   const gapX=page.width-drag.rect.w,gapY=page.height-drag.rect.h;
   state.film={...filmSettings(state),x:Math.abs(gapX)<1?.5:clamp(drag.origin.x+dx/gapX,0,1),y:Math.abs(gapY)<1?.5:clamp(drag.origin.y+dy/gapY,0,1)};
  }else{
-  if(!drag.moved){const all=(filmGeometry||filmLayout(state,measureRun)).blocks.filter(b=>b.visible);for(const b of all){setFilmFormat(b,'x',b.x);setFilmFormat(b,'y',b.y);}}
+  if(!drag.moved){const all=(filmGeometry||filmLayout(state,measureRun)).blocks;for(const b of all){setFilmFormat(b,'x',b.x);setFilmFormat(b,'y',b.y);}}
   const r=drag.bounds;
   if(drag.resize)for(const b of drag.original)setFilmFormat(b,'w',clamp(b.w+dx,Math.min(80,page.width-b.x),page.width-b.x));
   else{
@@ -313,7 +317,7 @@ function onFilmDrag(e){
  drag.moved=true;updateCanvas();renderOverlays();
 }
 function nudgeFilm(key,step){
- const blocks=selection().map(displayBlock).filter(b=>b.visible);if(!blocks.length)return;const page=filmSize(state);
+ const blocks=selection().filter(b=>b.type==='text').map(displayBlock);if(!blocks.length)return;const page=filmSize(state);
  change(()=>{for(const b of blocks){setFilmFormat(b,'x',clamp(b.x+(key==='ArrowLeft'?-step:key==='ArrowRight'?step:0),0,page.width-b.w));setFilmFormat(b,'y',clamp(b.y+(key==='ArrowUp'?-step:key==='ArrowDown'?step:0),0,Math.max(0,page.height-b.metrics.h)));}});
 }
 $('pngLayout').onchange=e=>{
@@ -329,10 +333,10 @@ $('filmFile').onchange=async e=>{
 };
 $('filmRemove').onclick=()=>change(()=>{state.film={...filmSettings(state),imageId:null,imageName:''};});
 $('filmCenter').onclick=()=>change(()=>{state.film={...filmSettings(state),x:.5,y:.5};});
-for(const [id,key] of [['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText']])$(id).onchange=e=>{endTyping();change(()=>setFilmSetting(key,e.target.value));};
-for(const [id,key] of [['filmLetterbox','letterbox'],['filmPlayer','player'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']])$(id).onchange=e=>change(()=>setFilmSetting(key,e.target.checked));
-for(const [id,key,unit] of [['filmBarPercent','barPercent','%'],['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']])bindSlider($(id),v=>setFilmSetting(key,v),v=>$(id+'Value').textContent=v+unit);
-for(const [id,key] of [['filmPlayerElapsed','playerElapsed'],['filmPlayerDuration','playerDuration']])$(id).onchange=e=>{
+for(const [id,key] of filmTextControls)$(id).onchange=e=>{endTyping();change(()=>setFilmSetting(key,e.target.value));};
+for(const [id,key] of filmToggleControls)$(id).onchange=e=>change(()=>setFilmSetting(key,e.target.checked));
+for(const [id,key,unit] of filmSliderControls)bindSlider($(id),v=>setFilmSetting(key,v),v=>$(id+'Value').textContent=v+unit);
+for(const [id,key] of filmTimeControls)$(id).onchange=e=>{
  const seconds=playerSeconds(e.target.value);
  if(seconds===null||seconds>86400||key==='playerDuration'&&seconds===0){e.target.value=playerTime(filmSettings(state)[key]);notify('시간은 분:초로 입력해 줘. 예: 0:15');return;}
  endTyping();change(()=>{setFilmSetting(key,seconds);state.film=filmSettings(state);});e.target.value=playerTime(filmSettings(state)[key]);
@@ -340,8 +344,8 @@ for(const [id,key] of [['filmPlayerElapsed','playerElapsed'],['filmPlayerDuratio
 function renderSettings(){
  renderFilmSettings();const html=htmlSettings(state),isHTML=editorMode==='html',film=!isHTML&&state.pngLayout==='film';
  $('backgroundTitle').textContent=isHTML?'배경 및 색상':'배경';$('color2').closest('label').hidden=!isHTML&&state.background==='solid';
- $('color1').closest('label').firstChild.textContent=isHTML?'본문 배경':film||state.background==='solid'?'바탕색':'색 1';$('color2').closest('label').firstChild.textContent=isHTML?'바깥 배경':'색 2';
- $('color1').value=isHTML?html.surface:film?filmSettings(state).background:state.colors[0];$('color2').value=isHTML?html.background:state.colors[1];
+ $('color1').closest('label').firstChild.textContent=isHTML?'본문 배경':state.background==='solid'?'바탕색':'색 1';$('color2').closest('label').firstChild.textContent=isHTML?'바깥 배경':'색 2';
+ $('color1').value=isHTML?html.surface:state.colors[0];$('color2').value=isHTML?html.background:state.colors[1];
  for(const [id,key] of [['color1','surface'],['color2','background'],['htmlTextColor','textColor'],['htmlAccent','accent'],['htmlMuted','muted'],['htmlBorder','border']]){$(id+'Value').textContent=html[key].toUpperCase();if(isHTML)$(id).value=html[key];}
  $('noise').value=state.noise;$('noiseValue').textContent=state.noise+'%';$('pageWidth').value=film?filmSettings(state).width:state.width;$('pageMargin').value=state.margin;
  for(const [id,key] of [['htmlWidth','width'],['htmlPadding','padding'],['htmlGap','gap'],['htmlAccent','accent'],['htmlMuted','muted'],['htmlBorder','border'],['htmlRadius','radius'],['htmlHeaderDecoration','headerDecoration'],['htmlFooterDecoration','footerDecoration'],['htmlDecorationLabel','decorationLabel']])$(id).value=html[key];
@@ -455,7 +459,7 @@ $('addLine').onclick=()=>change(()=>{const b=newBlock('','line');b.x=(state.widt
 $('autoLayout').onclick=()=>{change(autoLayout);notify('자동 배치 완료');};
 $('undo').onclick=()=>historyBack();$('redo').onclick=()=>historyBack(true);$('zoomOut').onclick=()=>{fitMode=false;zoom=clamp(zoom-.1,.15,1.5);updateZoom();};$('zoomIn').onclick=()=>{fitMode=false;zoom=clamp(zoom+.1,.15,1.5);updateZoom();};$('zoomLabel').onclick=()=>{fitMode=false;zoom=1;updateZoom();};$('zoomFit').onclick=()=>{fitMode=true;updateZoom();};new ResizeObserver(()=>{if(fitMode)updateZoom();}).observe($('stageScroll'));
 palettes.forEach(p=>{const button=document.createElement('button');button.className='palette';button.title=p.name;button.setAttribute('aria-label',p.name);const label=document.createElement('span');label.className='palette-name';label.textContent=p.background==='solid'?'단색':'그라데이션';button.append(label);button.style.background=p.background==='solid'?p.colors[0]:gradientCSS(p.colors);button.onclick=()=>change(()=>{state.background=p.background;state.colors=[...p.colors];state.textColor=p.text;state.noise=p.noise;state.blocks.forEach(b=>b.color=p.text);});$('palettes').append(button);});
-for(let i=0;i<2;i++)$('color'+(i+1)).onchange=e=>change(()=>{if(editorMode==='html')setHTMLSetting(i===0?'surface':'background',e.target.value);else if(state.pngLayout==='film')setFilmSetting('background',e.target.value);else state.colors[i]=e.target.value;});
+for(let i=0;i<2;i++)$('color'+(i+1)).onchange=e=>change(()=>{if(editorMode==='html')setHTMLSetting(i===0?'surface':'background',e.target.value);else state.colors[i]=e.target.value;});
 bindSlider($('noise'),v=>state.noise=v,v=>$('noiseValue').textContent=v+'%');
 $('pageWidth').onchange=e=>change(()=>{const next=clamp(+e.target.value,400,1600);if(state.pngLayout==='film'){setFilmSetting('width',next);return;}const ratio=next/state.width;state.blocks.forEach(b=>{b.x*=ratio;b.w*=ratio;});state.width=next;state.margin=Math.min(state.margin,next/3);fitHeight();});$('pageMargin').onchange=e=>change(()=>{state.margin=clamp(+e.target.value,24,Math.min(160,state.width/3));autoLayout();notify('여백 적용됨');});
 function pngOutput(requestedScale=pngScale){const page=state.pngLayout==='film'?filmSize(state):state,scale=Math.min(requestedScale,16000/page.height,Math.sqrt(16000000/(page.width*page.height)));return {width:Math.floor(page.width*scale),height:Math.floor(page.height*scale),scale};}

@@ -26,13 +26,12 @@ export function filmLayout(state,measure){
   return b;
  });
  let bottom=height-bottomInset-safe;
- for(const b of blocks.filter(b=>b.visible).reverse()){
+ for(const b of [...blocks].reverse()){
   const override=s.blocks[b.id]||{};b.y=override.y===undefined?Math.max(top,bottom-b.metrics.h):override.y*height;
   bottom=b.y-width*.018;
  }
- for(const b of blocks)if(b.y===undefined)b.y=height-bottomInset-safe-b.metrics.h;
- const warnings=blocks.filter(b=>b.visible&&(b.metrics.lines.length>3||b.x<0||b.x+b.metrics.w>width||b.y<top||b.y+b.metrics.h>height-bottomInset-safe+1)).map(b=>({id:b.id,lines:b.metrics.lines.length}));
- return {width,height,scale,bar,playerHeight,bottomInset,metadataY,safe,blocks,warnings};
+ const warnings=blocks.filter(b=>(b.metrics.lines.length>3||b.x<0||b.x+b.metrics.w>width||b.y<top||b.y+b.metrics.h>height-bottomInset-safe+1)).map(b=>({id:b.id,lines:b.metrics.lines.length}));
+ return {width,height,scale,bar,metadataY,safe,blocks,warnings};
 }
 
 let backgroundCache,grainCache;
@@ -62,7 +61,7 @@ export function paintFilm(target,state,image,layout,scale=1,editingId=null){
  c.save();c.setTransform(scale,0,0,scale,0,0);c.clearRect(0,0,width,height);c.beginPath();c.roundRect(0,0,width,height,12*layout.scale);c.clip();c.drawImage(filmBackground(state,image,layout),0,0);
  c.textAlign='left';c.textBaseline='alphabetic';c.lineJoin='round';
  for(const b of layout.blocks){
-  if(!b.visible||b.id===editingId)continue;const m=b.metrics,h=b.size*b.lineHeight;
+  if(b.id===editingId)continue;const m=b.metrics,h=b.size*b.lineHeight;
   c.font=(b.bold?'700':'400')+' '+b.size+'px '+fonts[b.font];const sample=c.measureText('한글Ag'),ascent=sample.actualBoundingBoxAscent||b.size*.8,descent=sample.actualBoundingBoxDescent||b.size*.2;
   for(let i=0;i<m.lines.length;i++){
    const y=b.y+m.paddingY+i*h+(h-ascent-descent)/2+ascent;

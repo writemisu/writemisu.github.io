@@ -13,7 +13,7 @@ export function playerTime(seconds){const h=Math.floor(seconds/3600),m=Math.floo
 export function playerSeconds(text){const parts=text.trim().split(':');return parts.length>=2&&parts.length<=3&&/^\d+(?::[0-5]\d){1,2}$/.test(text.trim())?parts.reduce((total,n)=>total*60+Number(n),0):null;}
 export function paintFilmPlayer(c,s,layout){
  const {width,height,scale}=layout,pad=15*scale,y=height-43*scale,end=width-pad,position=pad+(end-pad)*s.playerElapsed/s.playerDuration;
- c.save();c.fillStyle='#090909';c.fillRect(0,height-layout.playerHeight,width,layout.playerHeight);
+ c.save();
  c.lineCap='round';c.lineWidth=2.5*scale;c.strokeStyle='#666666';c.beginPath();c.moveTo(pad,y);c.lineTo(end,y);c.stroke();
  c.strokeStyle='#ff1744';c.beginPath();c.moveTo(pad,y);c.lineTo(position,y);c.stroke();c.fillStyle='#ff1744';c.beginPath();c.arc(position,y,3.5*scale,0,Math.PI*2);c.fill();
  const row=height-22*scale,size=17*scale;
