@@ -261,7 +261,7 @@ function renderFilmWarning(){
  const scene=filmGeometry,warning=$('filmWarning');warning.hidden=!scene?.warnings.length;
  warning.textContent=scene?.warnings.map(item=>'문단 '+(state.blocks.findIndex(b=>b.id===item.id)+1)+': '+(item.lines>3?item.lines+'줄 · 1~2줄 권장':'자막 안전 영역을 벗어났어요.')).join(' / ')||'';
 }
-const filmTextControls=[['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText']];
+const filmTextControls=[['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText'],['filmPlayerTitle','playerTitle']];
 const filmToggleControls=[['filmLetterbox','letterbox'],['filmPlayer','player'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']];
 const filmSliderControls=[['filmBarPercent','barPercent','%'],['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']];
 const filmTimeControls=[['filmPlayerElapsed','playerElapsed'],['filmPlayerDuration','playerDuration']];

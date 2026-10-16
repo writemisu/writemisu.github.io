@@ -8,7 +8,7 @@ const bounded=(n,fallback,min,max)=>Number.isFinite(n)?Math.max(min,Math.min(max
 const ratios={'16:9':16/9,'2.39:1':2.39,'4:5':4/5};
 export function filmSettings(state){
  const f=state.film||{},playerDuration=Math.round(bounded(f.playerDuration,15,1,86400)),metadataOn=f.metadataOn??(f.sceneOn!==false||f.timecodeOn!==false),leftText=f.leftText??(f.sceneOn===false?'':'SCENE '+(f.scene??'04')+' / TAKE '+(f.take??'02')),rightText=f.rightText??(f.timecodeOn===false?'':f.timecode??'00:02:17:08');
- return {width:bounded(f.width,state.width||800,400,1600),ratio:Object.hasOwn(ratios,f.ratio)?f.ratio:'16:9',background:f.background||state.colors?.[0]||'#18212b',imageId:f.imageId||null,imageName:f.imageName||'',fit:f.fit==='contain'?'contain':'cover',x:bounded(f.x,.5,0,1),y:bounded(f.y,.5,0,1),blur:bounded(f.blur,2,0,20),darken:bounded(f.darken,28,0,80),letterbox:f.letterbox!==false,barPercent:bounded(f.barPercent,9,0,25),player:f.player===true,playerDuration,playerElapsed:Math.round(bounded(f.playerElapsed,Math.min(2,playerDuration),0,playerDuration)),metadataOn,leftText,rightText,grain:bounded(f.grain,11,0,30),vignette:bounded(f.vignette,20,0,80),size:bounded(f.size,24,1,200),outline:bounded(f.outline,2,0,6),shadow:f.shadow!==false,blocks:f.blocks||{}};
+ return {width:bounded(f.width,state.width||800,400,1600),ratio:Object.hasOwn(ratios,f.ratio)?f.ratio:'16:9',background:f.background||state.colors?.[0]||'#18212b',imageId:f.imageId||null,imageName:f.imageName||'',fit:f.fit==='contain'?'contain':'cover',x:bounded(f.x,.5,0,1),y:bounded(f.y,.5,0,1),blur:bounded(f.blur,2,0,20),darken:bounded(f.darken,28,0,80),letterbox:f.letterbox!==false,barPercent:bounded(f.barPercent,9,0,25),player:f.player===true,playerTitle:f.playerTitle??'',playerDuration,playerElapsed:Math.round(bounded(f.playerElapsed,Math.min(2,playerDuration),0,playerDuration)),metadataOn,leftText,rightText,grain:bounded(f.grain,11,0,30),vignette:bounded(f.vignette,20,0,80),size:bounded(f.size,24,1,200),outline:bounded(f.outline,2,0,6),shadow:f.shadow!==false,blocks:f.blocks||{}};
 }
 export function filmSize(state){const s=filmSettings(state);return {width:s.width,height:Math.round(s.width/ratios[s.ratio])};}
 export function filmImageRect(image,width,height,fit='cover',x=.5,y=.5){
@@ -91,7 +91,7 @@ export function validFilm(f){
  for(const [key,[min,max]] of Object.entries(numbers))if(f[key]!==undefined&&(!Number.isFinite(f[key])||f[key]<min||f[key]>max))return false;
  if(['playerElapsed','playerDuration'].some(k=>f[k]!==undefined&&!Number.isInteger(f[k])))return false;
  if(f.ratio!==undefined&&!Object.hasOwn(ratios,f.ratio)||f.fit!==undefined&&!['cover','contain'].includes(f.fit))return false;
- if(['letterbox','player','metadataOn','sceneOn','timecodeOn','shadow'].some(k=>f[k]!==undefined&&typeof f[k]!=='boolean')||['leftText','rightText','scene','take','timecode','imageName'].some(k=>f[k]!==undefined&&typeof f[k]!=='string'))return false;
+ if(['letterbox','player','metadataOn','sceneOn','timecodeOn','shadow'].some(k=>f[k]!==undefined&&typeof f[k]!=='boolean')||['leftText','rightText','playerTitle','scene','take','timecode','imageName'].some(k=>f[k]!==undefined&&typeof f[k]!=='string'))return false;
  if(f.imageId!=null&&typeof f.imageId!=='string'||f.background!==undefined&&!/^#[\da-f]{6}$/i.test(f.background))return false;
  if(f.blocks!==undefined){
   if(!f.blocks||typeof f.blocks!=='object'||Array.isArray(f.blocks))return false;
