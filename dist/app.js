@@ -167,12 +167,12 @@ function inheritParagraphFormat(block){
 }
 function copyParagraphFormat(){
  finishInlineEdit();endTyping();const blocks=selectedTextBlocks();if(blocks.length!==1)return;
- const film=editorMode==='png'&&state.pngLayout==='film';copiedParagraphFormats[film?'film':editorMode]=paragraphFormat(state,film?displayBlock(blocks[0]):blocks[0],editorMode);renderTypography();notify('문단 서식을 복사했어요. 적용할 문단을 선택해 주세요.');
+ const film=editorMode==='png'&&state.pngLayout==='film';copiedParagraphFormats[film?'film':editorMode]=paragraphFormat(state,film?displayBlock(blocks[0]):blocks[0],editorMode);renderTypography();notify('서식 복사 완료');
 }
 function pasteParagraphFormat(){
  finishInlineEdit();endTyping();const film=editorMode==='png'&&state.pngLayout==='film',format=copiedParagraphFormats[film?'film':editorMode],blocks=selectedTextBlocks();if(!format||!blocks.length)return;
  change(()=>{for(const b of blocks){if(film){for(const [key,value] of Object.entries(format))setFilmFormat(b,key,key==='w'?Math.min(value,filmSize(state).width-filmView(b).x):value);}else{applyParagraphFormat(b,format,editorMode);if(editorMode==='png')b.w=Math.min(b.w,state.width-b.x);}}});
- notify(blocks.length+'개 문단에 서식을 붙여넣었어요.');
+ notify(blocks.length+'개 문단 서식 적용');
 }
 function quoteSettings(){return (editorMode==='html'?htmlSettings(state).quoteStyle:undefined)||state.quoteStyle||{enabled:false,color:null,highlight:editorMode==='html'?htmlSettings(state).accent:state.textColor,highlightOpacity:8,bold:false,italic:false,underline:false,strike:false};}
 function setQuoteSettings(value){if(editorMode==='html')setHTMLSetting('quoteStyle',value);else state.quoteStyle=value;}
@@ -189,7 +189,7 @@ function renderQuoteSettings(){
 function renderTypography(){const blocks=formatTargets(),b=displayBlock(blocks[0]||{font:preferredFont,size:defaultFontSize(preferredFont),lineHeight:1.85,color:state.textColor,box:'#ffffff',bold:false,opacity:0,align:'left'}),colors=presentationColors(b),host=$('typographyControls'),advancedOpen=!!host.querySelector('.typography-advanced[open]');
  host.innerHTML=`<label class="full-field">글꼴<select id="blockFont"><optgroup label="본문"><option value="kopubDotum">코펍돋움</option><option value="kopubBatang">코펍바탕</option><option value="pretendard">프리텐다드</option><option value="noto">Noto Serif KR</option></optgroup><optgroup label="헤더"><option value="freesentation">프리젠테이션</option></optgroup></select></label><label class="range-label">글자 크기<output id="fontSizeValue">${Math.round(b.size*75)/100}pt</output><input id="fontSize" aria-label="글자 크기" type="range" min="9" max="75" step=".5" value="${b.size*3/4}"></label><label class="range-label">행간<output id="lineHeightValue">${b.lineHeight.toFixed(2)}배</output><input id="lineHeight" aria-label="행간" type="range" min="1" max="3" step=".05" value="${b.lineHeight}"></label><div class="alignment-control"><h4>정렬</h4><div class="segmented" role="tablist" aria-label="정렬 방식"><button id="textAlignTab" role="tab" aria-controls="alignmentButtons">글 정렬</button><button id="layerAlignTab" role="tab" aria-controls="alignmentButtons">레이어 정렬</button></div><div id="alignmentButtons" class="align-buttons" role="tabpanel"></div></div><details class="typography-advanced"><summary>색과 박스 설정</summary><div class="color-row"><label>글자 색<input id="textColor" type="color" value="${colors.color}"></label><label>박스 색<input id="boxColor" type="color" value="${colors.box}"></label></div><label class="range-label">박스 불투명도<output id="opacityValue">${colors.opacity}%</output><input id="boxOpacity" type="range" min="0" max="100" value="${colors.opacity}"></label></details>`;
  const title=$('typographyGroup').querySelector('summary');title.querySelector('.paragraph-format-tools')?.remove();
- const tools=document.createElement('div');tools.className='paragraph-format-tools';tools.setAttribute('role','group');tools.setAttribute('aria-label','문단 서식');tools.innerHTML='<button type="button" id="copyParagraphFormat" aria-label="문단 서식 복사" title="서식 복사 · 문단 하나 선택">'+icons.copy+'</button><button type="button" id="pasteParagraphFormat" aria-label="문단 서식 붙여넣기" title="선택한 문단에 서식 붙여넣기">'+icons['clipboard-paste']+'</button>';title.insertBefore(tools,title.querySelector('.summary-chevron'));tools.onclick=e=>e.stopPropagation();
+ const tools=document.createElement('div');tools.className='paragraph-format-tools';tools.setAttribute('role','group');tools.setAttribute('aria-label','문단 서식');tools.innerHTML='<button type="button" id="copyParagraphFormat" aria-label="문단 서식 복사" title="문단 서식 복사">'+icons.copy+'</button><button type="button" id="pasteParagraphFormat" aria-label="문단 서식 붙여넣기" title="선택한 문단에 서식 붙여넣기">'+icons['clipboard-paste']+'</button>';title.insertBefore(tools,title.querySelector('.summary-chevron'));tools.onclick=e=>e.stopPropagation();
  if(selectedTextBlocks().length>1)host.insertAdjacentHTML('afterbegin','<p class="paragraph-format-selection">'+selectedTextBlocks().length+'개 문단 선택</p>');
  host.querySelector('.typography-advanced').open=advancedOpen;
  if(editorMode==='png'&&state.pngLayout==='film')host.querySelector('.typography-advanced>summary').textContent='자막 색';
@@ -253,13 +253,13 @@ function setFilmFormat(b,key,value){
 function requestFilmImage(){
  const id=filmSettings(state).imageId;if(id===filmImageId)return filmImagePromise;
  filmImage?.close();filmImage=null;filmImageId=id;filmImageError=false;
- filmImagePromise=id?readFilmImage(id).then(image=>{if(filmImageId!==id){image.close();return;}filmImage=image;}).catch(()=>{if(filmImageId===id){filmImageError=true;notify('배경 이미지를 불러오지 못했어. 이미지를 다시 선택해 줘.');}}).finally(()=>{if(filmImageId===id){renderFilmSettings();scheduleDraw();}}):Promise.resolve();
+ filmImagePromise=id?readFilmImage(id).then(image=>{if(filmImageId!==id){image.close();return;}filmImage=image;}).catch(()=>{if(filmImageId===id){filmImageError=true;notify('배경 이미지 불러오기 실패');}}).finally(()=>{if(filmImageId===id){renderFilmSettings();scheduleDraw();}}):Promise.resolve();
  return filmImagePromise;
 }
 async function ensureFilmImage(){await requestFilmImage();if(filmSettings(state).imageId&&(!filmImage||filmImageId!==filmSettings(state).imageId))throw Error('배경 이미지가 준비되지 않음');}
 function renderFilmWarning(){
  const scene=filmGeometry,warning=$('filmWarning');warning.hidden=!scene?.warnings.length;
- warning.textContent=scene?.warnings.map(item=>'문단 '+(state.blocks.findIndex(b=>b.id===item.id)+1)+': '+(item.lines>3?item.lines+'줄 · 1~2줄 권장':'자막 안전 영역을 벗어났어요.')).join(' / ')||'';
+ warning.textContent=scene?.warnings.map(item=>'문단 '+(state.blocks.findIndex(b=>b.id===item.id)+1)+': '+(item.lines>3?item.lines+'줄 · 1~2줄 권장':'자막 안전 영역 벗어남')).join(' / ')||'';
 }
 const filmTextControls=[['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText'],['filmPlayerTitle','playerTitle']];
 const filmToggleControls=[['filmLetterbox','letterbox'],['filmPlayer','player'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']];
@@ -276,17 +276,17 @@ function renderFilmSettings(){
  for(const [id,key] of filmTextControls)if(document.activeElement!==$(id))$(id).value=s[key];
  for(const [id,key] of filmToggleControls)$(id).checked=s[key];
  for(const [id,key,unit] of filmSliderControls){$(id).value=s[key];$(id+'Value').textContent=s[key]+unit;}
- $('filmBarFields').hidden=!s.letterbox;$('filmPlayerFields').hidden=!s.player;
+ $('filmBarFields').hidden=!s.letterbox;$('filmPlayerFields').hidden=!s.player;$('filmPlayerTimes').hidden=!s.player;
  for(const [id,key] of filmTimeControls)if(document.activeElement!==$(id))$(id).value=playerTime(s[key]);
  $('filmMetadataFields').hidden=!s.metadataOn;
  $('filmUpload').innerHTML=icons.plus+'<span>'+(s.imageId?'이미지 교체':'이미지 선택')+'</span>';$('filmRemove').innerHTML=icons['trash-2'];$('filmRemove').disabled=!s.imageId;$('filmCenter').disabled=!s.imageId;
- $('filmImageStatus').textContent=!s.imageId?'선택한 이미지 없음 · 새로고침하면 다시 올려 주세요.':filmImageError?'이미지를 열지 못했어요 · 다시 선택해 주세요.':!filmImage?'이미지 불러오는 중…':s.imageName;
+ $('filmImageStatus').textContent=!s.imageId?'이미지 미선택':filmImageError?'이미지 불러오기 실패':!filmImage?'이미지 불러오는 중':'이미지: '+s.imageName;
  renderFilmWarning();
 }
 function renderFilmSelection(){
  const blocks=selection().filter(b=>b.type==='text'),host=$('selectionControls');host.replaceChildren();$('selectionPanel').hidden=!blocks.length;if(!blocks.length)return;
  $('selectionTitle').textContent=blocks.length>1?blocks.length+'개 자막':'선택한 자막';const b=filmView(blocks[0]),page=filmSize(state),max=Math.max(20,page.width-b.x),min=Math.min(80,max);
- host.innerHTML='<label class="range-label">자막 너비<output id="filmWidthValue">'+Math.round(b.w)+'px</output><input id="filmBlockWidth" type="range" min="'+min+'" max="'+max+'" value="'+b.w+'"></label><p class="film-hint">지면에서 드래그하면 자막 위치를 바꿔요. Shift를 누르면 높이를 유지해요.</p>';
+ host.innerHTML='<label class="range-label">자막 너비<output id="filmWidthValue">'+Math.round(b.w)+'px</output><input id="filmBlockWidth" type="range" min="'+min+'" max="'+max+'" value="'+b.w+'"></label>';
  bindSlider($('filmBlockWidth'),v=>blocks.forEach(source=>setFilmFormat(source,'w',Math.min(v,page.width-filmView(source).x))),v=>$('filmWidthValue').textContent=v+'px');
 }
 function startFilmDrag(e,id){
@@ -328,7 +328,7 @@ $('filmUpload').onclick=()=>$('filmFile').click();
 $('filmFile').onchange=async e=>{
  const file=e.target.files[0];if(!file)return;$('filmUpload').disabled=true;
  try{const id=await storeFilmImage(file);finishInlineEdit();endTyping();change(()=>{state.film={...filmSettings(state),imageId:id,imageName:file.name,x:.5,y:.5};});}
- catch{notify('이미지를 열지 못했어. PNG·JPG·WebP 등 이미지 파일을 선택해 줘.');}
+ catch{notify('이미지 불러오기 실패');}
  finally{e.target.value='';$('filmUpload').disabled=false;}
 };
 $('filmRemove').onclick=()=>change(()=>{state.film={...filmSettings(state),imageId:null,imageName:''};});
@@ -338,7 +338,7 @@ for(const [id,key] of filmToggleControls)$(id).onchange=e=>change(()=>setFilmSet
 for(const [id,key,unit] of filmSliderControls)bindSlider($(id),v=>setFilmSetting(key,v),v=>$(id+'Value').textContent=v+unit);
 for(const [id,key] of filmTimeControls)$(id).onchange=e=>{
  const seconds=playerSeconds(e.target.value);
- if(seconds===null||seconds>86400||key==='playerDuration'&&seconds===0){e.target.value=playerTime(filmSettings(state)[key]);notify('시간은 분:초로 입력해 줘. 예: 0:15');return;}
+ if(seconds===null||seconds>86400||key==='playerDuration'&&seconds===0){e.target.value=playerTime(filmSettings(state)[key]);notify('시간 형식 오류');return;}
  endTyping();change(()=>{setFilmSetting(key,seconds);state.film=filmSettings(state);});e.target.value=playerTime(filmSettings(state)[key]);
 };
 function renderSettings(){
@@ -452,8 +452,8 @@ function addChatBubble(){
 }
 const addChat=document.createElement('button');addChat.id='addChat';addChat.type='button';addChat.className='stage-chat-add';addChat.hidden=true;addChat.innerHTML=icons.plus+'<span>말풍선</span>';addChat.onclick=addChatBubble;$('stageScroll').append(addChat);
 const fontLoads=new Map();
-function loadUsedFonts(){const jobs=[];for(const source of state.blocks){const b=displayBlock(source);if(b.type!=='text')continue;const family=fonts[b.font]||fonts.noto,weights=new Set([400,...(b.presentation==='chapter'||b.presentation==='notification'&&b.messageSender||quoteSettings().enabled&&quoteSettings().bold?[700]:[]),...blockRuns(b).map(r=>r.bold||b.bold?700:400)]);for(const weight of weights){const key=family+':'+weight;if(!fontLoads.has(key)){const job=document.fonts.load(weight+' 22px '+family,b.text||'한글').then(()=>{metricCache.clear();scheduleDraw();}).catch(error=>{notify('글꼴을 불러오지 못했어. 연결을 확인해 줘.');throw error;});fontLoads.set(key,job);job.catch(()=>{});}jobs.push(fontLoads.get(key));}}return Promise.all(jobs);}
-function insertParagraphs(text,{eachLine=false,append=false}={}){const paragraphs=splitParagraphs(text,eachLine);if(!paragraphs.length){notify('붙여 넣을 글을 입력하세요.');return false;}change(()=>{const fresh=paragraphs.map(t=>newBlock(t)),color=state.blocks.find(b=>b.type==='text')?.color||state.textColor;fresh.forEach(b=>{b.w=bodyWidth();b.color=color;});if(append&&!state.demo){let y=Math.max(state.margin,...state.blocks.map(b=>b.y+metrics(b).h+32));fresh.forEach(b=>{b.x=(state.width-bodyWidth())/2;b.y=y;y+=metrics(b).h+32;});state.blocks.push(...fresh);fitHeight();}else{state.blocks=editorMode==='html'?[...state.blocks.filter(b=>b.htmlTabId!==activeHTMLTab),...fresh]:fresh;if(editorMode==='png')autoLayout();}state.demo=false;selected=new Set([fresh[0].id]);});$('stageScroll').scrollTop=0;notify(`${paragraphs.length}개 문단 추가됨`);return true;}
+function loadUsedFonts(){const jobs=[];for(const source of state.blocks){const b=displayBlock(source);if(b.type!=='text')continue;const family=fonts[b.font]||fonts.noto,weights=new Set([400,...(b.presentation==='chapter'||b.presentation==='notification'&&b.messageSender||quoteSettings().enabled&&quoteSettings().bold?[700]:[]),...blockRuns(b).map(r=>r.bold||b.bold?700:400)]);for(const weight of weights){const key=family+':'+weight;if(!fontLoads.has(key)){const job=document.fonts.load(weight+' 22px '+family,b.text||'한글').then(()=>{metricCache.clear();scheduleDraw();}).catch(error=>{notify('글꼴 불러오기 실패');throw error;});fontLoads.set(key,job);job.catch(()=>{});}jobs.push(fontLoads.get(key));}}return Promise.all(jobs);}
+function insertParagraphs(text,{eachLine=false,append=false}={}){const paragraphs=splitParagraphs(text,eachLine);if(!paragraphs.length){notify('입력된 글 없음');return false;}change(()=>{const fresh=paragraphs.map(t=>newBlock(t)),color=state.blocks.find(b=>b.type==='text')?.color||state.textColor;fresh.forEach(b=>{b.w=bodyWidth();b.color=color;});if(append&&!state.demo){let y=Math.max(state.margin,...state.blocks.map(b=>b.y+metrics(b).h+32));fresh.forEach(b=>{b.x=(state.width-bodyWidth())/2;b.y=y;y+=metrics(b).h+32;});state.blocks.push(...fresh);fitHeight();}else{state.blocks=editorMode==='html'?[...state.blocks.filter(b=>b.htmlTabId!==activeHTMLTab),...fresh]:fresh;if(editorMode==='png')autoLayout();}state.demo=false;selected=new Set([fresh[0].id]);});$('stageScroll').scrollTop=0;notify(`${paragraphs.length}개 문단 추가됨`);return true;}
 $('addText').onclick=()=>{finishInlineEdit();endTyping();change(()=>{const b=inheritParagraphFormat(newBlock());b.x=(state.width-b.w)/2;b.y=Math.max(state.margin,...state.blocks.map(x=>x.y+metrics(x).h+32));b.auto=!state.blocks.some(x=>x.auto===false);state.blocks.push(b);selected=new Set([b.id]);});editBlock(state.blocks.at(-1).id);};
 $('addLine').onclick=()=>change(()=>{const b=newBlock('','line');b.x=(state.width-bodyWidth())/2;b.w=bodyWidth()/3;b.color=state.blocks[0]?.color||'#f4eee2';b.y=Math.max(state.margin,...state.blocks.map(x=>x.y+metrics(x).h+24));state.blocks.push(b);selected=new Set([b.id]);alignmentMode='layer';});
 $('autoLayout').onclick=()=>{change(autoLayout);notify('자동 배치 완료');};
@@ -470,7 +470,7 @@ function renderPNGOptions(){
 $('pngScaleMenu').addEventListener('beforetoggle',e=>{if(e.newState!=='open')return;renderPNGOptions();const menu=$('pngScaleMenu'),r=$('pngScale').getBoundingClientRect(),width=Math.min(220,innerWidth-16);menu.style.width=width+'px';menu.style.left=Math.max(8,Math.min(r.left,innerWidth-width-8))+'px';menu.style.top=r.bottom+8+'px';});
 for(const button of $('pngScaleMenu').querySelectorAll('[data-png-scale]'))button.onclick=()=>{pngScale=+button.dataset.pngScale;try{localStorage.setItem('writemisu-png-scale',String(pngScale));}catch{}renderPNGOptions();$('pngScaleMenu').hidePopover();$('pngScale').focus({preventScroll:true});};
 window.addEventListener('resize',()=>$('pngScaleMenu').hidePopover());
-async function savePNG(){finishInlineEdit();const exportScale=pngScale,button=$('savePNG');button.disabled=true;button.textContent='저장 준비 중…';try{if(state.pngLayout==='film')await ensureFilmImage();await loadUsedFonts();await document.fonts.ready;updateCanvas();await new Promise(requestAnimationFrame);const {width,height,scale}=pngOutput(exportScale),output=document.createElement('canvas');output.width=width;output.height=height;paint(output,scale);const blob=await new Promise((resolve,reject)=>output.toBlob(b=>b?resolve(b):reject(Error('PNG 생성 실패')),'image/png'));const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='작성미수-'+new Date().toISOString().slice(0,10)+'.png';link.click();setTimeout(()=>URL.revokeObjectURL(url),60000);notify(`PNG 저장을 시작했어요. ${output.width} × ${output.height}px`);output.width=output.height=1;}catch(error){notify('PNG를 저장하지 못했어요. 글을 나눠서 다시 시도해 주세요.');console.error(error);}finally{button.disabled=false;button.innerHTML=saveButtonContent;}}
+async function savePNG(){finishInlineEdit();const exportScale=pngScale,button=$('savePNG');button.disabled=true;button.textContent='저장 준비 중…';try{if(state.pngLayout==='film')await ensureFilmImage();await loadUsedFonts();await document.fonts.ready;updateCanvas();await new Promise(requestAnimationFrame);const {width,height,scale}=pngOutput(exportScale),output=document.createElement('canvas');output.width=width;output.height=height;paint(output,scale);const blob=await new Promise((resolve,reject)=>output.toBlob(b=>b?resolve(b):reject(Error('PNG 생성 실패')),'image/png'));const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='작성미수-'+new Date().toISOString().slice(0,10)+'.png';link.click();setTimeout(()=>URL.revokeObjectURL(url),60000);notify(`PNG 저장 시작 · ${output.width} × ${output.height}px`);output.width=output.height=1;}catch(error){notify('PNG 저장 실패');console.error(error);}finally{button.disabled=false;button.innerHTML=saveButtonContent;}}
 for(const [id,name,label] of [['addText','plus','문단 추가'],['addLine','minus','구분선']])$(id).innerHTML=icons[name]+'<span>'+label+'</span>';
 for(const [id,name] of [['addReplacement','plus'],['zoomOut','minus'],['zoomIn','plus']])$(id).innerHTML=icons[name];
 $('pngScale').querySelector('.presentation-chevron').innerHTML=icons['chevron-down'];
@@ -499,7 +499,7 @@ function bindHTMLChatDrag(body){
 }
 function renderHTMLPreview(){
  const html=exportHTML(state),settings=htmlSettings(state),frame=$('htmlPreview');
- $('htmlCode').value=html;$('htmlSizeLabel').textContent='최대 '+settings.width+'px · HTML + 인라인';frame.style.maxWidth=settings.width+'px';
+ $('htmlCode').value=html;$('htmlSizeLabel').textContent=settings.width+'px';frame.style.maxWidth=settings.width+'px';
  const body=frame.contentDocument?.body;if(!body||!frame.dataset.ready)return;
  if(inlineEdit?.mode==='html'){resizeHTMLPreview();return;}
  htmlPreviewObserver?.disconnect();body.innerHTML=exportHTML(state,{preview:true,selectedLine:htmlLineSelection});
@@ -548,8 +548,8 @@ async function copyHTML(formatted=false){
  try{
   if(formatted){const doc=new DOMParser().parseFromString(html,'text/html');await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([doc.body.textContent],{type:'text/plain'})})]);}
   else await navigator.clipboard.writeText(html);
-  notify(formatted?'서식 복사됨 · 웹편집기에 붙여넣기':'HTML 복사됨 · HTML 입력 모드에 붙여넣기');
- }catch{setHTMLView(true);$('htmlCode').value=html;$('htmlCode').focus();$('htmlCode').select();notify('클립보드 접근이 막혔어. 선택된 코드를 Ctrl+C로 복사해.');}
+  notify(formatted?'서식 복사 완료':'HTML 복사 완료');
+ }catch{setHTMLView(true);$('htmlCode').value=html;$('htmlCode').focus();$('htmlCode').select();notify('클립보드 접근 차단');}
 }
 $('copyHTML').onclick=()=>copyHTML();$('copyRichHTML').onclick=()=>copyHTML(true);
 const sidebar=$('editorSidebar'),sidebarResize=$('sidebarResize'),workspace=sidebar.parentElement;
@@ -583,7 +583,7 @@ function flushDraft(){
  const saved=writeDraft(()=>localStorage,data),sessionSaved=writeDraft(()=>sessionStorage,saved?data:JSON.stringify({...draft,pending:true}));
  if(!sessionSaved){try{sessionStorage.removeItem('writemisu-draft-v1');}catch{}}
  draftDirty=!saved;draftStatus(saved?'임시저장됨':'임시저장 실패',!saved);
- if(!saved&&!draftErrorShown){draftErrorShown=true;notify('임시저장을 사용할 수 없어. 탭을 닫기 전에 내용을 복사해 둬.');}if(saved)draftErrorShown=false;
+ if(!saved&&!draftErrorShown){draftErrorShown=true;notify('임시저장 사용 불가');}if(saved)draftErrorShown=false;
  return saved;
 }
 document.addEventListener('compositionstart',e=>{composingInput=e.target.closest('.paragraph-input');});
