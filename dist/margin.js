@@ -4,10 +4,11 @@ import {blockRuns,sliceRuns,positionedRuns,fillTextWithSpaces} from './richtext.
 import {replaceBlocks} from './replace.js';
 
 const limits={width:[400,1600],outer:[16,160],bodyWidth:[120,1400],marginWidth:[24,180],texture:[0,60],size:[12,64],lineHeight:[1,3],paragraphGap:[0,100],dialogueIndent:[0,64],dialogueGap:[0,64],headerScale:[50,150],headerGap:[0,120]};
-const defaults={outer:44,bodyWidth:560,marginWidth:76,background:'#eee8d8',color:'#383027',muted:'#968a75',frameColor:'#baad91',accent:'#a89775',numberColor:'#8c806b',texture:10,font:'kopubBatang',size:20,lineHeight:1.85,paragraphGap:22,dialogueIndent:6,dialogueGap:8,frame:true,corners:true,header:true,chapter:'01',subtitle:'THE THINGS WE NEVER SAID',title:'비가 그친 자리',description:'젖은 거리와, 끝내 건네지 못한 말들에 대하여.',headerScale:100,headerGap:36,chapterStar:true,numbers:true,diamonds:true,guide:true,footer:true,footerText:'THE SPACE BETWEEN US',page:true,pageText:'01 — 01',footerStar:true,footerLine:true};
+const defaults={outer:44,bodyWidth:560,marginWidth:62,background:'#eee8d8',color:'#383027',muted:'#968a75',frameColor:'#baad91',accent:'#a89775',numberColor:'#8c806b',texture:15,font:'kopubBatang',size:20,lineHeight:1.85,paragraphGap:22,dialogueIndent:8,dialogueGap:2,frame:true,corners:true,header:true,chapter:'01',subtitle:'THE THINGS WE NEVER SAID',title:'비가 그친 자리',description:'젖은 거리와, 끝내 건네지 못한 말들에 대하여.',headerScale:100,headerGap:36,chapterStar:true,numbers:true,diamonds:true,guide:true,footer:true,footerText:'THE SPACE BETWEEN US',page:true,pageText:'01 — 01',footerStar:true,footerLine:true};
 export function marginSettings(state){
  const stored=state.marginLayout||{},s={...defaults,width:state.width||800,...stored,blocks:stored.blocks||{}};
  for(const [key,[min,max]] of Object.entries(limits)){const value=s[key];s[key]=Number.isFinite(value)?Math.max(min,Math.min(max,value)):defaults[key]??800;}
+ s.texture=15;s.paragraphGap=22;s.dialogueIndent=8;s.dialogueGap=2;s.marginWidth=62;s.corners=s.frame;s.diamonds=s.numbers;s.chapterStar=true;s.footerStar=true;s.page=true;
  s.outer=Math.min(s.outer,s.width/4);s.marginWidth=Math.min(s.marginWidth,Math.max(24,s.width-s.outer*2-120));s.bodyWidth=Math.min(s.bodyWidth,s.width-s.outer*2-s.marginWidth);
  return s;
 }
@@ -87,7 +88,7 @@ export function marginLayout(state,measure){
   blocks.push(b);y+=s.paragraphGap;
  }
  const bodyBottom=blocks.length?y-s.paragraphGap:bodyTop,footerY=bodyBottom+40;
- const footerHeight=s.footer?Math.max(s.footerLine||s.footerStar?20:0,s.footerText||s.page?42:0):0;
+ const footerHeight=s.footer?30:0;
  return {width,height:Math.ceil((s.footer?footerY+footerHeight:bodyBottom)+outer),outer,bodyX,bodyWidth,bodyTop,bodyBottom,headerHeight,headerX,headerRows,footerY,blocks};
 }
 function star(c,x,y,size){
@@ -117,7 +118,7 @@ export function paintMargin(target,state,layout,background,scale=1,editingId=nul
  c.save();c.setTransform(scale,0,0,scale,0,0);c.clearRect(0,0,g.width,g.height);c.drawImage(background,0,0,g.width,g.height);c.textAlign='left';c.textBaseline='top';frame(c,s,g.width,g.height);
  if(s.header){
   c.fillStyle=s.muted;c.font=(9*hs)+'px Georgia,serif';tracked(c,'CHAPTER',g.outer,g.outer+2*hs,1.6*hs);
-  c.font=(62*hs)+'px Georgia,serif';c.fillText(s.chapter,g.outer,g.outer+16*hs,82*hs);
+  c.font=(62*hs)+'px "Times New Roman",Times,serif';c.fillText(s.chapter,g.outer,g.outer+16*hs,82*hs);
   c.fillStyle=s.accent;if(s.chapterStar)star(c,g.outer+33*hs,g.outer+99*hs,11*hs);
   c.strokeStyle=s.frameColor;c.lineWidth=.8;c.beginPath();c.moveTo(g.headerX-24*hs,g.outer);c.lineTo(g.headerX-24*hs,g.outer+g.headerHeight);c.stroke();
   for(const row of g.headerRows){c.fillStyle=row.key==='title'?s.color:s.muted;c.font='400 '+row.size+'px '+(row.key==='subtitle'?'Georgia,serif':fonts[row.font]);row.lines.forEach((text,i)=>tracked(c,text,row.x,row.y+i*row.size*row.lineHeight,row.tracking));}
@@ -131,11 +132,11 @@ export function paintMargin(target,state,layout,background,scale=1,editingId=nul
   if(b.id!==editingId)for(const part of b.parts)paintPart(c,part);
  }
  if(s.footer){
-  c.fillStyle=s.accent;c.strokeStyle=s.accent;c.lineWidth=.7;
-  if(s.footerLine){c.beginPath();c.moveTo(g.outer,g.footerY);c.lineTo(g.width/2-(s.footerStar?16:0),g.footerY);c.moveTo(g.width/2+(s.footerStar?16:0),g.footerY);c.lineTo(g.width-g.outer,g.footerY);c.stroke();}
-  if(s.footerStar)star(c,g.width/2,g.footerY,8);
+  c.fillStyle=s.accent;c.strokeStyle=s.accent;c.lineWidth=.5;
+  if(s.footerLine){c.beginPath();c.moveTo(g.outer,g.footerY);c.lineTo(g.width/2-10,g.footerY);c.moveTo(g.width/2+10,g.footerY);c.lineTo(g.width-g.outer,g.footerY);c.stroke();}
+  c.save();c.translate(g.width/2,g.footerY);c.scale(1,.55);star(c,0,0,5);c.restore();
   c.fillStyle=s.muted;c.font='11px Georgia,serif';c.textBaseline='top';
-  const textY=g.footerY+(s.footerLine||s.footerStar?22:0),max=s.page?(g.width-g.outer*2)*.7:g.width-g.outer*2;
+  const textY=g.footerY+14,max=(g.width-g.outer*2)*.7;
   c.save();c.beginPath();c.rect(g.outer,textY,max,20);c.clip();tracked(c,s.footerText,g.outer,textY,1.7);c.restore();
   if(s.page){c.textAlign='right';c.fillText(s.pageText,g.width-g.outer,textY);}
  }

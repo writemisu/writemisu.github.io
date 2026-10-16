@@ -465,7 +465,7 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .film-inline-range output{text-align:right;font-variant-numeric:tabular-nums}
 
 /* MARGIN keeps one text column and shared typography controls. */
-.margin-mode #palettes,.margin-mode #quoteGroup,.margin-mode .presentation-controls,.margin-mode #pageSettings,.margin-mode #addLine,.margin-mode .alignment-control,.margin-mode .typography-advanced .color-row label:last-child,.margin-mode .typography-advanced .range-label,.margin-mode .paragraph-format-tools,.margin-mode .paragraph-format-selection,.margin-mode .resize-handle{display:none}
+.margin-mode #backgroundGroup,.margin-mode #quoteGroup,.margin-mode .presentation-controls,.margin-mode #pageSettings,.margin-mode #addLine,.margin-mode .alignment-control,.margin-mode .typography-advanced .color-row label:last-child,.margin-mode .typography-advanced .range-label,.margin-mode .paragraph-format-tools,.margin-mode .paragraph-format-selection,.margin-mode .resize-handle{display:none}
 .margin-mode #board{border-radius:0;overflow:hidden}
 .margin-mode .block-overlay{cursor:text}
 .margin-mode #designPanel .full-field,.margin-controls .full-field,#marginPageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted);white-space:nowrap}
@@ -476,4 +476,3 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .margin-mode #designPanel .range-label{margin-top:10px}
 .margin-mode #marginPageSize{display:block;margin:0}
 .margin-mode .film-layout-picker select{width:100%}
-#marginBodyFields{margin-top:12px}

@@ -10,6 +10,14 @@ const block=(id,text)=>({id,type:'text',text,x:90,y:120,w:320,font:'pretendard',
 const state=()=>({width:800,height:741,margin:80,padding:0,noise:0,seed:741,background:'solid',colors:['#f5f5f5','#ffffff'],textColor:'#333333',blocks:[block('b1','비가 그친 자리.\n“기다린 건 아니야.”'),block('b2','그는 창밖을 바라보았다.\n\n“그럼 왜 아직 여기 있어?”')]});
 const measure=(b,text)=>Array.from(text).length*b.size*.52;
 
+test('MARGIN fixes spacing and persistent decorations while linking frame and section switches',()=>{
+ for(const enabled of [false,true]){
+  const s=state();s.marginLayout={texture:3,paragraphGap:60,dialogueIndent:30,dialogueGap:20,marginWidth:100,frame:enabled,corners:!enabled,numbers:enabled,diamonds:!enabled,chapterStar:false,footerStar:false,page:false};const before=structuredClone(s),m=marginSettings(s);
+  assert.deepEqual([m.texture,m.paragraphGap,m.dialogueIndent,m.dialogueGap,m.marginWidth],[15,22,8,2,62]);
+  assert.equal(m.corners,enabled);assert.equal(m.diamonds,enabled);assert.ok(m.chapterStar&&m.footerStar&&m.page);assert.deepEqual(s,before);
+ }
+});
+
 test('MARGIN shares body type across narration and dialogue without altering source or HTML output',()=>{
  const s=state(),before=structuredClone(s),html=exportHTML(s);s.pngLayout='margin';s.marginLayout=marginSettings(s);
  const g=marginLayout(s,measure),parts=g.blocks.flatMap(b=>b.parts);
@@ -20,7 +28,7 @@ test('MARGIN shares body type across narration and dialogue without altering sou
 
 test('section starts label paragraph groups while explicit roles retain the original quotes and column',()=>{
  const s=state();s.blocks.push(block('b3','“이번에는 네가 먼저 가.”'));s.marginLayout={blocks:{b1:{role:'narration'},b2:{sectionStart:true},b3:{role:'dialogue'}}};
- const g=marginLayout(s,measure);assert.deepEqual(g.blocks.map(b=>b.section),[1,2,null]);assert.equal(g.blocks[0].parts[1].x,g.bodyX);assert.equal(g.blocks[2].parts[0].x,g.bodyX+6);
+ const g=marginLayout(s,measure);assert.deepEqual(g.blocks.map(b=>b.section),[1,2,null]);assert.equal(g.blocks[0].parts[1].x,g.bodyX);assert.equal(g.blocks[2].parts[0].x,g.bodyX+8);
  for(let i=1;i<g.blocks.length;i++)assert.ok(g.blocks[i].y>=g.blocks[i-1].y+g.blocks[i-1].metrics.h);
 });
 
@@ -30,7 +38,7 @@ test('MARGIN puts inline dialogue on separate lines while preserving source text
  s.blocks[0].runs=[{text:text.slice(0,quoteStart)},{text:text.slice(quoteStart,quoteEnd),italic:true},{text:text.slice(quoteEnd)}];const before=structuredClone(s);
  const g=marginLayout(s,measure),parts=g.blocks[0].parts;
  assert.deepEqual(parts.map(p=>p.text),['그가 말했다.','"기다려."','문이 닫혔다.','“다시 올게.”']);
- assert.equal(parts[0].x,g.bodyX);assert.equal(parts[1].x,g.bodyX+6);assert.equal(parts[2].x,g.bodyX);assert.ok(parts[1].runs.every(r=>r.italic));assert.ok(parts[2].runs.every(r=>!r.italic));
+ assert.equal(parts[0].x,g.bodyX);assert.equal(parts[1].x,g.bodyX+8);assert.equal(parts[2].x,g.bodyX);assert.ok(parts[1].runs.every(r=>r.italic));assert.ok(parts[2].runs.every(r=>!r.italic));
  for(let i=1;i<parts.length;i++)assert.ok(parts[i].y>=parts[i-1].y+parts[i-1].metrics.h);
  assert.ok(parts.every(p=>p.size===20));assert.deepEqual(s,before);
 });
@@ -44,10 +52,10 @@ test('dialogue segmentation handles nested quotes, multiline dialogue, blank lin
  const escaped='그는 \\"인용\\"이라고 적었다.';assert.equal(marginSegments(escaped).length,1);assert.equal(marginSegments(escaped)[0].dialogue,false);
 });
 
-test('separated dialogue adds one body line above and below on top of the configured spacing',()=>{
+test('separated dialogue adds one body line above and below on top of the fixed 2px spacing',()=>{
  for(const [size,lineHeight,gap] of [[20,1.85,8],[24,2,0]]){
   const s=state();s.blocks=[block('b1','앞의 지문. "대사." 뒤의 지문.')];s.marginLayout={size,lineHeight,dialogueGap:gap};const before=structuredClone(s);
-  const [first,dialogue,last]=marginLayout(s,measure).blocks[0].parts,expected=size*lineHeight+gap;
+  const [first,dialogue,last]=marginLayout(s,measure).blocks[0].parts,expected=size*lineHeight+2;
   assert.ok(Math.abs(dialogue.y-first.y-first.metrics.h-expected)<1e-8);assert.ok(Math.abs(last.y-dialogue.y-dialogue.metrics.h-expected)<1e-8);assert.deepEqual(s,before);
  }
 });

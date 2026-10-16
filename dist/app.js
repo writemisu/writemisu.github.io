@@ -252,13 +252,13 @@ function renderMarginSettings(){
  const active=editorMode==='png'&&state.pngLayout==='margin',s=marginSettings(state);document.body.classList.toggle('margin-mode',active);
  for(const node of document.querySelectorAll('[data-margin-only]'))node.hidden=!active;
  const panel=$('designPanel'),background=$('backgroundGroup'),type=$('typographyGroup'),quote=$('quoteGroup');
- if(active){if(background.nextElementSibling!==$('marginHeaderGroup'))panel.insertBefore(background,$('marginHeaderGroup'));if(type.nextElementSibling!==$('marginNumberGroup'))panel.insertBefore(type,$('marginNumberGroup'));}
+ if(active){if(type.nextElementSibling!==$('marginNumberGroup'))panel.insertBefore(type,$('marginNumberGroup'));}
  else if(background.nextElementSibling!==type||type.nextElementSibling!==quote){panel.insertBefore(background,quote);panel.insertBefore(type,quote);}
- type.querySelector('summary').firstChild.textContent=active?'본문':'글자';$('noise').closest('label').firstChild.textContent=active?'질감':'노이즈 ';
+ type.querySelector('summary').firstChild.textContent=active?'본문':'글자';
  if(!active)return;
  for(const input of document.querySelectorAll('[data-margin-key]')){const value=s[input.dataset.marginKey];if(input.type==='checkbox')input.checked=value;else if(document.activeElement!==input)input.value=value;}
  for(const output of document.querySelectorAll('[data-margin-value]'))output.textContent=s[output.dataset.marginValue]+output.dataset.unit;
- $('marginHeaderFields').hidden=!s.header;$('marginFooterFields').hidden=!s.footer;$('marginPageTextField').hidden=!s.page;
+ $('marginHeaderFields').hidden=!s.header;$('marginFooterFields').hidden=!s.footer;
 }
 function renderMarginSelection(){
  const blocks=selection().filter(b=>b.type==='text'),host=$('selectionControls'),s=marginSettings(state),first=state.blocks.find(b=>b.type==='text')?.id;
@@ -377,11 +377,11 @@ for(const [id,key] of filmTimeControls)$(id).onchange=e=>{
 };
 function renderSettings(){
  renderFilmSettings();renderMarginSettings();const html=htmlSettings(state),isHTML=editorMode==='html',film=!isHTML&&state.pngLayout==='film',margin=!isHTML&&state.pngLayout==='margin',m=marginSettings(state);
- $('backgroundTitle').textContent=isHTML?'배경 및 색상':margin?'지면 색상':'배경';$('color2').closest('label').hidden=!isHTML&&(margin||state.background==='solid');
- $('color1').closest('label').firstChild.textContent=isHTML?'본문 배경':margin||state.background==='solid'?'바탕색':'색 1';$('color2').closest('label').firstChild.textContent=isHTML?'바깥 배경':'색 2';
- $('color1').value=isHTML?html.surface:margin?m.background:state.colors[0];$('color2').value=isHTML?html.background:state.colors[1];
+ $('backgroundTitle').textContent=isHTML?'배경 및 색상':'배경';$('color2').closest('label').hidden=!isHTML&&state.background==='solid';
+ $('color1').closest('label').firstChild.textContent=isHTML?'본문 배경':state.background==='solid'?'바탕색':'색 1';$('color2').closest('label').firstChild.textContent=isHTML?'바깥 배경':'색 2';
+ $('color1').value=isHTML?html.surface:state.colors[0];$('color2').value=isHTML?html.background:state.colors[1];
  for(const [id,key] of [['color1','surface'],['color2','background'],['htmlTextColor','textColor'],['htmlAccent','accent'],['htmlMuted','muted'],['htmlBorder','border']]){$(id+'Value').textContent=html[key].toUpperCase();if(isHTML)$(id).value=html[key];}
- $('noise').value=margin?m.texture:state.noise;$('noiseValue').textContent=(margin?m.texture:state.noise)+'%';$('pageWidth').value=film?filmSettings(state).width:margin?m.width:state.width;$('pageMargin').value=state.margin;
+ $('noise').value=state.noise;$('noiseValue').textContent=state.noise+'%';$('pageWidth').value=film?filmSettings(state).width:margin?m.width:state.width;$('pageMargin').value=state.margin;
  for(const [id,key] of [['htmlWidth','width'],['htmlPadding','padding'],['htmlGap','gap'],['htmlAccent','accent'],['htmlMuted','muted'],['htmlBorder','border'],['htmlRadius','radius'],['htmlHeaderDecoration','headerDecoration'],['htmlFooterDecoration','footerDecoration'],['htmlDecorationLabel','decorationLabel']])$(id).value=html[key];
  $('htmlGapValue').textContent=html.gap+'px';$('htmlFrame').checked=html.frame;$('htmlFrameFields').hidden=!html.frame;$('htmlDecoration').checked=html.decoration;$('htmlDecorationFields').hidden=!html.decoration;$('htmlDecorationLabel').closest('label').hidden=html.footerDecoration!=='editorial';
  $('palettes').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active',palettes[i].background===state.background&&JSON.stringify(palettes[i].colors)===JSON.stringify(state.colors)));
@@ -493,8 +493,8 @@ $('addLine').onclick=()=>change(()=>{const b=newBlock('','line');b.x=(state.widt
 $('autoLayout').onclick=()=>{change(autoLayout);notify('자동 배치 완료');};
 $('undo').onclick=()=>historyBack();$('redo').onclick=()=>historyBack(true);$('zoomOut').onclick=()=>{fitMode=false;zoom=clamp(zoom-.1,.15,1.5);updateZoom();};$('zoomIn').onclick=()=>{fitMode=false;zoom=clamp(zoom+.1,.15,1.5);updateZoom();};$('zoomLabel').onclick=()=>{fitMode=false;zoom=1;updateZoom();};$('zoomFit').onclick=()=>{fitMode=true;updateZoom();};new ResizeObserver(()=>{if(fitMode)updateZoom();}).observe($('stageScroll'));
 palettes.forEach(p=>{const button=document.createElement('button');button.className='palette';button.title=p.name;button.setAttribute('aria-label',p.name);const label=document.createElement('span');label.className='palette-name';label.textContent=p.background==='solid'?'단색':'그라데이션';button.append(label);button.style.background=p.background==='solid'?p.colors[0]:gradientCSS(p.colors);button.onclick=()=>change(()=>{state.background=p.background;state.colors=[...p.colors];state.textColor=p.text;state.noise=p.noise;state.blocks.forEach(b=>b.color=p.text);});$('palettes').append(button);});
-for(let i=0;i<2;i++)$('color'+(i+1)).onchange=e=>change(()=>{if(editorMode==='html')setHTMLSetting(i===0?'surface':'background',e.target.value);else if(state.pngLayout==='margin')setMarginSetting('background',e.target.value);else state.colors[i]=e.target.value;});
-bindSlider($('noise'),v=>{if(state.pngLayout==='margin')setMarginSetting('texture',v);else state.noise=v;},v=>$('noiseValue').textContent=v+'%');
+for(let i=0;i<2;i++)$('color'+(i+1)).onchange=e=>change(()=>{if(editorMode==='html')setHTMLSetting(i===0?'surface':'background',e.target.value);else state.colors[i]=e.target.value;});
+bindSlider($('noise'),v=>state.noise=v,v=>$('noiseValue').textContent=v+'%');
 $('pageWidth').onchange=e=>change(()=>{const next=clamp(+e.target.value,400,1600);if(state.pngLayout==='film'){setFilmSetting('width',next);return;}if(state.pngLayout==='margin'){setMarginSetting('width',next);return;}const ratio=next/state.width;state.blocks.forEach(b=>{b.x*=ratio;b.w*=ratio;});state.width=next;state.margin=Math.min(state.margin,next/3);fitHeight();});$('pageMargin').onchange=e=>change(()=>{state.margin=clamp(+e.target.value,24,Math.min(160,state.width/3));autoLayout();notify('여백 적용됨');});
 function pngOutput(requestedScale=pngScale){const page=state.pngLayout==='film'?filmSize(state):state.pngLayout==='margin'?(marginGeometry||marginLayout(state,measureRun)):state,scale=Math.min(requestedScale,16000/page.height,Math.sqrt(16000000/(page.width*page.height)));return {width:Math.floor(page.width*scale),height:Math.floor(page.height*scale),scale};}
 function renderPNGOptions(){
