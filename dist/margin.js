@@ -69,25 +69,27 @@ export function marginLayout(state,measure){
   }
   headerHeight=Math.max(y-outer,(s.chapterStar?112:104)*hs);
  }
- let y=outer+(s.header?headerHeight+s.headerGap:0),number=0,pending=false;
+ let y=outer+(s.header?headerHeight+s.headerGap:0),number=0,pending=false,previous=null,blankGap=0;
  const bodyTop=y,blocks=[],dialogueGap=s.size*s.lineHeight+s.dialogueGap;
  for(const source of replaceBlocks(state.blocks,state.replacementRules||[]).blocks){
   if(source.type==='line'){pending=true;continue;}
   const options=s.blocks[source.id]||{},b=textBlock(s,source),parts=[],runs=blockRuns(b);
+  if(!b.text.trim()){blankGap+=Math.max(1,b.text.split('\n').length)*s.paragraphGap;continue;}
   for(const segment of marginSegments(b.text,options.role||'auto')){
-   if(segment.blank){y+=s.paragraphGap;continue;}
+   if(segment.blank){blankGap+=s.paragraphGap;continue;}
    const {start,end,dialogue}=segment,indent=dialogue?Math.min(s.dialogueIndent,bodyWidth/4):0;
-   if(dialogue)y+=dialogueGap;
+   const gap=previous?(previous.dialogue!==dialogue?dialogueGap:dialogue||previous.id!==b.id?s.paragraphGap:0):0;
+   y+=Math.max(gap,blankGap);blankGap=0;
    const part={...b,text:b.text.slice(start,end),runs:sliceRuns(runs,start,end),x:bodyX+indent,y,w:bodyWidth-indent};
-   part.metrics=blockMetrics(part,(text,run)=>measure(part,text,run));parts.push(part);y+=part.metrics.h+(dialogue?dialogueGap:0);
+   part.metrics=blockMetrics(part,(text,run)=>measure(part,text,run));parts.push(part);y+=part.metrics.h;previous={dialogue,id:b.id};
   }
   if(!parts.length)continue;
   const section=blocks.length===0||pending||options.sectionStart;pending=false;if(section)number++;
   b.x=bodyX;b.y=parts[0].y;b.w=bodyWidth;b.parts=parts;b.section=section?number:null;
   b.metrics={...parts[0].metrics,w:bodyWidth,h:y-b.y,textWidth:bodyWidth,lines:parts.flatMap(p=>p.metrics.lines)};
-  blocks.push(b);y+=s.paragraphGap;
+  blocks.push(b);
  }
- const bodyBottom=blocks.length?y-s.paragraphGap:bodyTop,footerY=bodyBottom+40;
+ const bodyBottom=blocks.length?y:bodyTop,footerY=bodyBottom+40;
  const footerHeight=s.footer?30:0;
  return {width,height:Math.ceil((s.footer?footerY+footerHeight:bodyBottom)+outer),outer,bodyX,bodyWidth,bodyTop,bodyBottom,headerHeight,headerX,headerRows,footerY,blocks};
 }

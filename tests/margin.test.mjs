@@ -52,12 +52,31 @@ test('dialogue segmentation handles nested quotes, multiline dialogue, blank lin
  const escaped='그는 \\"인용\\"이라고 적었다.';assert.equal(marginSegments(escaped).length,1);assert.equal(marginSegments(escaped)[0].dialogue,false);
 });
 
-test('separated dialogue adds one body line above and below on top of the fixed 2px spacing',()=>{
+test('narration and dialogue transitions use one body line plus 2px once',()=>{
  for(const [size,lineHeight,gap] of [[20,1.85,8],[24,2,0]]){
   const s=state();s.blocks=[block('b1','앞의 지문. "대사." 뒤의 지문.')];s.marginLayout={size,lineHeight,dialogueGap:gap};const before=structuredClone(s);
   const [first,dialogue,last]=marginLayout(s,measure).blocks[0].parts,expected=size*lineHeight+2;
   assert.ok(Math.abs(dialogue.y-first.y-first.metrics.h-expected)<1e-8);assert.ok(Math.abs(last.y-dialogue.y-dialogue.metrics.h-expected)<1e-8);assert.deepEqual(s,before);
  }
+});
+
+test('adjacent dialogue uses 22px within and across source paragraphs without exterior padding',()=>{
+ for(const texts of [['"첫 대사." "다음 대사."'],['"첫 대사."\n"다음 대사."'],['"첫 대사."','"다음 대사."']]){
+  const s=state();s.blocks=texts.map((text,i)=>block('b'+(i+1),text));const before=structuredClone(s),g=marginLayout(s,measure),[first,last]=g.blocks.flatMap(b=>b.parts);
+  assert.ok(Math.abs(last.y-first.y-first.metrics.h-22)<1e-8);assert.equal(first.y,g.bodyTop);assert.equal(g.bodyBottom,last.y+last.metrics.h);assert.deepEqual(s,before);
+ }
+});
+
+test('blank lines collapse with automatic spacing instead of adding to it across paragraphs',()=>{
+ for(const [first,last,gap] of [['지문.','"대사."',39],['"대사."','지문.',39],['"대사."','"다음 대사."',22],['지문.','다음 지문.',22]]){
+  for(const blanks of [0,1,2])for(const separate of [false,true]){
+   const s=state();s.blocks=separate?[block('b1',first+'\n'.repeat(blanks)),block('b2',last)]:[block('b1',first+'\n'.repeat(blanks+1)+last)];
+   const g=marginLayout(s,measure),[a,b]=g.blocks.flatMap(block=>block.parts),base=first==='지문.'&&last==='다음 지문.'&&!separate?0:gap;
+   assert.ok(Math.abs(b.y-a.y-a.metrics.h-Math.max(base,blanks*22))<1e-8);
+  }
+ }
+ const s=state();s.blocks=[block('b1','"대사."'),block('b2',' '),block('b3','"다음 대사."')];
+ const g=marginLayout(s,measure),[a,b]=g.blocks.flatMap(block=>block.parts);assert.equal(g.blocks.length,2);assert.ok(Math.abs(b.y-a.y-a.metrics.h-22)<1e-8);
 });
 
 test('long logs grow the page without shrinking type or overlapping header, paragraphs and footer',()=>{
