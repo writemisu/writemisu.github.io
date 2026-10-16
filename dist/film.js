@@ -19,9 +19,9 @@ export function filmLayout(state,measure){
  const s=filmSettings(state),{width,height}=filmSize(state),scale=width/800,bar=s.letterbox?height*s.barPercent/100:0,playerHeight=s.player?60*scale:0,bottomInset=Math.max(bar,playerHeight),safe=width*.045;
  const metadataY=bar>=24*scale?bar/2:Math.max(height*.05,10*scale),top=Math.max(bar+safe,s.metadataOn&&(s.leftText||s.rightText)?metadataY+6.5*scale+width*.02:0);
  const sources=replaceBlocks(state.blocks,state.replacementRules||[]).blocks.filter(b=>b.type==='text');
- const blocks=sources.map((source,i)=>{
+ const blocks=sources.map(source=>{
   const override=s.blocks[source.id]||{},b={...source,presentation:'plain',group:null,font:'pretendard',size:s.size*scale,lineHeight:1.3,align:'center',color:'#ffffff',box:'#000000',opacity:0,padding:0,bold:false,...override};
-  b.visible=override.visible??i===0;b.w=(override.w??.78)*width;b.size=(override.size??s.size)*scale;b.padding=(override.padding??0)*scale;
+  b.visible=true;b.w=(override.w??.78)*width;b.size=(override.size??s.size)*scale;b.padding=(override.padding??0)*scale;
   b.metrics=blockMetrics(b,(text,run)=>measure(b,text,run));b.x=override.x===undefined?(width-b.w)/2:override.x*width;
   return b;
  });

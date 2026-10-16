@@ -26,9 +26,9 @@ test('cover and contain preserve image proportions and constrain every alignment
  }
 });
 
-test('ratio and resolution changes scale subtitles while visibility and manual line breaks stay separate from the source',()=>{
+test('ratio and resolution changes scale subtitles while all paragraphs remain visible with their manual line breaks',()=>{
  const s=state();s.blocks.push({...block,id:'b2',text:'두 번째 자막'});s.pngLayout='film';s.film={...filmSettings(s),width:1600,ratio:'4:5',letterbox:false,blocks:{b1:{visible:false},b2:{visible:true,x:.12,y:.7,w:.7,size:30,color:'#ffeecc'}}};const before=structuredClone(s),scene=filmLayout(s,measure);
- assert.deepEqual(filmSize(s),{width:1600,height:2000});assert.equal(scene.bar,0);assert.equal(scene.blocks[0].visible,false);assert.equal(scene.blocks[1].visible,true);assert.equal(scene.blocks[1].size,60);assert.equal(scene.blocks[1].x,192);assert.equal(scene.blocks[1].y,1400);assert.deepEqual(s,before);
+ assert.deepEqual(filmSize(s),{width:1600,height:2000});assert.equal(scene.bar,0);assert.equal(scene.blocks[0].visible,true);assert.equal(scene.blocks[1].visible,true);assert.equal(scene.blocks[1].size,60);assert.equal(scene.blocks[1].x,192);assert.equal(scene.blocks[1].y,1400);assert.deepEqual(s,before);
  s.film.ratio='2.39:1';assert.equal(filmSize(s).height,669);
 });
 

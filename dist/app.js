@@ -161,7 +161,7 @@ function selectedTextBlocks(){return selection().filter(b=>b.type==='text'&&(edi
 function inheritParagraphFormat(block){
  const members=state.blocks.filter(b=>b.type==='text'&&(editorMode!=='html'||b.htmlTabId===activeHTMLTab));
  const source=members.find(b=>selected.has(b.id))||members.at(-1);
- if(editorMode==='png'&&state.pngLayout==='film'){if(source)for(const [key,value] of Object.entries(paragraphFormat(state,displayBlock(source),'png')))setFilmFormat(block,key,value);setFilmFormat(block,'visible',true);return block;}
+ if(editorMode==='png'&&state.pngLayout==='film'){if(source)for(const [key,value] of Object.entries(paragraphFormat(state,displayBlock(source),'png')))setFilmFormat(block,key,value);return block;}
  if(source)applyParagraphFormat(block,paragraphFormat(state,source,editorMode),editorMode);
  return block;
 }
@@ -277,8 +277,6 @@ function renderFilmSettings(){
  $('filmMetadataFields').hidden=!s.metadataOn;
  $('filmUpload').innerHTML=icons.plus+'<span>'+(s.imageId?'이미지 교체':'이미지 선택')+'</span>';$('filmRemove').innerHTML=icons['trash-2'];$('filmRemove').disabled=!s.imageId;$('filmCenter').disabled=!s.imageId;
  $('filmImageStatus').textContent=!s.imageId?'선택한 이미지 없음 · 새로고침하면 다시 올려 주세요.':filmImageError?'이미지를 열지 못했어요 · 다시 선택해 주세요.':!filmImage?'이미지 불러오는 중…':s.imageName;
- const host=$('filmParagraphs');host.replaceChildren();
- state.blocks.forEach((b,i)=>{if(b.type!=='text')return;const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');input.type='checkbox';input.checked=filmView(b).visible;input.onchange=()=>change(()=>setFilmFormat(b,'visible',input.checked));text.textContent='문단 '+(i+1)+' · '+(b.text.replace(/\s+/g,' ').trim()||'내용 없음');label.append(input,text);host.append(label);});
  renderFilmWarning();
 }
 function renderFilmSelection(){
@@ -320,7 +318,7 @@ function nudgeFilm(key,step){
 }
 $('pngLayout').onchange=e=>{
  finishInlineEdit();endTyping();const value=e.target.value;
- change(()=>{state.pngLayout=value;if(value==='film'&&!state.film){const chosen=selection().find(b=>b.type==='text')||state.blocks.find(b=>b.type==='text');state.film={...filmSettings(state),blocks:Object.fromEntries(state.blocks.filter(b=>b.type==='text').map(b=>[b.id,{visible:b.id===chosen?.id}]))};}if(value==='film'){alignmentMode='text';$('filmImageGroup').open=true;}});
+ change(()=>{state.pngLayout=value;if(value==='film'&&!state.film)state.film=filmSettings(state);if(value==='film'){alignmentMode='text';$('filmImageGroup').open=true;}});
 };
 $('filmUpload').onclick=()=>$('filmFile').click();
 $('filmFile').onchange=async e=>{
