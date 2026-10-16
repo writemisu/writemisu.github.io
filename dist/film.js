@@ -6,8 +6,8 @@ import {replaceBlocks} from './replace.js';
 const bounded=(n,fallback,min,max)=>Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
 const ratios={'16:9':16/9,'2.39:1':2.39,'4:5':4/5};
 export function filmSettings(state){
- const f=state.film||{};
- return {width:bounded(f.width,state.width||800,400,1600),ratio:Object.hasOwn(ratios,f.ratio)?f.ratio:'16:9',background:f.background||state.colors?.[0]||'#18212b',imageId:f.imageId||null,imageName:f.imageName||'',fit:f.fit==='contain'?'contain':'cover',x:bounded(f.x,.5,0,1),y:bounded(f.y,.5,0,1),blur:bounded(f.blur,2,0,20),darken:bounded(f.darken,28,0,80),letterbox:f.letterbox!==false,sceneOn:f.sceneOn!==false,scene:f.scene??'04',take:f.take??'02',timecodeOn:f.timecodeOn!==false,timecode:f.timecode??'00:02:17:08',grain:bounded(f.grain,11,0,30),vignette:bounded(f.vignette,20,0,80),size:bounded(f.size,24,1,200),outline:bounded(f.outline,2,0,6),shadow:f.shadow!==false,blocks:f.blocks||{}};
+ const f=state.film||{},metadataOn=f.metadataOn??(f.sceneOn!==false||f.timecodeOn!==false),leftText=f.leftText??(f.sceneOn===false?'':'SCENE '+(f.scene??'04')+' / TAKE '+(f.take??'02')),rightText=f.rightText??(f.timecodeOn===false?'':f.timecode??'00:02:17:08');
+ return {width:bounded(f.width,state.width||800,400,1600),ratio:Object.hasOwn(ratios,f.ratio)?f.ratio:'16:9',background:f.background||state.colors?.[0]||'#18212b',imageId:f.imageId||null,imageName:f.imageName||'',fit:f.fit==='contain'?'contain':'cover',x:bounded(f.x,.5,0,1),y:bounded(f.y,.5,0,1),blur:bounded(f.blur,2,0,20),darken:bounded(f.darken,28,0,80),letterbox:f.letterbox!==false,metadataOn,leftText,rightText,grain:bounded(f.grain,11,0,30),vignette:bounded(f.vignette,20,0,80),size:bounded(f.size,24,1,200),outline:bounded(f.outline,2,0,6),shadow:f.shadow!==false,blocks:f.blocks||{}};
 }
 export function filmSize(state){const s=filmSettings(state);return {width:s.width,height:Math.round(s.width/ratios[s.ratio])};}
 export function filmImageRect(image,width,height,fit='cover',x=.5,y=.5){
@@ -16,7 +16,7 @@ export function filmImageRect(image,width,height,fit='cover',x=.5,y=.5){
 }
 export function filmLayout(state,measure){
  const s=filmSettings(state),{width,height}=filmSize(state),scale=width/800,bar=s.letterbox?height*.09:0,safe=width*.045;
- const top=bar?bar+safe:Math.max(safe,s.sceneOn||s.timecodeOn?height*.05+6.5*scale+width*.02:0);
+ const top=bar?bar+safe:Math.max(safe,s.metadataOn&&(s.leftText||s.rightText)?height*.05+6.5*scale+width*.02:0);
  const sources=replaceBlocks(state.blocks,state.replacementRules||[]).blocks.filter(b=>b.type==='text');
  const blocks=sources.map((source,i)=>{
   const override=s.blocks[source.id]||{},b={...source,presentation:'plain',group:null,font:'pretendard',size:s.size*scale,lineHeight:1.3,align:'center',color:'#ffffff',box:'#000000',opacity:0,padding:0,bold:false,...override};
@@ -77,10 +77,10 @@ export function paintFilm(target,state,image,layout,scale=1,editingId=null){
  }
  c.fillStyle='#090909';if(bar){c.fillRect(0,0,width,bar);c.fillRect(0,height-bar,width,bar);}
  c.fillStyle='#c9c1b5';c.font='600 '+(13*layout.scale)+'px '+fonts.pretendard;c.textBaseline='middle';
- const y=bar?bar/2:height*.05,left=width*.045,max=s.sceneOn&&s.timecodeOn?width*.44:width-left*2;
+ const y=bar?bar/2:height*.05,left=width*.045,max=s.leftText&&s.rightText?width*.44:width-left*2;
  if(!bar){c.shadowColor='rgba(0,0,0,.75)';c.shadowBlur=2*layout.scale;c.shadowOffsetY=layout.scale;}
- if(s.sceneOn)trackedText(c,'SCENE '+s.scene+' / TAKE '+s.take,left,y,1.8*layout.scale,'left',max);
- if(s.timecodeOn)trackedText(c,s.timecode,width-left,y,.9*layout.scale,'right',max);
+ if(s.metadataOn&&s.leftText)trackedText(c,s.leftText,left,y,1.8*layout.scale,'left',max);
+ if(s.metadataOn&&s.rightText)trackedText(c,s.rightText,width-left,y,.9*layout.scale,'right',max);
  c.shadowColor='transparent';c.shadowBlur=0;c.shadowOffsetY=0;
  if(s.grain)c.drawImage(filmGrain(state,layout),0,0);c.restore();
 }
@@ -90,7 +90,7 @@ export function validFilm(f){
  const numbers={width:[400,1600],x:[0,1],y:[0,1],blur:[0,20],darken:[0,80],grain:[0,30],vignette:[0,80],size:[1,200],outline:[0,6]};
  for(const [key,[min,max]] of Object.entries(numbers))if(f[key]!==undefined&&(!Number.isFinite(f[key])||f[key]<min||f[key]>max))return false;
  if(f.ratio!==undefined&&!Object.hasOwn(ratios,f.ratio)||f.fit!==undefined&&!['cover','contain'].includes(f.fit))return false;
- if(['letterbox','sceneOn','timecodeOn','shadow'].some(k=>f[k]!==undefined&&typeof f[k]!=='boolean')||['scene','take','timecode','imageName'].some(k=>f[k]!==undefined&&typeof f[k]!=='string'))return false;
+ if(['letterbox','metadataOn','sceneOn','timecodeOn','shadow'].some(k=>f[k]!==undefined&&typeof f[k]!=='boolean')||['leftText','rightText','scene','take','timecode','imageName'].some(k=>f[k]!==undefined&&typeof f[k]!=='string'))return false;
  if(f.imageId!=null&&typeof f.imageId!=='string'||f.background!==undefined&&!/^#[\da-f]{6}$/i.test(f.background))return false;
  if(f.blocks!==undefined){
   if(!f.blocks||typeof f.blocks!=='object'||Array.isArray(f.blocks))return false;

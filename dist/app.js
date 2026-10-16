@@ -262,13 +262,16 @@ function renderFilmWarning(){
 }
 function renderFilmSettings(){
  const active=editorMode==='png'&&state.pngLayout==='film',s=filmSettings(state);document.body.classList.toggle('film-mode',active);
+ const widthField=$('pageWidth').closest('label'),ratioField=$('filmRatio').closest('label'),widthHost=active?$('filmScreenSize'):$('pageSettings').querySelector('.field-grid');
+ if(widthField.parentElement!==widthHost)widthHost.prepend(widthField);
+ if(ratioField.parentElement!==$('filmScreenSize'))$('filmScreenSize').append(ratioField);
  for(const node of document.querySelectorAll('[data-film-only]'))node.hidden=!active;
  $('pngLayout').value=state.pngLayout||'plain';$('autoLayout').textContent=active?'자막 자동 배치':'문단 자동 배치';
  if(!active)return;
- for(const [id,key] of [['filmRatio','ratio'],['filmFit','fit'],['filmScene','scene'],['filmTake','take'],['filmTimecode','timecode']])if(document.activeElement!==$(id))$(id).value=s[key];
- for(const [id,key] of [['filmLetterbox','letterbox'],['filmSceneOn','sceneOn'],['filmTimecodeOn','timecodeOn'],['filmShadow','shadow']])$(id).checked=s[key];
+ for(const [id,key] of [['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText']])if(document.activeElement!==$(id))$(id).value=s[key];
+ for(const [id,key] of [['filmLetterbox','letterbox'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']])$(id).checked=s[key];
  for(const [id,key,unit] of [['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']]){$(id).value=s[key];$(id+'Value').textContent=s[key]+unit;}
- $('filmSceneFields').hidden=!s.sceneOn;$('filmTimecodeField').hidden=!s.timecodeOn;
+ $('filmMetadataFields').hidden=!s.metadataOn;
  $('filmUpload').innerHTML=icons.plus+'<span>'+(s.imageId?'이미지 교체':'이미지 선택')+'</span>';$('filmRemove').innerHTML=icons['trash-2'];$('filmRemove').disabled=!s.imageId;$('filmCenter').disabled=!s.imageId;
  $('filmImageStatus').textContent=!s.imageId?'선택한 이미지 없음 · 새로고침하면 다시 올려 주세요.':filmImageError?'이미지를 열지 못했어요 · 다시 선택해 주세요.':!filmImage?'이미지 불러오는 중…':s.imageName;
  const host=$('filmParagraphs');host.replaceChildren();
@@ -325,8 +328,8 @@ $('filmFile').onchange=async e=>{
 };
 $('filmRemove').onclick=()=>change(()=>{state.film={...filmSettings(state),imageId:null,imageName:''};});
 $('filmCenter').onclick=()=>change(()=>{state.film={...filmSettings(state),x:.5,y:.5};});
-for(const [id,key] of [['filmRatio','ratio'],['filmFit','fit'],['filmScene','scene'],['filmTake','take'],['filmTimecode','timecode']])$(id).onchange=e=>{endTyping();change(()=>setFilmSetting(key,e.target.value));};
-for(const [id,key] of [['filmLetterbox','letterbox'],['filmSceneOn','sceneOn'],['filmTimecodeOn','timecodeOn'],['filmShadow','shadow']])$(id).onchange=e=>change(()=>setFilmSetting(key,e.target.checked));
+for(const [id,key] of [['filmRatio','ratio'],['filmFit','fit'],['filmLeftText','leftText'],['filmRightText','rightText']])$(id).onchange=e=>{endTyping();change(()=>setFilmSetting(key,e.target.value));};
+for(const [id,key] of [['filmLetterbox','letterbox'],['filmMetadataOn','metadataOn'],['filmShadow','shadow']])$(id).onchange=e=>change(()=>setFilmSetting(key,e.target.checked));
 for(const [id,key,unit] of [['filmBlur','blur','px'],['filmDarken','darken','%'],['filmOutline','outline','px'],['filmGrain','grain','%'],['filmVignette','vignette','%']])bindSlider($(id),v=>setFilmSetting(key,v),v=>$(id+'Value').textContent=v+unit);
 function renderSettings(){
  renderFilmSettings();const html=htmlSettings(state),isHTML=editorMode==='html',film=!isHTML&&state.pngLayout==='film';

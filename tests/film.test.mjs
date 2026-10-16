@@ -13,7 +13,7 @@ const measure=(b,text)=>Array.from(text).length*b.size*.5;
 
 test('Film defaults preserve the source layout and place subtitles inside the lower image safe area',()=>{
  const s=state(),before=structuredClone(s),f=filmSettings(s),scene=filmLayout(s,measure),b=scene.blocks[0];
- assert.deepEqual(filmSize(s),{width:800,height:450});assert.deepEqual([f.fit,f.blur,f.darken,f.letterbox,f.scene,f.take,f.timecode,f.grain,f.vignette],['cover',2,28,true,'04','02','00:02:17:08',11,20]);
+ assert.deepEqual(filmSize(s),{width:800,height:450});assert.deepEqual([f.fit,f.blur,f.darken,f.letterbox,f.metadataOn,f.leftText,f.rightText,f.grain,f.vignette],['cover',2,28,true,true,'SCENE 04 / TAKE 02','00:02:17:08',11,20]);
  assert.equal(b.align,'center');assert.equal(b.font,'pretendard');assert.equal(b.color,'#ffffff');assert.equal(b.lineHeight,1.3);assert.equal(b.metrics.lines.length,2);assert.equal(b.w,624);
  assert.ok(b.y>=scene.bar+scene.safe);assert.ok(b.y+b.metrics.h<=scene.height-scene.bar-scene.safe+1);assert.deepEqual(scene.warnings,[]);assert.deepEqual(s,before);
 });
