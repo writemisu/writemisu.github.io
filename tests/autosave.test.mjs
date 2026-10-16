@@ -64,3 +64,8 @@ test('IME autosave merges a partial HTML editor without replacing the rest of it
 test('a migrated HTML design queues one save without scanning editors or changing layout',()=>{
  const h=editor(1,true);assert.equal(h.stats.timers,1);h.env.flush();assert.deepEqual(h.saved(),h.state);assert.equal(h.stats.reads,0);assert.equal(h.stats.layouts,0);
 });
+
+test('Film saves design settings without retaining an uploaded image or its file name',()=>{
+ const h=editor(1);h.state.pngLayout='film';h.state.film={imageId:'current-tab-image',imageName:'my-photo.png',ratio:'16:9',blur:2,blocks:{b1:{visible:true}}};const before=structuredClone(h.state);
+ h.env.queue();h.env.flush();const saved=h.saved();assert.equal(saved.film.imageId,null);assert.equal(saved.film.imageName,'');assert.equal(saved.film.ratio,'16:9');assert.equal(saved.film.blocks.b1.visible,true);assert.deepEqual(h.state,before);
+});

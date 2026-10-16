@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {filmSize} from '../dist/film.js';
 
 const source=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8').split('\n').filter(line=>line.startsWith('async function savePNG()')||line.startsWith('function pngOutput(')).join('\n');
-async function exportPNG(width,height,pngScale=1){
+async function exportPNG(width,height,pngScale=1,film=null){
  const button={},result={downloads:0,errors:[]};
- const env={state:{width,height},pngScale,$:()=>button,saveButtonContent:'PNG 저장',finishInlineEdit(){result.finished=true;},loadUsedFonts:async()=>{},updateCanvas(){},requestAnimationFrame:fn=>fn(),setTimeout(){},URL:{createObjectURL:()=> 'blob:png',revokeObjectURL(){}},notify:message=>result.message=message,console:{error:error=>result.errors.push(error)}};
+ const env={state:{width,height,...(film?{pngLayout:'film',film}:{})},filmSize,pngScale,$:()=>button,saveButtonContent:'PNG 저장',finishInlineEdit(){result.finished=true;},ensureFilmImage:async()=>{result.imageReady=true;},loadUsedFonts:async()=>{},updateCanvas(){},requestAnimationFrame:fn=>fn(),setTimeout(){},URL:{createObjectURL:()=> 'blob:png',revokeObjectURL(){}},notify:message=>result.message=message,console:{error:error=>result.errors.push(error)}};
  env.document={fonts:{ready:Promise.resolve()},createElement:type=>type==='canvas'?{toBlob(callback,mime){result.size=[this.width,this.height];result.mime=mime;callback({});}}:{click(){result.downloads++;}}};
  env.paint=(canvas,scale)=>{assert.equal(result.finished,true);result.paint=[canvas.width,canvas.height,scale];};
  runInNewContext(source,env);await env.savePNG();assert.deepEqual(result.errors,[]);assert.equal(button.disabled,false);return result;
@@ -33,4 +34,8 @@ test('high-resolution selection renders at double dimensions and matches its dis
  }
  const limited=await exportPNG(1600,12000,2),[width,height]=limited.size;
  assert.ok(height<=16000&&width*height<=16000000);
+});
+
+test('Film waits for the image and exports its own aspect ratio at original and double resolution',async()=>{
+ for(const scale of [1,2]){const result=await exportPNG(500,741,scale,{width:800,ratio:'16:9'});assert.equal(result.imageReady,true);assert.deepEqual(result.size,[800*scale,450*scale]);}
 });
