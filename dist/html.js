@@ -63,6 +63,7 @@ export function exportHTML(state,{preview=false,selectedLine=null}={}){
    let offset=0;
    body='<span data-block-id="'+escapeHTML(b.id)+'" style="display:block;">'+b.text.split('\n').map((text,index)=>{
     const html=runsHTML(sliceRuns(displayedRuns,offset,offset+text.length));offset+=text.length+1;
+    if(!text.trim()&&b.text.length)return '<span aria-hidden="true" style="display:block;min-height:1em;">'+(html||'<br>')+'</span>';
     const selected=selectedLine?.id===b.id&&selectedLine.index===index;
     return '<span data-line-index="'+index+'"'+(selected?' data-line-selected="true"':'')+' tabindex="0" role="button" aria-pressed="'+selected+'" aria-label="텍스트 블록 '+(index+1)+' 선택 · 더블클릭하여 수정" style="display:block;min-height:1em;">'+(html||'<br>')+'</span>';
    }).join('')+'</span>';

@@ -17,8 +17,16 @@ test('preview maps each editable paragraph without adding editor metadata to cop
 
 test('preview selects individual newline blocks while copied HTML retains its original line breaks',()=>{
  const s={...state,blocks:[{...block,text:'같은 말\n\n같은 말\n끝'}],replacementRules:[{find:'말',replace:'표시할 말'}]},before=structuredClone(s),preview=exportHTML(s,{preview:true,selectedLine:{id:'b1',index:2}});
- assert.equal((preview.match(/data-line-index=/g)||[]).length,4);assert.match(preview,/data-line-index="2" data-line-selected="true"/);assert.match(preview,/data-line-index="1"[^>]*><br><\/span>/);
+ assert.deepEqual(Array.from(preview.matchAll(/data-line-index="(\d+)"/g),m=>m[1]),['0','2','3']);assert.match(preview,/data-line-index="2" data-line-selected="true"/);assert.match(preview,/<span aria-hidden="true" style="display:block;min-height:1em;"><br><\/span>/);
  const html=exportHTML(s);assert.match(html,/같은 표시할 말<br><br>같은 표시할 말<br>끝/);assert.doesNotMatch(html,/data-line-|tabindex|aria-pressed/);assert.deepEqual(s,before);
+});
+
+test('blank and whitespace-only lines keep their spacing without becoming editable blocks',()=>{
+ for(const text of ['\n\n',' \t\n\u3000\n\u00a0']){
+  const s={...state,blocks:[{...block,text}]},preview=exportHTML(s,{preview:true,selectedLine:{id:'b1',index:1}});
+  assert.doesNotMatch(preview,/data-line-index|data-line-selected|tabindex|aria-pressed/);assert.equal((preview.match(/display:block;min-height:1em;/g)||[]).length,3);
+ }
+ assert.match(exportHTML({...state,blocks:[{...block,text:''}]},{preview:true}),/data-line-index="0"/);
 });
 
 test('new HTML uses Champagne Noir with inline responsive layout and no generated metadata',()=>{
