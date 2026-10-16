@@ -134,7 +134,7 @@ export function paintMargin(target,state,layout,background,scale=1,editingId=nul
  if(s.footer){
   c.fillStyle=s.accent;c.strokeStyle=s.accent;c.lineWidth=.5;
   if(s.footerLine){c.beginPath();c.moveTo(g.outer,g.footerY);c.lineTo(g.width/2-10,g.footerY);c.moveTo(g.width/2+10,g.footerY);c.lineTo(g.width-g.outer,g.footerY);c.stroke();}
-  c.save();c.translate(g.width/2,g.footerY);c.scale(1,.55);star(c,0,0,5);c.restore();
+  star(c,g.width/2,g.footerY,6);
   c.fillStyle=s.muted;c.font='11px Georgia,serif';c.textBaseline='top';
   const textY=g.footerY+14,max=(g.width-g.outer*2)*.7;
   c.save();c.beginPath();c.rect(g.outer,textY,max,20);c.clip();tracked(c,s.footerText,g.outer,textY,1.7);c.restore();
