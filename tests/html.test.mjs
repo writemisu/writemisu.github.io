@@ -29,7 +29,7 @@ test('new HTML uses Champagne Noir with inline responsive layout and no generate
 
 test('each excerpt has its own optional title and native open or closed state',()=>{
  const s={...state,blocks:[{...block,htmlOpen:true},{...block,id:'b2',htmlSummary:'대화 <&> "제목"',htmlOpen:false},{...block,id:'b3'}]},html=exportHTML(s);
- assert.deepEqual(details(html),[true,false,false]);assert.equal((html.match(/<summary /g)||[]).length,3);
+ assert.deepEqual(details(html),[true,false,false]);assert.equal((html.match(/<summary /g)||[]).length,3);assert.match(html,/<details open="open" /);
  assert.match(html,/대화 &lt;&amp;&gt; &quot;제목&quot;/);assert.match(html,/aria-label="펼치기 \/ 접기"/);assert.deepEqual(restore(s),s);
  for(const htmlOpen of ['true','false',1,null])assert.equal(restore({...state,blocks:[{...block,htmlOpen}]}),undefined);
 });
@@ -180,7 +180,7 @@ test('multiple tabs share header insets and leave transparent space between card
  const s={...state,htmlSettings:{background:'#61739f'},htmlTabs:[{id:'t1',title:'같은 제목',open:false,collapse:true},{id:'t2',title:'같은 제목',open:true,collapse:true}],blocks:[{...block,htmlTabId:'t1'},{...block,id:'b2',htmlTabId:'t2'}]},html=exportHTML(s),root=html.split('>')[0];
  assert.match(root,/background-color:transparent/);assert.doesNotMatch(root,/#61739f/);
  const excerpts=Array.from(html.matchAll(/<details\b[\s\S]*?<\/details>/g),m=>m[0]);
- assert.equal(excerpts.length,2);assert.equal(excerpts[0].replace('<details','<details open'),excerpts[1]);
+ assert.equal(excerpts.length,2);assert.equal(excerpts[0].replace('<details','<details open="open"'),excerpts[1]);
  for(const excerpt of excerpts){
   const summary=excerpt.match(/<summary[^>]*style="([^"]*)"/)[1],projected=excerpt.match(/display:block;box-sizing:border-box;padding:15px [^"]*/)[0];
   assert.equal(summary.match(/padding:15px [^;]*;padding-left:[^;]*;padding-right:[^;]*;/)[0],projected.match(/padding:15px [^;]*;padding-left:[^;]*;padding-right:[^;]*;/)[0]);
