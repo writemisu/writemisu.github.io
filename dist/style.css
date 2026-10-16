@@ -449,7 +449,8 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .film-mode #designPanel .full-field,.film-control-row,#filmScreenSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;color:var(--muted);font-size:11px;white-space:nowrap}
 .film-mode #designPanel .full-field input,.film-mode #designPanel .full-field select,#filmScreenSize input,#filmScreenSize select{margin-top:0;font-size:11px}
 #filmScreenSize{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}
-#filmScreenSize>label{grid-template-columns:auto minmax(0,1fr);gap:6px}
+.film-mode #designPanel #filmScreenSize>label{grid-template-columns:auto minmax(0,1fr);gap:6px;min-width:0}
+.film-mode #designPanel #filmScreenSize select{min-width:78px}
 .film-time-pair,.film-fit-controls{display:flex;align-items:center;gap:6px;min-width:0}
 .film-time-pair input{flex:1;min-width:0;text-align:center}
 .film-time-pair>span{flex:none;color:var(--muted)}
