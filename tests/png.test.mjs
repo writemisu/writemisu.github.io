@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {filmSize} from '../dist/film.js';
+import {marginLayout} from '../dist/margin.js';
 
 const source=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8').split('\n').filter(line=>line.startsWith('async function savePNG()')||line.startsWith('function pngOutput(')).join('\n');
-async function exportPNG(width,height,pngScale=1,film=null){
+async function exportPNG(width,height,pngScale=1,film=null,margin=null){
  const button={},result={downloads:0,errors:[]};
- const env={state:{width,height,...(film?{pngLayout:'film',film}:{})},filmSize,pngScale,$:()=>button,saveButtonContent:'PNG 저장',finishInlineEdit(){result.finished=true;},ensureFilmImage:async()=>{result.imageReady=true;},loadUsedFonts:async()=>{},updateCanvas(){},requestAnimationFrame:fn=>fn(),setTimeout(){},URL:{createObjectURL:()=> 'blob:png',revokeObjectURL(){}},notify:message=>result.message=message,console:{error:error=>result.errors.push(error)}};
+ const env={state:{width,height,blocks:[],...(film?{pngLayout:'film',film}:{}),...(margin?{pngLayout:'margin',marginLayout:margin}:{})},filmSize,marginLayout,marginGeometry:null,measureRun:(b,text)=>Array.from(text).length*b.size*.52,pngScale,$:()=>button,saveButtonContent:'PNG 저장',finishInlineEdit(){result.finished=true;},ensureFilmImage:async()=>{result.imageReady=true;},loadUsedFonts:async()=>{},updateCanvas(){},requestAnimationFrame:fn=>fn(),setTimeout(){},URL:{createObjectURL:()=> 'blob:png',revokeObjectURL(){}},notify:message=>result.message=message,console:{error:error=>result.errors.push(error)}};
  env.document={fonts:{ready:Promise.resolve()},createElement:type=>type==='canvas'?{toBlob(callback,mime){result.size=[this.width,this.height];result.mime=mime;callback({});}}:{click(){result.downloads++;}}};
  env.paint=(canvas,scale)=>{assert.equal(result.finished,true);result.paint=[canvas.width,canvas.height,scale];};
  runInNewContext(source,env);await env.savePNG();assert.deepEqual(result.errors,[]);assert.equal(button.disabled,false);return result;
@@ -38,4 +39,9 @@ test('high-resolution selection renders at double dimensions and matches its dis
 
 test('Film waits for the image and exports its own aspect ratio at original and double resolution',async()=>{
  for(const scale of [1,2]){const result=await exportPNG(500,741,scale,{width:800,ratio:'16:9'});assert.equal(result.imageReady,true);assert.deepEqual(result.size,[800*scale,450*scale]);}
+});
+
+test('MARGIN exports its calculated page at original and double resolution',async()=>{
+ const settings={width:800,header:false},page=marginLayout({width:500,blocks:[],marginLayout:settings},(b,text)=>text.length*b.size*.52);
+ for(const scale of [1,2]){const result=await exportPNG(500,741,scale,null,settings);assert.deepEqual(result.size,[page.width*scale,page.height*scale]);}
 });

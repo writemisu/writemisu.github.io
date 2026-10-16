@@ -463,3 +463,17 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .film-inline-range{display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;gap:8px;min-width:0}
 .film-inline-range input[type=range]{margin:0;min-width:0}
 .film-inline-range output{text-align:right;font-variant-numeric:tabular-nums}
+
+/* MARGIN keeps one text column and shared typography controls. */
+.margin-mode #palettes,.margin-mode #quoteGroup,.margin-mode .presentation-controls,.margin-mode #pageSettings,.margin-mode #addLine,.margin-mode .alignment-control,.margin-mode .typography-advanced .color-row label:last-child,.margin-mode .typography-advanced .range-label,.margin-mode .paragraph-format-tools,.margin-mode .paragraph-format-selection,.margin-mode .resize-handle{display:none}
+.margin-mode #board{border-radius:0;overflow:hidden}
+.margin-mode .block-overlay{cursor:text}
+.margin-mode #designPanel .full-field,.margin-controls .full-field,#marginPageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted);white-space:nowrap}
+.margin-mode #designPanel .full-field input,.margin-mode #designPanel .full-field select{margin-top:0;font-size:11px}
+.margin-mode #designPanel input[type=text]{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font-size:11px}
+.margin-mode #designPanel .html-option{min-height:26px;margin:4px 0;font-size:11px}
+.margin-mode #designPanel>.design-group{padding:14px 2px}
+.margin-mode #designPanel .range-label{margin-top:10px}
+.margin-mode #marginPageSize{display:block;margin:0}
+.margin-mode .film-layout-picker select{width:100%}
+#marginBodyFields{margin-top:12px}
