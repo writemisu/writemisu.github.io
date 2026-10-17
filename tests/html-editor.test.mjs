@@ -20,10 +20,10 @@ test('existing formatting controls write HTML overrides without changing PNG sty
 });
 
 test('HTML divider alignment controls move the exported line without changing PNG coordinates',()=>{
- const s=state(),line={...s.blocks[0],type:'line',text:''};s.blocks=[line];const buttons=[],tabs={textAlignTab:{setAttribute(){}},layerAlignTab:{setAttribute(){}},alignmentButtons:{replaceChildren(){buttons.length=0;},setAttribute(){},append(b){buttons.push(b);}}};
- const env={state:s,editorMode:'html',alignmentMode:'layer',htmlBlock,icons:{},$:id=>tabs[id],formatTargets:()=>[line],selection:()=>[line],bounds:()=>null,displayBlock:b=>htmlBlock(s,b),change:fn=>fn(),setFormat:(b,key,value)=>{b.htmlStyle={...b.htmlStyle,[key]:value};},document:{createElement:()=>({setAttribute(){}})}};
+ const s=state(),line={...s.blocks[0],type:'line',text:''};s.blocks=[line];const buttons=[],tabs={alignmentScope:{},textAlignTab:{setAttribute(){}},layerAlignTab:{setAttribute(){}},alignmentButtons:{replaceChildren(){buttons.length=0;},setAttribute(){},append(b){buttons.push(b);}}};
+ const env={state:s,editorMode:'html',alignmentMode:'layer',selected:new Set([line.id]),htmlBlock,icons:{},$:id=>tabs[id],formatTargets:()=>[line],selection:()=>[line],bounds:()=>null,displayBlock:b=>htmlBlock(s,b),change:fn=>fn(),setFormat:(b,key,value)=>{b.htmlStyle={...b.htmlStyle,[key]:value};},document:{createElement:()=>({setAttribute(){}})}};
  const source=app.slice(app.indexOf('function renderAlignment(){'),app.indexOf('function widthLimit('));runInNewContext(source+'\nrenderAlignment();',env);
- assert.equal(buttons.length,3);assert.ok(buttons.every(b=>!b.disabled));buttons[2].onclick();assert.equal(line.htmlStyle.align,'right');assert.match(exportHTML(s),/width:33%;margin:0 0 0 auto/);
+ assert.equal(tabs.alignmentScope.textContent,'선택 1개');assert.equal(buttons.length,3);assert.ok(buttons.every(b=>!b.disabled));buttons[2].onclick();assert.equal(line.htmlStyle.align,'right');assert.match(exportHTML(s),/width:33%;margin:0 0 0 auto/);
  env.alignmentMode='text';buttons[1].onclick();assert.equal(line.htmlStyle.align,'center');assert.match(exportHTML(s),/width:33%;margin:0 auto/);assert.equal(line.x,block.x);assert.equal(line.y,block.y);
 });
 
