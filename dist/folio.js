@@ -26,8 +26,8 @@ export function folioLayout(state,measure){
   b.metrics=blockMetrics(b,(text,run)=>measure(b,text,run),s.quoteStyle);alignPrintBlock(b,bodyX,bodyWidth,b.layerAlign);blocks.push(b);y+=b.metrics.h+30*k;
  }
  const barSplit=outer+(width-outer*2)*.68;
- const rows=(key,size,w,bold=false,tracking=0)=>s.infoOn&&s[key]?wrapText(s[key],w,text=>measure({font:'pretendard',size:size*k,bold},text)+Math.max(0,Array.from(text).length-1)*tracking*k):[];
- const projectLines=rows('project',20,(s.code?barSplit-outer:width-outer*2)-40*k,true),codeLines=rows('code',20,(s.project?width-outer-barSplit:width-outer*2)-40*k,true);
+ const rows=(key,w)=>s.infoOn&&s[key]?wrapText(s[key],w,text=>measure({font:'mona12',size:20*k,bold:false},text)):[];
+ const projectLines=rows('project',(s.code?barSplit-outer:width-outer*2)-40*k),codeLines=rows('code',(s.project?width-outer-barSplit:width-outer*2)-40*k);
  const barHeight=projectLines.length||codeLines.length?Math.max(56*k,Math.max(projectLines.length,codeLines.length)*26*k+30*k):0,barGap=barHeight?34*k:0;
  const bodyBottom=blocks.length?y-30*k:bodyTop,height=Math.ceil(Math.max(width*1.25,bodyBottom+80*k+barGap+barHeight+outer));
  const mainBottom=height-outer-barHeight-barGap,barY=height-outer-barHeight;
@@ -41,7 +41,7 @@ export function paintFolio(target,state,g,scale=1,editingId=null){
  c.globalAlpha=1;c.textBaseline='top';c.textAlign='left';
  c.fillStyle=s.color;
  if(barHeight){
-  c.save();c.font='700 '+(20*k)+'px '+fonts.pretendard;c.textBaseline='alphabetic';
+  c.save();c.font='400 '+(20*k)+'px '+fonts.mona12;c.textBaseline='alphabetic';
   for(const [lines,x] of [[g.projectLines,outer+20*k],[g.codeLines,(g.projectLines.length?barSplit:outer)+20*k]]){
    const lineHeight=26*k,top=barY+(barHeight-lines.length*lineHeight)/2;
    lines.forEach((line,i)=>{const sample=c.measureText(line),ascent=sample.actualBoundingBoxAscent??16*k,descent=sample.actualBoundingBoxDescent??4*k;fillTextWithSpaces(c,line,x,top+(i+.5)*lineHeight+(ascent-descent)/2);});

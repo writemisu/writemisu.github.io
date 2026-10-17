@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {folioSettings,folioLayout,validFolio,paintFolio} from '../dist/folio.js';
-import {stripeLayout} from '../dist/stripe.js';
 import {marginLayout} from '../dist/margin.js';
 import {filmLayout} from '../dist/film.js';
 import {exportHTML} from '../dist/html.js';
@@ -34,10 +33,10 @@ test('hiding or clearing footer information removes the entire footer band',()=>
 });
 
 test('Folio settings round-trip through drafts while other layout geometry and HTML stay unchanged',()=>{
- const s=state(),before=structuredClone(s.blocks),html=exportHTML(s),others=[stripeLayout(s,measure),marginLayout(s,measure),filmLayout(s,measure)];
+ const s=state(),before=structuredClone(s.blocks),html=exportHTML(s),others=[marginLayout(s,measure),filmLayout(s,measure)];
  s.pngLayout='folio';s.folioLayout={...folioSettings(s),paper:'#fafafa',color:'#111111',font:'noto',size:30,lineHeight:2,project:'사용자 문구',code:'사용자 코드'};
  assert.ok(folioLayout(s,measure).blocks.every(b=>b.size===30&&b.font==='noto'&&b.lineHeight===2));assert.deepEqual(s.blocks,before);assert.equal(exportHTML(s),html);
- [stripeLayout(s,measure),marginLayout(s,measure),filmLayout(s,measure)].forEach((g,i)=>assert.deepEqual(g,others[i]));
+ [marginLayout(s,measure),filmLayout(s,measure)].forEach((g,i)=>assert.deepEqual(g,others[i]));
  assert.deepEqual(parseDraft(JSON.stringify({version:1,state:s})).state,s);
  for(const patch of [{width:200},{font:'missing'},{paper:'gray'},{size:0},{infoOn:'yes'},{note:7},[]])assert.equal(validFolio(patch),false);
 });
@@ -64,9 +63,9 @@ test('saved legacy Folio name and information cells never reappear',()=>{
 test('footer glyphs are vertically centered while preserving the 68:32 split and left padding',()=>{
  for(const width of [800,1080]){
   const s=state();s.blocks=[];s.folioLayout={width,project:'정의영',code:'glyph / 001'};const g=folioLayout(s,measure),draws=[];
-  const c=new Proxy({measureText(text){const size=parseFloat(this.font.split(' ')[1]),korean=/[가-힣]/.test(text);return {width:text.length*size*.5,actualBoundingBoxAscent:size*(korean?.8:.65),actualBoundingBoxDescent:size*(korean?.05:.2)};}},{get:(o,key)=>key in o?o[key]:(...args)=>{if(key==='fillText')draws.push({text:args[0],x:args[1],y:args[2],baseline:o.textBaseline,...o.measureText(args[0])});},set:(o,key,value)=>{o[key]=value;return true;}});
+  const c=new Proxy({measureText(text){const size=parseFloat(this.font.split(' ')[1]),korean=/[가-힣]/.test(text);return {width:text.length*size*.5,actualBoundingBoxAscent:size*(korean?.8:.65),actualBoundingBoxDescent:size*(korean?.05:.2)};}},{get:(o,key)=>key in o?o[key]:(...args)=>{if(key==='fillText')draws.push({text:args[0],x:args[1],y:args[2],font:o.font,baseline:o.textBaseline,...o.measureText(args[0])});},set:(o,key,value)=>{o[key]=value;return true;}});
   paintFolio({getContext:()=>c},s,g);assert.equal(draws.length,2);assert.equal(g.barSplit,g.outer+(g.width-g.outer*2)*.68);
   assert.equal(draws[0].x,g.outer+20*g.k);assert.equal(draws[1].x,g.barSplit+20*g.k);
-  for(const draw of draws){const center=draw.y+(draw.actualBoundingBoxDescent-draw.actualBoundingBoxAscent)/2;assert.equal(draw.baseline,'alphabetic');assert.ok(Math.abs(center-(g.barY+g.barHeight/2))<1e-6);}
+  for(const draw of draws){const center=draw.y+(draw.actualBoundingBoxDescent-draw.actualBoundingBoxAscent)/2;assert.equal(draw.font,'400 '+(20*g.k)+"px 'Mona12',monospace");assert.equal(draw.baseline,'alphabetic');assert.ok(Math.abs(center-(g.barY+g.barHeight/2))<1e-6);}
  }
 });

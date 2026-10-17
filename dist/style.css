@@ -464,47 +464,20 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .film-inline-range input[type=range]{margin:0;min-width:0}
 .film-inline-range output{text-align:right;font-variant-numeric:tabular-nums}
 
-/* MARGIN keeps one text column and shared typography controls. */
-.margin-mode #backgroundGroup,.margin-mode .presentation-controls,.margin-mode #pageSettings,.margin-mode #addLine,.margin-mode .typography-advanced .color-row label:last-child,.margin-mode .typography-advanced .range-label,.margin-mode .paragraph-format-tools,.margin-mode .paragraph-format-selection,.margin-mode .resize-handle{display:none}
-.margin-mode #board{border-radius:0;overflow:hidden}
-.margin-mode .block-overlay{cursor:text}
-.margin-mode #designPanel .full-field,.margin-controls .full-field,#marginPageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted);white-space:nowrap}
-.margin-mode #designPanel .full-field input,.margin-mode #designPanel .full-field select{margin-top:0;font-size:11px}
-.margin-mode #designPanel input[type=text]{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font-size:11px}
-.margin-mode #designPanel .html-option{min-height:26px;margin:4px 0;font-size:11px}
-.margin-mode #designPanel>.design-group{padding:14px 2px}
-.margin-mode #designPanel .range-label{margin-top:10px}
-.margin-mode #marginPageSize{display:block;margin:0}
-.margin-mode .film-layout-picker select{width:100%}
-
-/* STRIPE reuses body typography while keeping its print artwork separate. */
-.stripe-mode #backgroundGroup,.stripe-mode .presentation-controls,.stripe-mode #pageSettings,.stripe-mode #addLine,.stripe-mode .typography-advanced,.stripe-mode .paragraph-format-tools,.stripe-mode .paragraph-format-selection,.stripe-mode .resize-handle{display:none}
-.stripe-mode #board{border-radius:0;overflow:hidden}
-.stripe-mode .block-overlay{cursor:text}
-.stripe-mode #designPanel .full-field,#stripePageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted)}
-.stripe-mode #designPanel .full-field input,.stripe-mode #designPanel .full-field select{margin-top:0;font-size:11px}
-.stripe-mode #designPanel input[type=text],.stripe-mode #designPanel textarea{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:11px}
-.stripe-mode #designPanel textarea{resize:vertical;line-height:1.6}
-.stripe-mode #designPanel .html-option{min-height:26px;margin:4px 0;font-size:11px}
-.stripe-mode #designPanel>.design-group{padding:14px 2px}
-.stripe-mode #designPanel .range-label{margin-top:10px}
-.stripe-mode #stripePageSize{display:block;margin:0}
-.stripe-mode .film-layout-picker select{width:100%}
+/* Print layouts share one body column and compact settings. */
+:is(.margin-mode,.folio-mode) :is(#backgroundGroup,.presentation-controls,#pageSettings,#addLine,.paragraph-format-tools,.paragraph-format-selection,.resize-handle),.margin-mode .typography-advanced .color-row label:last-child,.margin-mode .typography-advanced .range-label,.folio-mode .typography-advanced,.folio-mode .left-bottom{display:none}
+:is(.margin-mode,.folio-mode) #board{border-radius:0;overflow:hidden}
+:is(.margin-mode,.folio-mode) .block-overlay{cursor:text}
+:is(.margin-mode,.folio-mode) #designPanel .full-field,.margin-controls .full-field,:is(#marginPageSize,#folioPageSize)>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted)}
+.margin-mode #designPanel .full-field,.margin-controls .full-field,#marginPageSize>label{white-space:nowrap}
+:is(.margin-mode,.folio-mode) #designPanel .full-field :is(input,select){margin-top:0;font-size:11px}
+:is(.margin-mode,.folio-mode) #designPanel input[type=text]{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font-size:11px}
+.folio-mode #designPanel input[type=text]{font-family:inherit}
+:is(.margin-mode,.folio-mode) #designPanel .html-option{min-height:26px;margin:4px 0;font-size:11px}
+:is(.margin-mode,.folio-mode) #designPanel>.design-group{padding:14px 2px}
+:is(.margin-mode,.folio-mode) #designPanel .range-label{margin-top:10px}
+:is(.margin-mode,.folio-mode) :is(#marginPageSize,#folioPageSize){display:block;margin:0}
+:is(.margin-mode,.folio-mode) .film-layout-picker select{width:100%}
 .print-colors label{display:grid;grid-template-columns:minmax(0,1fr) 72px 38px;align-items:center;gap:8px;margin:10px 0;font-size:11px;color:var(--muted)}
 .print-colors output{text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
 .print-colors input[type=color]{width:38px;height:27px;margin:0;padding:4px}
-.stripe-mode .left-bottom{display:none}
-
-/* Folio keeps only page, body and optional footer information controls. */
-.folio-mode #backgroundGroup,.folio-mode .presentation-controls,.folio-mode #pageSettings,.folio-mode #addLine,.folio-mode .typography-advanced,.folio-mode .paragraph-format-tools,.folio-mode .paragraph-format-selection,.folio-mode .resize-handle,.folio-mode .left-bottom{display:none}
-.folio-mode #board{border-radius:0;overflow:hidden}
-.folio-mode .block-overlay{cursor:text}
-.folio-mode #designPanel .full-field,#folioPageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted)}
-.folio-mode #designPanel .full-field input,.folio-mode #designPanel .full-field select{margin-top:0;font-size:11px}
-.folio-mode #designPanel input[type=text],.folio-mode #designPanel textarea{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:11px}
-.folio-mode #designPanel textarea{resize:vertical;line-height:1.6}
-.folio-mode #designPanel .html-option{min-height:26px;margin:4px 0;font-size:11px}
-.folio-mode #designPanel>.design-group{padding:14px 2px}
-.folio-mode #designPanel .range-label{margin-top:10px}
-.folio-mode #folioPageSize{display:block;margin:0}
-.folio-mode .film-layout-picker select{width:100%}

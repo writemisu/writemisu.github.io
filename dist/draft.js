@@ -1,7 +1,6 @@
 import {fonts} from './core.js';
 import {validFilm} from './film.js';
 import {validMargin} from './margin.js';
-import {validStripe} from './stripe.js';
 import {validFolio} from './folio.js';
 
 export const draftKey='writemisu-draft-v1';
@@ -13,8 +12,11 @@ export function parseDraft(raw){
  try{
   const draft=JSON.parse(raw),s=draft?.state;
   if(draft?.version!==1||!s||!number(s.width,400)||s.width>1600||!number(s.margin)||!number(s.padding)||!number(s.noise)||!number(s.seed)||!['solid','radial'].includes(s.background)||!Array.isArray(s.colors)||s.colors.length!==2||!s.colors.every(color)||!color(s.textColor)||!Array.isArray(s.blocks))return null;
+  const retiredLayout=s.pngLayout==='stripe'||Object.hasOwn(s,'stripeLayout');
+  if(s.pngLayout==='stripe')s.pngLayout='plain';
+  delete s.stripeLayout;
   const q=s.quoteStyle;
-  if(s.pngLayout!==undefined&&!['plain','film','margin','stripe','folio'].includes(s.pngLayout)||s.film!==undefined&&!validFilm(s.film)||s.marginLayout!==undefined&&!validMargin(s.marginLayout)||s.stripeLayout!==undefined&&!validStripe(s.stripeLayout)||s.folioLayout!==undefined&&!validFolio(s.folioLayout))return null;
+  if(s.pngLayout!==undefined&&!['plain','film','margin','folio'].includes(s.pngLayout)||s.film!==undefined&&!validFilm(s.film)||s.marginLayout!==undefined&&!validMargin(s.marginLayout)||s.folioLayout!==undefined&&!validFolio(s.folioLayout))return null;
   if(q!==undefined&&!quote(q))return null;
   if(s.replacementRules!==undefined&&(!Array.isArray(s.replacementRules)||s.replacementRules.some(rule=>!rule||typeof rule.find!=='string'||typeof rule.replace!=='string')))return null;
   if(s.htmlSettings!==undefined&&(!s.htmlSettings||!number(s.htmlSettings.width,280)||s.htmlSettings.width>1600||!number(s.htmlSettings.padding)||s.htmlSettings.padding>120||!number(s.htmlSettings.gap)||s.htmlSettings.gap>120))return null;
@@ -50,7 +52,7 @@ export function parseDraft(raw){
    if(b.group!=null&&!/^g\d+$/.test(b.group))return null;
    ids.add(b.id);counter=Math.max(counter,Number(b.id.slice(1)),b.group?Number(b.group.slice(1)):0);
   }
-  return {state:s,counter,...(draft.pending===true?{pending:true}:{})};
+  return {state:s,counter,...(draft.pending===true||retiredLayout?{pending:true}:{})};
  }catch{return null;}
 }
 

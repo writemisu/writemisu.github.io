@@ -16,6 +16,16 @@ test('restoration advances ids beyond existing blocks and groups',()=>{
  assert.equal(parseDraft(encode(state,1)).counter,8);
 });
 
+test('retired layout drafts retain text and marks and queue cleaned settings for saving',()=>{
+ for(const pngLayout of ['stripe','folio']){
+  const source={...state,pngLayout,stripeLayout:{infoText:'retired settings'}},raw=encode(source),restored=parseDraft(raw);
+  assert.equal(restored.state.pngLayout,pngLayout==='stripe'?'plain':pngLayout);
+  assert.equal(Object.hasOwn(restored.state,'stripeLayout'),false);
+  assert.deepEqual(restored.state.blocks,state.blocks);assert.equal(restored.counter,9);assert.equal(restored.pending,true);
+  assert.equal(encode(source),raw);
+ }
+});
+
 test('quote settings survive saving and old drafts remain valid',()=>{
  const quoteStyle={enabled:true,color:null,highlight:'#333333',highlightOpacity:8,bold:false,italic:true,underline:false,strike:false};
  assert.deepEqual(parseDraft(encode({...state,quoteStyle})).state.quoteStyle,quoteStyle);
