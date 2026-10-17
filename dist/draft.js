@@ -1,6 +1,7 @@
 import {fonts} from './core.js';
 import {validFilm} from './film.js';
 import {validMargin} from './margin.js';
+import {validStripe} from './stripe.js';
 
 export const draftKey='writemisu-draft-v1';
 const number=(value,min=0)=>Number.isFinite(value)&&value>=min;
@@ -12,7 +13,7 @@ export function parseDraft(raw){
   const draft=JSON.parse(raw),s=draft?.state;
   if(draft?.version!==1||!s||!number(s.width,400)||s.width>1600||!number(s.margin)||!number(s.padding)||!number(s.noise)||!number(s.seed)||!['solid','radial'].includes(s.background)||!Array.isArray(s.colors)||s.colors.length!==2||!s.colors.every(color)||!color(s.textColor)||!Array.isArray(s.blocks))return null;
   const q=s.quoteStyle;
-  if(s.pngLayout!==undefined&&!['plain','film','margin'].includes(s.pngLayout)||s.film!==undefined&&!validFilm(s.film)||s.marginLayout!==undefined&&!validMargin(s.marginLayout))return null;
+  if(s.pngLayout!==undefined&&!['plain','film','margin','stripe'].includes(s.pngLayout)||s.film!==undefined&&!validFilm(s.film)||s.marginLayout!==undefined&&!validMargin(s.marginLayout)||s.stripeLayout!==undefined&&!validStripe(s.stripeLayout))return null;
   if(q!==undefined&&!quote(q))return null;
   if(s.replacementRules!==undefined&&(!Array.isArray(s.replacementRules)||s.replacementRules.some(rule=>!rule||typeof rule.find!=='string'||typeof rule.replace!=='string')))return null;
   if(s.htmlSettings!==undefined&&(!s.htmlSettings||!number(s.htmlSettings.width,280)||s.htmlSettings.width>1600||!number(s.htmlSettings.padding)||s.htmlSettings.padding>120||!number(s.htmlSettings.gap)||s.htmlSettings.gap>120))return null;
