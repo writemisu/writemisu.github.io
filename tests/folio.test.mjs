@@ -60,3 +60,13 @@ test('saved legacy Folio name and information cells never reappear',()=>{
  for(const key of ['name','heading','tag','note'])assert.equal(Object.hasOwn(settings,key),false);
  assert.deepEqual(g.projectLines,['KEEP_PROJECT']);assert.deepEqual(g.codeLines,['KEEP_CODE']);assert.equal(g.nameHeight,undefined);assert.equal(g.infoHeight,undefined);assert.equal(g.height,1350);
 });
+
+test('footer glyphs are vertically centered while preserving the 68:32 split and left padding',()=>{
+ for(const width of [800,1080]){
+  const s=state();s.blocks=[];s.folioLayout={width,project:'정의영',code:'glyph / 001'};const g=folioLayout(s,measure),draws=[];
+  const c=new Proxy({measureText(text){const size=parseFloat(this.font.split(' ')[1]),korean=/[가-힣]/.test(text);return {width:text.length*size*.5,actualBoundingBoxAscent:size*(korean?.8:.65),actualBoundingBoxDescent:size*(korean?.05:.2)};}},{get:(o,key)=>key in o?o[key]:(...args)=>{if(key==='fillText')draws.push({text:args[0],x:args[1],y:args[2],baseline:o.textBaseline,...o.measureText(args[0])});},set:(o,key,value)=>{o[key]=value;return true;}});
+  paintFolio({getContext:()=>c},s,g);assert.equal(draws.length,2);assert.equal(g.barSplit,g.outer+(g.width-g.outer*2)*.68);
+  assert.equal(draws[0].x,g.outer+20*g.k);assert.equal(draws[1].x,g.barSplit+20*g.k);
+  for(const draw of draws){const center=draw.y+(draw.actualBoundingBoxDescent-draw.actualBoundingBoxAscent)/2;assert.equal(draw.baseline,'alphabetic');assert.ok(Math.abs(center-(g.barY+g.barHeight/2))<1e-6);}
+ }
+});

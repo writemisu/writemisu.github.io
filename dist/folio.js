@@ -40,7 +40,14 @@ export function paintFolio(target,state,g,scale=1,editingId=null){
  if(barHeight){c.strokeRect(outer,barY,width-outer*2,barHeight);if(g.projectLines.length&&g.codeLines.length){c.beginPath();c.moveTo(barSplit,barY);c.lineTo(barSplit,barY+barHeight);c.stroke();}}
  c.globalAlpha=1;c.textBaseline='top';c.textAlign='left';
  c.fillStyle=s.color;
- if(barHeight){c.font='700 '+(20*k)+'px '+fonts.pretendard;g.projectLines.forEach((line,i)=>fillTextWithSpaces(c,line,outer+20*k,barY+15*k+i*26*k));g.codeLines.forEach((line,i)=>fillTextWithSpaces(c,line,(g.projectLines.length?barSplit:outer)+20*k,barY+15*k+i*26*k));}
+ if(barHeight){
+  c.save();c.font='700 '+(20*k)+'px '+fonts.pretendard;c.textBaseline='alphabetic';
+  for(const [lines,x] of [[g.projectLines,outer+20*k],[g.codeLines,(g.projectLines.length?barSplit:outer)+20*k]]){
+   const lineHeight=26*k,top=barY+(barHeight-lines.length*lineHeight)/2;
+   lines.forEach((line,i)=>{const sample=c.measureText(line),ascent=sample.actualBoundingBoxAscent??16*k,descent=sample.actualBoundingBoxDescent??4*k;fillTextWithSpaces(c,line,x,top+(i+.5)*lineHeight+(ascent-descent)/2);});
+  }
+  c.restore();
+ }
  for(const b of g.blocks)if(b.id!==editingId)paintPrintText(c,b);
  c.restore();
 }
