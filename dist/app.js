@@ -272,7 +272,7 @@ function renderMarginSettings(){
  const active=editorMode==='png'&&state.pngLayout==='margin',s=marginSettings(state);document.body.classList.toggle('margin-mode',active);
  for(const node of document.querySelectorAll('[data-margin-only]'))node.hidden=!active;
  const panel=$('designPanel'),background=$('backgroundGroup'),type=$('typographyGroup'),quote=$('quoteGroup');
- if(active){if(type.nextElementSibling!==$('marginNumberGroup'))panel.insertBefore(type,$('marginNumberGroup'));type.after(quote);}
+ if(active){const group=$('marginDecorationGroup');if(type.nextElementSibling!==quote||quote.nextElementSibling!==group){panel.insertBefore(type,group);type.after(quote);}}
  else if(background.nextElementSibling!==type||type.nextElementSibling!==quote){panel.insertBefore(background,quote);panel.insertBefore(type,quote);}
  type.querySelector('summary').firstChild.textContent=active?'본문':'글자';
  if(!active)return;
@@ -376,7 +376,7 @@ function nudgeFilm(key,step){
 }
 $('pngLayout').onchange=e=>{
  finishInlineEdit();endTyping();const value=e.target.value;
- change(()=>{state.pngLayout=value;if(value==='film'&&!state.film)state.film=filmSettings(state);if(value==='margin'&&!state.marginLayout){state.marginLayout=marginSettings(state);$('marginHeaderGroup').open=true;}if(value==='folio'&&!state.folioLayout){state.folioLayout=folioSettings(state);$('folioInfoGroup').open=true;}if(value==='film'){alignmentMode='text';$('filmImageGroup').open=true;}});
+ change(()=>{state.pngLayout=value;if(value==='film'&&!state.film)state.film=filmSettings(state);if(value==='margin'&&!state.marginLayout){state.marginLayout=marginSettings(state);$('marginDecorationGroup').open=true;}if(value==='folio'&&!state.folioLayout){state.folioLayout=folioSettings(state);$('folioInfoGroup').open=true;}if(value==='film'){alignmentMode='text';$('filmImageGroup').open=true;}});
 };
 $('filmUpload').onclick=()=>$('filmFile').click();
 $('filmFile').onchange=async e=>{

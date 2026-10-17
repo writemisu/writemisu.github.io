@@ -470,6 +470,9 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 :is(.margin-mode,.folio-mode) .block-overlay{cursor:text}
 :is(.margin-mode,.folio-mode) #designPanel .full-field,.margin-controls .full-field,:is(#marginPageSize,#folioPageSize)>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted)}
 .margin-mode #designPanel .full-field,.margin-controls .full-field,#marginPageSize>label{white-space:nowrap}
+#marginDecorationGroup .margin-decoration-section{margin-top:12px}
+#marginDecorationGroup .margin-decoration-section+.margin-decoration-section{padding-top:14px;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}
+#marginDecorationGroup .margin-section-title{margin:0 0 8px;font-size:11px;font-weight:500;color:var(--muted)}
 :is(.margin-mode,.folio-mode) #designPanel .full-field :is(input,select){margin-top:0;font-size:11px}
 :is(.margin-mode,.folio-mode) #designPanel input[type=text]{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font-size:11px}
 .folio-mode #designPanel input[type=text]{font-family:inherit}
