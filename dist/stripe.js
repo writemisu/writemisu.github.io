@@ -71,7 +71,7 @@ function graphics(c,state,g,s){
  for(const x of [3*k,width-3*k]){c.beginPath();for(let y=0;y<height;y+=7*k){const px=x+(hash(Math.round(x),Math.round(y/k),seed)-.5)*5*k;if(y===0)c.moveTo(px,y);else c.lineTo(px,y);}c.stroke();}
  c.globalAlpha=1;
 }
-function text(c,b){
+export function paintPrintText(c,b){
  const m=b.metrics,h=b.size*b.lineHeight;c.save();c.textBaseline='alphabetic';c.font='400 '+b.size+'px '+fonts[b.font];
  const sample=c.measureText('한글Ag'),ascent=sample.actualBoundingBoxAscent||b.size*.8,descent=sample.actualBoundingBoxDescent||b.size*.2;
  for(let i=0;i<m.lines.length;i++){
@@ -87,6 +87,6 @@ export function paintStripe(target,state,g,paper,scale=1,editingId=null){
  c.save();c.setTransform(scale,0,0,scale,0,0);c.clearRect(0,0,g.width,g.height);c.drawImage(paperCache.layer,0,0,g.width,g.height);c.textAlign='left';c.textBaseline='top';
  if(g.titleLines.length){c.fillStyle=s.color;c.font='400 '+(30*g.k)+'px '+fonts[s.font];g.titleLines.forEach((line,i)=>fillTextWithSpaces(c,line,g.bodyX,g.top+i*42*g.k));}
  else{c.fillStyle=s.red;c.fillRect(g.bodyX,g.top,36*g.k,3*g.k);}
- for(const b of g.blocks)if(b.id!==editingId)text(c,b);
+ for(const b of g.blocks)if(b.id!==editingId)paintPrintText(c,b);
  c.restore();
 }

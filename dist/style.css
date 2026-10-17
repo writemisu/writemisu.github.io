@@ -478,7 +478,7 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .margin-mode .film-layout-picker select{width:100%}
 
 /* STRIPE reuses body typography while keeping its print artwork separate. */
-.stripe-mode #backgroundGroup,.stripe-mode #quoteGroup,.stripe-mode .presentation-controls,.stripe-mode #pageSettings,.stripe-mode #addLine,.stripe-mode .alignment-control,.stripe-mode .typography-advanced .color-row label:last-child,.stripe-mode .typography-advanced .range-label,.stripe-mode .paragraph-format-tools,.stripe-mode .paragraph-format-selection,.stripe-mode .resize-handle{display:none}
+.stripe-mode #backgroundGroup,.stripe-mode #quoteGroup,.stripe-mode .presentation-controls,.stripe-mode #pageSettings,.stripe-mode #addLine,.stripe-mode .alignment-control,.stripe-mode .typography-advanced,.stripe-mode .paragraph-format-tools,.stripe-mode .paragraph-format-selection,.stripe-mode .resize-handle{display:none}
 .stripe-mode #board{border-radius:0;overflow:hidden}
 .stripe-mode .block-overlay{cursor:text}
 .stripe-mode #designPanel .full-field,#stripePageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted)}
@@ -490,6 +490,21 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .stripe-mode #designPanel .range-label{margin-top:10px}
 .stripe-mode #stripePageSize{display:block;margin:0}
 .stripe-mode .film-layout-picker select{width:100%}
-.stripe-colors label{display:grid;grid-template-columns:minmax(0,1fr) 72px 38px;align-items:center;gap:8px;margin:10px 0;font-size:11px;color:var(--muted)}
-.stripe-colors output{text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
-.stripe-colors input[type=color]{width:38px;height:27px;margin:0;padding:4px}
+.print-colors label{display:grid;grid-template-columns:minmax(0,1fr) 72px 38px;align-items:center;gap:8px;margin:10px 0;font-size:11px;color:var(--muted)}
+.print-colors output{text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+.print-colors input[type=color]{width:38px;height:27px;margin:0;padding:4px}
+.stripe-mode .left-bottom{display:none}
+
+/* Folio keeps only page, body and optional footer information controls. */
+.folio-mode #backgroundGroup,.folio-mode #quoteGroup,.folio-mode .presentation-controls,.folio-mode #pageSettings,.folio-mode #addLine,.folio-mode .alignment-control,.folio-mode .typography-advanced,.folio-mode .paragraph-format-tools,.folio-mode .paragraph-format-selection,.folio-mode .resize-handle,.folio-mode .left-bottom{display:none}
+.folio-mode #board{border-radius:0;overflow:hidden}
+.folio-mode .block-overlay{cursor:text}
+.folio-mode #designPanel .full-field,#folioPageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted)}
+.folio-mode #designPanel .full-field input,.folio-mode #designPanel .full-field select{margin-top:0;font-size:11px}
+.folio-mode #designPanel input[type=text],.folio-mode #designPanel textarea{width:100%;min-width:0;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font:inherit;font-size:11px}
+.folio-mode #designPanel textarea{resize:vertical;line-height:1.6}
+.folio-mode #designPanel .html-option{min-height:26px;margin:4px 0;font-size:11px}
+.folio-mode #designPanel>.design-group{padding:14px 2px}
+.folio-mode #designPanel .range-label{margin-top:10px}
+.folio-mode #folioPageSize{display:block;margin:0}
+.folio-mode .film-layout-picker select{width:100%}
