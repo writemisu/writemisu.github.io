@@ -35,7 +35,7 @@ for(const [name,key,layout,valid] of layouts){
  });
 
  test(name+' rejects invalid saved alignment and quote settings',()=>{
-  for(const patch of [{blocks:{b1:{align:'bad'}}},{blocks:{b1:{layerAlign:'justify'}}},{blocks:{b1:{w:0}}},{blocks:{b1:{w:1601}}},{blocks:{b1:{w:'200'}}},{blocks:[]},{quoteStyle:{...quote,highlightOpacity:101}},{quoteStyle:{...quote,color:'bad'}}])assert.equal(valid(patch),false);
+  for(const patch of [{blocks:{b1:{align:'bad'}}},{blocks:{b1:{layerAlign:'justify'}}},{blocks:{b1:{w:0}}},{blocks:{b1:{w:1601}}},{blocks:{b1:{w:'200'}}},{blocks:{b1:{x:-1}}},{blocks:{b1:{x:1601}}},{blocks:{b1:{x:'100'}}},{blocks:[]},{quoteStyle:{...quote,highlightOpacity:101}},{quoteStyle:{...quote,color:'bad'}}])assert.equal(valid(patch),false);
  });
 
  test(name+' retains custom paragraph widths, reflows following text and preserves layer alignment',()=>{
@@ -60,6 +60,20 @@ for(const [name,key,layout,valid] of layouts){
   env.startPrintResize(event,'b1');env.onDrag({...event,clientX:60});env.finishDrag();
   assert.deepEqual(env.state.blocks,originalBlocks);assert.equal(saved[0],before);for(const b of env.state.blocks)assert.equal(env.state[key].blocks[b.id].w,width-80);
   const resized=env.snapshot();env.startPrintResize(event,'b1');env.onDrag({...event,clientX:150});env.finishDrag(true);assert.equal(env.snapshot(),resized);assert.equal(saved.length,1);
+ });
+
+ test(name+' resizing keeps the left edge fixed after center or right alignment and can realign afterwards',()=>{
+  const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+  for(const layerAlign of ['center','right']){
+   const s=state();s.pngLayout=name;s[key]={blocks:{b1:{w:240,layerAlign}}};const original=layout(s,measure).blocks[0],before=structuredClone(s.blocks);
+   const env={state:s,editorMode:'png',marginGeometry:null,folioGeometry:null,clamp:(v,min,max)=>Math.max(min,Math.min(max,v))};
+   env.pngPage=()=>layout(s,measure);env.displayBlock=b=>env.pngPage().blocks.find(x=>x.id===b.id);
+   runInNewContext(app.slice(app.indexOf('function setPrintBlockFormat('),app.indexOf('function setFormat('))+'\n'+app.slice(app.indexOf('function widthLimit('),app.indexOf('function arrangeSelection(')),env);
+   env.setBlockWidth(s.blocks[0],160);const resized=layout(s,measure).blocks[0];
+   assert.equal(resized.x,original.x);assert.equal(resized.x+resized.w,original.x+original.w-80);assert.deepEqual(s.blocks,before);
+   assert.equal(s[key].blocks.b1.layerAlign,undefined);assert.deepEqual(parseDraft(JSON.stringify({version:1,state:s})).state,JSON.parse(JSON.stringify(s)));
+   env.setPrintBlockFormat(s.blocks[0],'layerAlign','right');const aligned=layout(s,measure);assert.equal(s[key].blocks.b1.x,undefined);assert.equal(aligned.blocks[0].x+aligned.blocks[0].w,aligned.bodyX+aligned.bodyWidth);
+  }
  });
 }
 

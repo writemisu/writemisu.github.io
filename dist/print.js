@@ -6,13 +6,13 @@ export function validPrintOptions(s){
  if(q!==undefined&&(!q||typeof q.enabled!=='boolean'||q.color!=null&&!color(q.color)||!color(q.highlight)||!Number.isFinite(q.highlightOpacity)||q.highlightOpacity<0||q.highlightOpacity>100||!['bold','italic','underline','strike'].every(key=>typeof q[key]==='boolean')))return false;
  if(s.blocks!==undefined){
   if(!s.blocks||typeof s.blocks!=='object'||Array.isArray(s.blocks))return false;
-  for(const [id,b] of Object.entries(s.blocks))if(!/^b\d+$/.test(id)||!b||typeof b!=='object'||Array.isArray(b)||b.align!==undefined&&!['left','center','right','justify'].includes(b.align)||b.layerAlign!==undefined&&!['left','center','right'].includes(b.layerAlign)||b.w!==undefined&&(!Number.isFinite(b.w)||b.w<20||b.w>1600))return false;
+  for(const [id,b] of Object.entries(s.blocks))if(!/^b\d+$/.test(id)||!b||typeof b!=='object'||Array.isArray(b)||b.align!==undefined&&!['left','center','right','justify'].includes(b.align)||b.layerAlign!==undefined&&!['left','center','right'].includes(b.layerAlign)||b.w!==undefined&&(!Number.isFinite(b.w)||b.w<20||b.w>1600)||b.x!==undefined&&(!Number.isFinite(b.x)||b.x<0||b.x>1600))return false;
  }
  return true;
 }
-export function alignPrintBlock(b,x,width,align,fixedWidth){
- if(!align)return;
- const parts=b.parts||[b],natural=fixedWidth??Math.min(width,Math.max(20,...parts.flatMap(p=>p.metrics.lines.map(line=>p.x-x+line.width)))),left=x+(width-natural)*(align==='center'?.5:align==='right'?1:0);
+export function alignPrintBlock(b,x,width,align,fixedWidth,offsetX){
+ if(!align&&offsetX===undefined)return;
+ const parts=b.parts||[b],natural=fixedWidth??(offsetX!==undefined?b.w:Math.min(width,Math.max(20,...parts.flatMap(p=>p.metrics.lines.map(line=>p.x-x+line.width))))),left=x+(offsetX!==undefined?Math.max(0,Math.min(width-natural,offsetX)):(width-natural)*(align==='center'?.5:align==='right'?1:0));
  for(const part of parts){const inset=part.x-x;part.x=left+inset;part.w=Math.max(20,natural-inset);part.metrics={...part.metrics,w:part.w,textWidth:part.w};}
  b.x=left;b.w=natural;b.metrics={...b.metrics,w:natural,textWidth:natural};
 }

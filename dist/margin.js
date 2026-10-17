@@ -88,7 +88,7 @@ export function marginLayout(state,measure){
   const section=blocks.length===0||pending||options.sectionStart;pending=false;if(section)number++;
   b.x=bodyX;b.y=parts[0].y;b.w=blockWidth;b.parts=parts;b.section=section?number:null;
   b.metrics={...parts[0].metrics,w:blockWidth,h:y-b.y,textWidth:blockWidth,lines:parts.flatMap(p=>p.metrics.lines)};
-  alignPrintBlock(b,bodyX,bodyWidth,b.layerAlign,options.w===undefined?undefined:blockWidth);
+  alignPrintBlock(b,bodyX,bodyWidth,b.layerAlign,options.w===undefined?undefined:blockWidth,options.x);
   blocks.push(b);
  }
  const bodyBottom=blocks.length?y:bodyTop,footerY=bodyBottom+40;

@@ -21,7 +21,9 @@ h1,h2,p{margin:0}
 .paragraph-format-tools button{display:flex;align-items:center;justify-content:center;width:27px;height:27px;padding:6px;border:0;border-radius:5px;background:transparent;color:var(--muted)}
 .paragraph-format-tools svg{width:14px;height:14px;flex-shrink:0}
 .paragraph-format-tools button:disabled{opacity:.4}
-.paragraph-format-selection{margin:0 0 12px;font-size:10px;color:var(--muted)}
+.typography-target{display:flex;justify-content:space-between;gap:8px;margin:0 0 10px;font-size:10px;color:var(--muted)}
+.control-target{font-size:10px;font-weight:400;color:var(--muted)}
+.alignment-control h4{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .left-bottom{display:flex;flex-direction:column;gap:8px}
 .stage-panel{display:flex;flex-direction:column;min-width:0;min-height:0}
 .stage-toolbar{display:flex;align-items:center;gap:10px}
@@ -230,7 +232,10 @@ h3{display:flex;align-items:center;font-size:13px;font-weight:700;letter-spacing
 .zoom-tools button{min-width:25px;padding:4px;border-radius:4px;color:var(--muted)}
 .zoom-tools #zoomLabel{min-width:42px;font-variant-numeric:tabular-nums}
 .zoom-tools button:hover{background:#edf1f5}
-.zoom-tools #zoomFit{margin-left:3px;padding:4px 7px;border-left:1px solid var(--line);border-radius:0 4px 4px 0;font-size:11px}
+.zoom-tools #zoomFit{margin-left:3px;border-left:1px solid var(--line)}
+.zoom-tools :is(#zoomFit,#zoomPage){padding:4px 7px;border-radius:0;font-size:11px}
+.zoom-tools #zoomPage{border-radius:0 4px 4px 0}
+.zoom-tools :is(#zoomFit,#zoomPage)[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
 .stage-scroll{padding:32px 24px 38px;background:transparent;scrollbar-color:var(--accent-line) transparent}
 #board{box-shadow:0 8px 28px #29374514,0 0 0 1px #4354650e}
 #draftStatus[data-failed=true]{color:#9b4343}
@@ -465,7 +470,7 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .film-inline-range output{text-align:right;font-variant-numeric:tabular-nums}
 
 /* Print layouts share one body column and compact settings. */
-:is(.margin-mode,.folio-mode) :is(#backgroundGroup,.presentation-controls,#pageSettings,#addLine,.paragraph-format-tools,.paragraph-format-selection),.margin-mode .typography-advanced .color-row label:last-child,.margin-mode .typography-advanced .range-label,.folio-mode .typography-advanced,.folio-mode .left-bottom{display:none}
+:is(.margin-mode,.folio-mode) :is(#backgroundGroup,.presentation-controls,#pageSettings,#addLine,.paragraph-format-tools),.margin-mode .typography-advanced .color-row label:last-child,.margin-mode .typography-advanced .range-label,.folio-mode .typography-advanced,.folio-mode .left-bottom{display:none}
 :is(.margin-mode,.folio-mode) #board{border-radius:0;overflow:hidden}
 :is(.margin-mode,.folio-mode) .block-overlay{cursor:text}
 :is(.margin-mode,.folio-mode) #designPanel .full-field,.margin-controls .full-field,:is(#marginPageSize,#folioPageSize)>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted)}
