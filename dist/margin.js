@@ -74,21 +74,21 @@ export function marginLayout(state,measure){
  const bodyTop=y,blocks=[],dialogueGap=s.size*s.lineHeight+s.dialogueGap;
  for(const source of replaceBlocks(state.blocks,state.replacementRules||[]).blocks){
   if(source.type==='line'){pending=true;continue;}
-  const options=s.blocks[source.id]||{},b={...textBlock(s,source),align:s.blocks[source.id]?.align||'left',layerAlign:s.blocks[source.id]?.layerAlign},parts=[],runs=quoteRuns(blockRuns(b),s.quoteStyle);
+  const options=s.blocks[source.id]||{},blockWidth=Math.min(bodyWidth,Math.max(20,options.w??bodyWidth)),b={...textBlock(s,source),align:options.align||'left',layerAlign:options.layerAlign},parts=[],runs=quoteRuns(blockRuns(b),s.quoteStyle);
   if(!b.text.trim()){blankGap+=Math.max(1,b.text.split('\n').length)*s.paragraphGap;continue;}
   for(const segment of marginSegments(b.text,options.role||'auto')){
    if(segment.blank){blankGap+=s.paragraphGap;continue;}
-   const {start,end,dialogue}=segment,indent=dialogue?Math.min(s.dialogueIndent,bodyWidth/4):0;
+   const {start,end,dialogue}=segment,indent=dialogue?Math.min(s.dialogueIndent,blockWidth/4):0;
    const gap=previous?(previous.dialogue!==dialogue?dialogueGap:dialogue||previous.id!==b.id?s.paragraphGap:0):0;
    y+=Math.max(gap,blankGap);blankGap=0;
-   const part={...b,text:b.text.slice(start,end),runs:sliceRuns(runs,start,end),x:bodyX+indent,y,w:bodyWidth-indent};
+   const part={...b,text:b.text.slice(start,end),runs:sliceRuns(runs,start,end),x:bodyX+indent,y,w:blockWidth-indent};
    part.metrics=blockMetrics(part,(text,run)=>measure(part,text,run));parts.push(part);y+=part.metrics.h;previous={dialogue,id:b.id};
   }
   if(!parts.length)continue;
   const section=blocks.length===0||pending||options.sectionStart;pending=false;if(section)number++;
-  b.x=bodyX;b.y=parts[0].y;b.w=bodyWidth;b.parts=parts;b.section=section?number:null;
-  b.metrics={...parts[0].metrics,w:bodyWidth,h:y-b.y,textWidth:bodyWidth,lines:parts.flatMap(p=>p.metrics.lines)};
-  alignPrintBlock(b,bodyX,bodyWidth,b.layerAlign);
+  b.x=bodyX;b.y=parts[0].y;b.w=blockWidth;b.parts=parts;b.section=section?number:null;
+  b.metrics={...parts[0].metrics,w:blockWidth,h:y-b.y,textWidth:blockWidth,lines:parts.flatMap(p=>p.metrics.lines)};
+  alignPrintBlock(b,bodyX,bodyWidth,b.layerAlign,options.w===undefined?undefined:blockWidth);
   blocks.push(b);
  }
  const bodyBottom=blocks.length?y:bodyTop,footerY=bodyBottom+40;

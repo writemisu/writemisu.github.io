@@ -22,8 +22,9 @@ export function folioLayout(state,measure){
  let y=bodyTop;
  for(const source of replaceBlocks(state.blocks,state.replacementRules||[]).blocks){
   if(source.type==='line')continue;
-  const b={...source,type:'text',presentation:'plain',font:s.font,size:s.size,lineHeight:s.lineHeight,color:s.color,align:s.blocks[source.id]?.align||'left',layerAlign:s.blocks[source.id]?.layerAlign,bold:false,padding:0,opacity:0,group:null,runs:blockRuns(source),x:bodyX,y,w:bodyWidth};
-  b.metrics=blockMetrics(b,(text,run)=>measure(b,text,run),s.quoteStyle);alignPrintBlock(b,bodyX,bodyWidth,b.layerAlign);blocks.push(b);y+=b.metrics.h+30*k;
+  const options=s.blocks[source.id]||{},blockWidth=Math.min(bodyWidth,Math.max(20,options.w??bodyWidth));
+  const b={...source,type:'text',presentation:'plain',font:s.font,size:s.size,lineHeight:s.lineHeight,color:s.color,align:options.align||'left',layerAlign:options.layerAlign,bold:false,padding:0,opacity:0,group:null,runs:blockRuns(source),x:bodyX,y,w:blockWidth};
+  b.metrics=blockMetrics(b,(text,run)=>measure(b,text,run),s.quoteStyle);alignPrintBlock(b,bodyX,bodyWidth,b.layerAlign,options.w===undefined?undefined:blockWidth);blocks.push(b);y+=b.metrics.h+30*k;
  }
  const barSplit=outer+(width-outer*2)*.68;
  const rows=(key,w)=>s.infoOn&&s[key]?wrapText(s[key],w,text=>measure({font:'mona12',size:20*k,bold:false},text)):[];
