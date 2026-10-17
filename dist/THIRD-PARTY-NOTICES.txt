@@ -24,6 +24,12 @@ Noto Serif KR
   SIL Open Font License 1.1:
   https://github.com/google/fonts/blob/main/ofl/notoserifkr/OFL.txt
 
+Mona12
+  https://github.com/MonadABXY/mona-font
+  Regular and Bold webfonts loaded from jsDelivr.
+  SIL Open Font License 1.1:
+  https://github.com/MonadABXY/mona-font/blob/main/OFL.txt
+
 Lucide icons
   Rabbit icon used in favicon.svg; colors and background adapted.
   https://lucide.dev/
