@@ -1,4 +1,4 @@
-Third-party resources used by 작성미수
+Third-party resources used by 미수로그
 
 KoPub Batang / KoPub Dotum
   Copyright: Ministry of Culture, Sports and Tourism / Korea Publishers Society.
@@ -25,5 +25,6 @@ Noto Serif KR
   https://github.com/google/fonts/blob/main/ofl/notoserifkr/OFL.txt
 
 Lucide icons
+  Rabbit icon used in favicon.svg; colors and background adapted.
   https://lucide.dev/
   ISC License; bundled license: LUCIDE-LICENSE.txt
