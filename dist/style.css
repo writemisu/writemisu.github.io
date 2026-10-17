@@ -465,7 +465,7 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .film-inline-range output{text-align:right;font-variant-numeric:tabular-nums}
 
 /* MARGIN keeps one text column and shared typography controls. */
-.margin-mode #backgroundGroup,.margin-mode #quoteGroup,.margin-mode .presentation-controls,.margin-mode #pageSettings,.margin-mode #addLine,.margin-mode .alignment-control,.margin-mode .typography-advanced .color-row label:last-child,.margin-mode .typography-advanced .range-label,.margin-mode .paragraph-format-tools,.margin-mode .paragraph-format-selection,.margin-mode .resize-handle{display:none}
+.margin-mode #backgroundGroup,.margin-mode .presentation-controls,.margin-mode #pageSettings,.margin-mode #addLine,.margin-mode .typography-advanced .color-row label:last-child,.margin-mode .typography-advanced .range-label,.margin-mode .paragraph-format-tools,.margin-mode .paragraph-format-selection,.margin-mode .resize-handle{display:none}
 .margin-mode #board{border-radius:0;overflow:hidden}
 .margin-mode .block-overlay{cursor:text}
 .margin-mode #designPanel .full-field,.margin-controls .full-field,#marginPageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted);white-space:nowrap}
@@ -478,7 +478,7 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .margin-mode .film-layout-picker select{width:100%}
 
 /* STRIPE reuses body typography while keeping its print artwork separate. */
-.stripe-mode #backgroundGroup,.stripe-mode #quoteGroup,.stripe-mode .presentation-controls,.stripe-mode #pageSettings,.stripe-mode #addLine,.stripe-mode .alignment-control,.stripe-mode .typography-advanced,.stripe-mode .paragraph-format-tools,.stripe-mode .paragraph-format-selection,.stripe-mode .resize-handle{display:none}
+.stripe-mode #backgroundGroup,.stripe-mode .presentation-controls,.stripe-mode #pageSettings,.stripe-mode #addLine,.stripe-mode .typography-advanced,.stripe-mode .paragraph-format-tools,.stripe-mode .paragraph-format-selection,.stripe-mode .resize-handle{display:none}
 .stripe-mode #board{border-radius:0;overflow:hidden}
 .stripe-mode .block-overlay{cursor:text}
 .stripe-mode #designPanel .full-field,#stripePageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted)}
@@ -496,7 +496,7 @@ details[open]>summary>.summary-chevron{transform:rotate(180deg)}
 .stripe-mode .left-bottom{display:none}
 
 /* Folio keeps only page, body and optional footer information controls. */
-.folio-mode #backgroundGroup,.folio-mode #quoteGroup,.folio-mode .presentation-controls,.folio-mode #pageSettings,.folio-mode #addLine,.folio-mode .alignment-control,.folio-mode .typography-advanced,.folio-mode .paragraph-format-tools,.folio-mode .paragraph-format-selection,.folio-mode .resize-handle,.folio-mode .left-bottom{display:none}
+.folio-mode #backgroundGroup,.folio-mode .presentation-controls,.folio-mode #pageSettings,.folio-mode #addLine,.folio-mode .typography-advanced,.folio-mode .paragraph-format-tools,.folio-mode .paragraph-format-selection,.folio-mode .resize-handle,.folio-mode .left-bottom{display:none}
 .folio-mode #board{border-radius:0;overflow:hidden}
 .folio-mode .block-overlay{cursor:text}
 .folio-mode #designPanel .full-field,#folioPageSize>label{display:grid;grid-template-columns:84px minmax(0,1fr);align-items:center;gap:8px;margin:8px 0;font-size:11px;color:var(--muted)}

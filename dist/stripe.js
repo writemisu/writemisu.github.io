@@ -1,12 +1,13 @@
 import {fonts,wrapText} from './core.js';
 import {blockMetrics} from './messages.js';
-import {blockRuns,positionedRuns,fillTextWithSpaces} from './richtext.js';
+import {blockRuns,fillTextWithSpaces} from './richtext.js';
+import {paintPrintText,alignPrintBlock,validPrintOptions} from './print.js';
 import {replaceBlocks} from './replace.js';
 
 const defaults={width:1080,paper:'#efe5cf',panel:'#23221e',color:'#28251f',red:'#b63425',orange:'#df702b',yellow:'#e7af43',infoOn:true,infoLabel:'STP / 001',infoText:'서윤 × 해준',titleOn:true,title:'비가 그친 자리',font:'kopubBatang',size:28,lineHeight:1.8,texture:24};
 const limits={width:[400,1600],size:[12,100],lineHeight:[1,3],texture:[0,60]};
 export function stripeSettings(state){
- const s={...defaults,...state.stripeLayout};
+ const stored=state.stripeLayout||{},s={...defaults,...(state.quoteStyle?{quoteStyle:state.quoteStyle}:{}),...stored,blocks:stored.blocks||{}};
  for(const [key,[min,max]] of Object.entries(limits))s[key]=Number.isFinite(s[key])?Math.max(min,Math.min(max,s[key])):defaults[key];
  return s;
 }
@@ -15,7 +16,7 @@ export function validStripe(s){
  for(const [key,[min,max]] of Object.entries(limits))if(s[key]!==undefined&&(!Number.isFinite(s[key])||s[key]<min||s[key]>max))return false;
  if(['paper','panel','color','red','orange','yellow'].some(key=>s[key]!==undefined&&!/^#[\da-f]{6}$/i.test(s[key])))return false;
  if(['infoOn','titleOn'].some(key=>s[key]!==undefined&&typeof s[key]!=='boolean')||['infoLabel','infoText','title'].some(key=>s[key]!==undefined&&typeof s[key]!=='string'))return false;
- return s.font===undefined||Object.hasOwn(fonts,s.font);
+ return (s.font===undefined||Object.hasOwn(fonts,s.font))&&validPrintOptions(s);
 }
 export function stripeLayout(state,measure){
  const s=stripeSettings(state),width=s.width,k=width/1080,stripWidth=width*.2,bodyX=stripWidth+72*k,bodyWidth=width-bodyX-56*k;
@@ -29,8 +30,8 @@ export function stripeLayout(state,measure){
  let y=bodyTop;
  for(const source of replaceBlocks(state.blocks,state.replacementRules||[]).blocks){
   if(source.type==='line')continue;
-  const b={...source,type:'text',presentation:'plain',font:s.font,size:s.size,lineHeight:s.lineHeight,color:s.color,align:'left',bold:false,padding:0,opacity:0,group:null,runs:blockRuns(source),x:bodyX,y,w:bodyWidth};
-  b.metrics=blockMetrics(b,(text,run)=>measure(b,text,run));blocks.push(b);y+=b.metrics.h+28*k;
+  const b={...source,type:'text',presentation:'plain',font:s.font,size:s.size,lineHeight:s.lineHeight,color:s.color,align:s.blocks[source.id]?.align||'left',layerAlign:s.blocks[source.id]?.layerAlign,bold:false,padding:0,opacity:0,group:null,runs:blockRuns(source),x:bodyX,y,w:bodyWidth};
+  b.metrics=blockMetrics(b,(text,run)=>measure(b,text,run),s.quoteStyle);alignPrintBlock(b,bodyX,bodyWidth,b.layerAlign);blocks.push(b);y+=b.metrics.h+28*k;
  }
  const bodyBottom=blocks.length?y-28*k:bodyTop,height=Math.ceil(Math.max(width*1.25,bodyBottom+72*k,graphicBottom+220*k));
  return {width,height,k,stripWidth,bodyX,bodyWidth,bodyTop,bodyBottom,top,titleLines,titleHeight,labelLines,labelY,infoLines,infoY,graphicTop,graphicBottom,blocks};
@@ -70,15 +71,6 @@ function graphics(c,state,g,s){
  c.strokeStyle=s.panel;c.globalAlpha=ink*.35;c.lineWidth=1.6*k;
  for(const x of [3*k,width-3*k]){c.beginPath();for(let y=0;y<height;y+=7*k){const px=x+(hash(Math.round(x),Math.round(y/k),seed)-.5)*5*k;if(y===0)c.moveTo(px,y);else c.lineTo(px,y);}c.stroke();}
  c.globalAlpha=1;
-}
-export function paintPrintText(c,b){
- const m=b.metrics,h=b.size*b.lineHeight;c.save();c.textBaseline='alphabetic';c.font='400 '+b.size+'px '+fonts[b.font];
- const sample=c.measureText('한글Ag'),ascent=sample.actualBoundingBoxAscent||b.size*.8,descent=sample.actualBoundingBoxDescent||b.size*.2;
- for(let i=0;i<m.lines.length;i++){
-  const y=b.y+i*h+(h-ascent-descent)/2+ascent,runs=positionedRuns(m.lines[i],m.textWidth,'left',(text,run)=>{c.font=(run.bold?'700':'400')+' '+b.size+'px '+fonts[b.font];return c.measureText(text).width;});
-  for(const run of runs){const x=b.x+run.x;c.font=(run.bold?'700':'400')+' '+b.size+'px '+fonts[b.font];c.fillStyle=run.color||b.color;c.save();if(run.italic){c.translate(x,y);c.transform(1,0,-.21,1,0,0);}fillTextWithSpaces(c,run.text,run.italic?0:x,run.italic?0:y);c.restore();const thickness=Math.max(1,b.size/18);if(run.underline)c.fillRect(x,y+Math.max(2,descent/2),run.w,thickness);if(run.strike)c.fillRect(x,y-ascent*.38,run.w,thickness);}
- }
- c.restore();
 }
 let paperCache;
 export function paintStripe(target,state,g,paper,scale=1,editingId=null){

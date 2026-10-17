@@ -16,26 +16,26 @@ const measure=(b,text)=>Array.from(text).length*b.size*.52;
 test('Folio keeps a single column within a thin frame and a restrained footer on a 1080 by 1350 page',()=>{
  const s=state(),before=structuredClone(s),g=folioLayout(s,measure);
  assert.deepEqual([g.width,g.height],[1080,1350]);assert.ok(g.blocks.every(b=>b.x===g.bodyX&&b.size===26&&b.font==='pretendard'));
- assert.ok(g.bodyX>g.outer&&g.bodyX+g.bodyWidth<g.width-g.outer);assert.ok(g.bodyBottom<g.nameY);assert.ok(g.nameHeight<100&&g.infoHeight<220);assert.deepEqual(s,before);
+ assert.ok(g.bodyX>g.outer&&g.bodyX+g.bodyWidth<g.width-g.outer);assert.ok(g.bodyBottom<g.mainBottom);assert.ok(g.barHeight<100);assert.deepEqual(s,before);
 });
 
 test('Folio expands for long text and long footer text without overlapping either column',()=>{
  const s=state();s.blocks=Array.from({length:50},(_,i)=>block('b'+(i+1),'남겨진 마음은 한동안 같은 자리에 머물렀다. '.repeat(8)));
- s.folioLayout={name:'긴 이름 '.repeat(60),note:'긴 설명 '.repeat(120)};const g=folioLayout(s,measure);
- assert.ok(g.height>1350*4);assert.ok(g.bodyBottom+79<=g.nameY);
- assert.ok(g.nameLines.length*52+30<=g.nameHeight);assert.ok(g.noteLines.length*28+44<=g.infoHeight);
+ s.folioLayout={project:'긴 프로젝트 문구 '.repeat(60),code:'긴 코드 '.repeat(120)};const g=folioLayout(s,measure);
+ assert.ok(g.height>1350*4);assert.ok(g.bodyBottom+79<=g.mainBottom);
+ assert.ok(Math.max(g.projectLines.length,g.codeLines.length)*26+30<=g.barHeight);
  for(let i=1;i<g.blocks.length;i++)assert.ok(g.blocks[i].y>=g.blocks[i-1].y+g.blocks[i-1].metrics.h);
 });
 
 test('hiding or clearing footer information removes the entire footer band',()=>{
  for(const settings of [{infoOn:false},{name:'',heading:'',tag:'',note:'',project:'',code:''}]){
-  const s=state();s.folioLayout=settings;const g=folioLayout(s,measure);assert.equal(g.infoHeight,0);assert.equal(g.nameHeight,0);assert.equal(g.barHeight,0);assert.deepEqual(g.nameLines,[]);assert.deepEqual(g.noteLines,[]);assert.equal(g.infoY,g.height-g.outer);
+  const s=state();s.folioLayout=settings;const g=folioLayout(s,measure);assert.equal(g.barHeight,0);assert.deepEqual(g.projectLines,[]);assert.deepEqual(g.codeLines,[]);assert.equal(g.mainBottom,g.height-g.outer);
  }
 });
 
 test('Folio settings round-trip through drafts while other layout geometry and HTML stay unchanged',()=>{
  const s=state(),before=structuredClone(s.blocks),html=exportHTML(s),others=[stripeLayout(s,measure),marginLayout(s,measure),filmLayout(s,measure)];
- s.pngLayout='folio';s.folioLayout={...folioSettings(s),paper:'#fafafa',color:'#111111',font:'noto',size:30,lineHeight:2,name:'사용자 이름',note:'사용자 설명'};
+ s.pngLayout='folio';s.folioLayout={...folioSettings(s),paper:'#fafafa',color:'#111111',font:'noto',size:30,lineHeight:2,project:'사용자 문구',code:'사용자 코드'};
  assert.ok(folioLayout(s,measure).blocks.every(b=>b.size===30&&b.font==='noto'&&b.lineHeight===2));assert.deepEqual(s.blocks,before);assert.equal(exportHTML(s),html);
  [stripeLayout(s,measure),marginLayout(s,measure),filmLayout(s,measure)].forEach((g,i)=>assert.deepEqual(g,others[i]));
  assert.deepEqual(parseDraft(JSON.stringify({version:1,state:s})).state,s);
@@ -52,5 +52,11 @@ test('shared body controls update only Folio settings',()=>{
 test('Folio paints the same text coordinates at preview and double resolution with small footer type',()=>{
  const s=state(),g=folioLayout(s,measure),events=[],sizes=[],c=new Proxy({measureText:text=>({width:text.length*10,actualBoundingBoxAscent:20,actualBoundingBoxDescent:6})},{get:(o,k)=>k in o?o[k]:(...args)=>events.push({key:k,args}),set:(o,k,v)=>{if(k==='font')sizes.push(parseFloat(v.split(' ')[1]));o[k]=v;return true;}}),target={getContext:()=>c};
  paintFolio(target,s,g,1);const first=events.splice(0);paintFolio(target,s,g,2);
- assert.deepEqual(first.filter(e=>e.key==='fillText'),events.filter(e=>e.key==='fillText'));assert.ok(Math.max(...sizes)<=40);assert.ok(events.some(e=>e.key==='setTransform'&&e.args[0]===2));
+ assert.deepEqual(first.filter(e=>e.key==='fillText'),events.filter(e=>e.key==='fillText'));assert.ok(Math.max(...sizes)<=26);assert.ok(events.some(e=>e.key==='setTransform'&&e.args[0]===2));
+});
+
+test('saved legacy Folio name and information cells never reappear',()=>{
+ const s=state();s.folioLayout={name:'REMOVED_NAME',heading:'REMOVED_HEADING',tag:'REMOVED_TAG',note:'REMOVED_NOTE',project:'KEEP_PROJECT',code:'KEEP_CODE'};const settings=folioSettings(s),g=folioLayout(s,measure);
+ for(const key of ['name','heading','tag','note'])assert.equal(Object.hasOwn(settings,key),false);
+ assert.deepEqual(g.projectLines,['KEEP_PROJECT']);assert.deepEqual(g.codeLines,['KEEP_CODE']);assert.equal(g.nameHeight,undefined);assert.equal(g.infoHeight,undefined);assert.equal(g.height,1350);
 });
