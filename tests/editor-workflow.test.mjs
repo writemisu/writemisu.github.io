@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {createFontLoader} from '../dist/font-loader.js';
 
 const app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
 
 test('a failed font request can retry, while successful requests remain cached',async()=>{
  let attempts=0,redraws=0;
  const env={metricCache:new Map([['old',1]]),marginGeometry:{old:true},folioGeometry:{old:true},scheduleDraw(){redraws++;},notify(){},document:{fonts:{load(){attempts++;return attempts===1?Promise.reject(Error('Temporary font failure')):Promise.resolve([]);}}}};
- runInNewContext(app.slice(app.indexOf('const fontLoads=new Map();'),app.indexOf('function loadUsedFonts(')),env);
+ env.loadFont=createFontLoader({fontSet:env.document.fonts,onLoad:()=>{env.metricCache.clear();env.marginGeometry=null;env.folioGeometry=null;env.scheduleDraw();},onError:env.notify});
  await assert.rejects(env.loadFont('Pretendard',400,'한글'),/Temporary font failure/);
  await env.loadFont('Pretendard',400,'한글');await env.loadFont('Pretendard',400,'한글');
  assert.equal(attempts,2);assert.equal(redraws,1);assert.equal(env.metricCache.size,0);assert.equal(env.marginGeometry,null);assert.equal(env.folioGeometry,null);

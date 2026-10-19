@@ -1,7 +1,7 @@
-@font-face{font-family:'KoPub Batang';font-weight:400;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/KoPubBatang@main/KoPubBatang-Medium.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'KoPub Batang';font-weight:700;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/KoPubBatang@main/KoPubBatang-Bold.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'KoPub Dotum';font-weight:400;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/KoPubDotum/KoPubDotum-Medium.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'KoPub Dotum';font-weight:700;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/KoPubDotum/KoPubDotum-Bold.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'KoPub Batang';font-weight:400;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/KoPubBatang@7ef37ed4015cf0f638952e3d9937e4192f7cea97/KoPubBatang-Medium.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'KoPub Batang';font-weight:700;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/KoPubBatang@7ef37ed4015cf0f638952e3d9937e4192f7cea97/KoPubBatang-Bold.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'KoPub Dotum';font-weight:400;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/KoPubDotum@295e0fc83931fda749f129b6690c0fa93f798007/KoPubDotum-Medium.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'KoPub Dotum';font-weight:700;src:url('https://cdn.jsdelivr.net/gh/fonts-archive/KoPubDotum@295e0fc83931fda749f129b6690c0fa93f798007/KoPubDotum-Bold.woff2') format('woff2');font-display:swap}
 @font-face{font-family:'Pretendard';font-weight:400;src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2');font-display:swap}
 @font-face{font-family:'Pretendard';font-weight:700;src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff2/Pretendard-Bold.woff2') format('woff2');font-display:swap}
 @font-face{font-family:'Noto Serif KR';font-weight:400;src:url('https://fonts.gstatic.com/s/notoserifkr/v32/3JnoSDn90Gmq2mr3blnHaTZXbOtLJDvui3JOncjmeM52.ttf') format('truetype');font-display:swap}
@@ -9,5 +9,5 @@
 
 @font-face{font-family:'Freesentation';font-weight:400;src:url('fonts/Freesentation-Regular.woff2') format('woff2');font-display:swap}
 @font-face{font-family:'Freesentation';font-weight:700;src:url('fonts/Freesentation-Bold.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'Mona12';font-weight:400;src:url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/Mona12.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'Mona12';font-weight:700;src:url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/Mona12-Bold.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Mona12';font-weight:400;src:url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font@07029e3c1f4e3491b0ed707b27953d1ace78d9b2/web/Mona12.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Mona12';font-weight:700;src:url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font@07029e3c1f4e3491b0ed707b27953d1ace78d9b2/web/Mona12-Bold.woff2') format('woff2');font-display:swap}

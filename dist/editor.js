@@ -3,8 +3,7 @@ import {styledHTML} from './core.js';
 import {icons} from './icons.js';
 
 const formats=[['bold','굵게'],['italic','기울임'],['underline','밑줄'],['strike','취소선']];
-const selectionUpdates=new WeakMap(),selectionDocuments=new WeakSet([document]);
-document.addEventListener('selectionchange',()=>selectionUpdates.get(document.activeElement)?.());
+const selectionUpdates=new WeakMap(),selectionDocuments=new WeakSet();
 export function readEditor(input){
  const runs=[];
  function walk(node,style={}){
