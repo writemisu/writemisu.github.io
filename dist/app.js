@@ -613,7 +613,7 @@ function renderMode(){
  const frame=$('htmlPreview');if(html&&!frame.hasAttribute('srcdoc')){
   frame.onload=()=>{frame.dataset.ready='true';htmlPreviewObserver?.disconnect();htmlPreviewObserver=new ResizeObserver(resizeHTMLPreview);renderHTMLPreview();frame.contentDocument.fonts.ready.then(resizeHTMLPreview);};
   const fontURL=new URL('fonts.css',import.meta.url).href;
-  frame.srcdoc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="'+fontURL+'"><style>body{margin:0}summary:focus-visible{outline:2px solid #40566b;outline-offset:3px}[data-line-index]{border-radius:3px;cursor:text}[data-line-index]:hover{outline:1px solid #8d9cb566;outline-offset:3px}[data-line-selected],[data-line-index]:focus-visible{outline:1px solid #8799bd;outline-offset:3px}[data-line-index]:has(.stage-editor){outline:none}</style></head><body></body></html>';
+  frame.srcdoc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="'+fontURL+'"><style>body{margin:0}summary:focus-visible{outline:2px solid #30332d;outline-offset:3px}[data-line-index]{border-radius:3px;cursor:text}[data-line-index]:hover{outline:1px solid #a6a79566;outline-offset:3px}[data-line-selected],[data-line-index]:focus-visible{outline:1px solid #a6a795;outline-offset:3px}[data-line-index]:has(.stage-editor){outline:none}</style></head><body></body></html>';
  }
  setHTMLView(htmlCodeView);
 }
