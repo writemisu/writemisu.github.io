@@ -18,6 +18,19 @@ test('Folio keeps a single column within a thin frame and a restrained footer on
  assert.ok(g.bodyX>g.outer&&g.bodyX+g.bodyWidth<g.width-g.outer);assert.ok(g.bodyBottom<g.mainBottom);assert.ok(g.barHeight<100);assert.deepEqual(s,before);
 });
 
+test('Folio default dialogue controls match rendering and keep saved quote styles',()=>{
+ const s=state(),before=structuredClone(s),app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');s.pngLayout='folio';
+ const source=app.slice(app.indexOf('function quoteSettings('),app.indexOf('function setQuoteSettings(')),env={state:s,editorMode:'png',folioSettings};
+ runInNewContext(source,env);
+ const q=env.quoteSettings(),g=folioLayout(s,measure),runs=g.blocks[1].metrics.lines.flatMap(line=>line.runs);
+ assert.ok(q.enabled);assert.equal(q.highlightOpacity,10);assert.equal(q.color,null);assert.ok(!q.bold&&!q.italic&&!q.underline&&!q.strike);
+ assert.ok(runs.some(run=>run.highlight===q.highlight&&run.highlightOpacity===10));assert.deepEqual(s.blocks,before.blocks);
+ s.quoteStyle={...q,enabled:false,highlightOpacity:23};assert.equal(env.quoteSettings().enabled,false);assert.equal(folioSettings(s).quoteStyle.highlightOpacity,23);
+ s.folioLayout={project:'직접 쓴 이름',quoteStyle:{...q,highlight:'#224466',highlightOpacity:35}};
+ assert.equal(env.quoteSettings().highlight,'#224466');assert.equal(folioSettings(s).project,'직접 쓴 이름');
+ assert.deepEqual(parseDraft(JSON.stringify({version:1,state:s})).state,s);
+});
+
 test('Folio expands for long text and long footer text without overlapping either column',()=>{
  const s=state();s.blocks=Array.from({length:50},(_,i)=>block('b'+(i+1),'남겨진 마음은 한동안 같은 자리에 머물렀다. '.repeat(8)));
  s.folioLayout={project:'긴 프로젝트 문구 '.repeat(60),code:'긴 코드 '.repeat(120)};const g=folioLayout(s,measure);

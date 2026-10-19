@@ -28,7 +28,7 @@ function defaultFontSize(font){return (font==='freesentation'?20:12)*4/3;}
 function newBlock(text='',type='text'){return {id:'b'+(++counter),type,text,x:(state.width-bodyWidth())/2,y:state.margin,w:bodyWidth(),size:defaultFontSize(preferredFont),lineHeight:1.85,font:preferredFont,auto:true,color:state.textColor,align:'left',bold:false,padding:state.padding,box:'#ffffff',opacity:0,group:null,...(state.htmlTabs?{htmlTabId:activeHTMLTab}:{}),...(state.htmlSettings?{htmlStyle:{font:htmlSettings(state).font,size:defaultFontSize(htmlSettings(state).font)}}:{})};}
 let state={width:800,height:260,margin:80,padding:0,background:'solid',colors:[...palettes[1].colors],textColor:palettes[1].text,noise:0,seed:741,blocks:[],demo:false};
 const tabDraft=readDraft(()=>sessionStorage),restoredDraft=tabDraft||readDraft(()=>localStorage);
-if(restoredDraft){state=restoredDraft.state;counter=restoredDraft.counter;if(!tabDraft)writeDraft(()=>sessionStorage,JSON.stringify({version:1,...restoredDraft}));}else state.blocks.push(newBlock());
+if(restoredDraft){state=restoredDraft.state;counter=restoredDraft.counter;if(!tabDraft)writeDraft(()=>sessionStorage,JSON.stringify({version:1,...restoredDraft}));}else state.blocks.push(newBlock('아무것도 변하지 않을 것처럼 우린 웃었지.'));
 const htmlMigrated=[initializeHTML(state,!!restoredDraft),initializeHTMLTabs(state)].some(Boolean);
 let activeHTMLTab=state.htmlTabs[0].id;
 let inlineEdit=null;
@@ -175,7 +175,7 @@ function pasteParagraphFormat(){
  change(()=>{for(const b of blocks){if(film){for(const [key,value] of Object.entries(format))setFilmFormat(b,key,key==='w'?Math.min(value,filmSize(state).width-filmView(b).x):value);}else{applyParagraphFormat(b,format,editorMode);if(editorMode==='png')b.w=Math.min(b.w,state.width-b.x);}}});
  notify(blocks.length+'개 문단 서식 적용');
 }
-function quoteSettings(){const key=editorMode==='png'?{margin:'marginLayout',folio:'folioLayout'}[state.pngLayout]:null;return (editorMode==='html'?htmlSettings(state).quoteStyle:key?state[key]?.quoteStyle:undefined)||state.quoteStyle||{enabled:false,color:null,highlight:editorMode==='html'?htmlSettings(state).accent:key?state[key]?.color||state.textColor:state.textColor,highlightOpacity:8,bold:false,italic:false,underline:false,strike:false};}
+function quoteSettings(){const key=editorMode==='png'?{margin:'marginLayout',folio:'folioLayout'}[state.pngLayout]:null;return (editorMode==='html'?htmlSettings(state).quoteStyle:key==='folioLayout'?folioSettings(state).quoteStyle:key?state[key]?.quoteStyle:undefined)||state.quoteStyle||{enabled:false,color:null,highlight:editorMode==='html'?htmlSettings(state).accent:key?state[key]?.color||state.textColor:state.textColor,highlightOpacity:8,bold:false,italic:false,underline:false,strike:false};}
 function setQuoteSettings(value){if(editorMode==='html')setHTMLSetting('quoteStyle',value);else if(state.pngLayout==='margin')setMarginSetting('quoteStyle',value);else if(state.pngLayout==='folio')setFolioSetting('quoteStyle',value);else state.quoteStyle=value;}
 function renderQuoteSettings(){
  const q=quoteSettings(),host=$('quoteControls');

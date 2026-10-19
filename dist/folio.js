@@ -4,10 +4,11 @@ import {blockRuns,fillTextWithSpaces} from './richtext.js';
 import {replaceBlocks} from './replace.js';
 import {paintPrintText,alignPrintBlock,validPrintOptions} from './print.js';
 
-const defaults={width:1080,paper:'#e4e3df',color:'#252622',font:'pretendard',size:26,lineHeight:1.7,infoOn:true,project:'THE THINGS WE NEVER SAID',code:'ARCHIVE / 001'};
+const defaults={width:1080,paper:'#e4e3df',color:'#252622',font:'pretendard',size:26,lineHeight:1.7,infoOn:true,project:'봇 이름',code:'ARCHIVE / 001'};
+const defaultQuoteStyle={enabled:true,color:null,highlight:'#888888',highlightOpacity:10,bold:false,italic:false,underline:false,strike:false};
 const limits={width:[400,1600],size:[12,100],lineHeight:[1,3]};
 export function folioSettings(state){
- const {name,heading,tag,note,...stored}=state.folioLayout||{},s={...defaults,...(state.quoteStyle?{quoteStyle:state.quoteStyle}:{}),...stored,blocks:stored.blocks||{}};
+ const {name,heading,tag,note,...stored}=state.folioLayout||{},s={...defaults,quoteStyle:{...defaultQuoteStyle},...(state.quoteStyle?{quoteStyle:state.quoteStyle}:{}),...stored,blocks:stored.blocks||{}};
  for(const [key,[min,max]] of Object.entries(limits))s[key]=Number.isFinite(s[key])?Math.max(min,Math.min(max,s[key])):defaults[key];
  return s;
 }
