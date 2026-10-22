@@ -484,7 +484,7 @@ function finishInlineEdit(){
  if(!inlineEdit)return;
  const current=inlineEdit;inlineEdit=null;
  if(state.blocks.some(b=>b.id===current.id))current.commit(current.id,readEditor(current.input));
- if(composingInput===current.input)composingInput=null;
+ autosave.endComposition(current.input);
  current.wrapper.remove();endTyping();render();
 }
 function editBlock(id){finishInlineEdit();const input=$('blockList').querySelector('[data-id="'+id+'"] .paragraph-input');if(input){input.closest('details').open=true;input.focus();input.scrollIntoView({block:'nearest'});}}

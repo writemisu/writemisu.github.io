@@ -36,9 +36,10 @@ export function createAutosave({getContext,prepareLayout,finishDrag,status,notif
   if(saved)errorShown=false;
   return saved;
  }
+ function endComposition(input){if(composingInput===input)composingInput=null;}
  function watchEditor(input){
   input.addEventListener('compositionstart',()=>{composingInput=input;});
-  input.addEventListener('compositionend',()=>{if(composingInput===input)composingInput=null;});
+  input.addEventListener('compositionend',()=>endComposition(input));
   input.addEventListener('input',()=>{if(composingInput===input)queue();});
  }
  doc.addEventListener('compositionstart',e=>{composingInput=e.target.closest('.paragraph-input');});
@@ -49,5 +50,5 @@ export function createAutosave({getContext,prepareLayout,finishDrag,status,notif
  win.addEventListener('beforeunload',e=>{finishDrag();if(!flush()){e.preventDefault();e.returnValue='';}});
  setStatus(restored?'임시저장 복원됨':'자동 임시저장');
  if(dirty)queue();
- return {queue,flush,watchEditor};
+ return {queue,flush,watchEditor,endComposition};
 }

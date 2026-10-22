@@ -14,7 +14,7 @@ function editor(count=100,htmlMigrated=false){
   const input=e.target;Object.defineProperty(input,'childNodes',{get(){stats.reads++;return input.runs.map(run=>({nodeType:1,dataset:{},tagName:'SPAN',style:{fontWeight:run.bold?'700':'400',fontStyle:run.italic?'italic':'normal',textDecoration:[run.underline?'underline':'',run.strike?'line-through':''].join(' ')},childNodes:[{nodeType:3,data:run.text}]}));}});fn(e);
  }:fn);}};
  const saver=createAutosave({getContext:()=>env,prepareLayout:()=>{env.flowLayout();env.fitHeight();},finishDrag:env.finishDrag,status,notify:env.notify,dirty:htmlMigrated,local:()=>localStorage,session:()=>sessionStorage,doc,win:{addEventListener:register,setTimeout:env.setTimeout,clearTimeout:env.clearTimeout}});
- env.queue=saver.queue;env.flush=saver.flush;env.watchEditor=saver.watchEditor;
+ env.queue=saver.queue;env.flush=saver.flush;env.watchEditor=saver.watchEditor;env.endComposition=saver.endComposition;
  return {env,state,events,stats,localStorage,sessionStorage,saved:()=>JSON.parse(localStorage.data.get(draftKey)).state};
 }
 
@@ -87,4 +87,13 @@ test('HTML preview composition listeners save only the active line before an IME
  h.env.inlineEdit={input,range:{start:2,end:4}};h.env.watchEditor(input);
  listeners.compositionstart();listeners.input();h.env.flush();assert.equal(h.saved().blocks[0].text,'앞\n조합 중\n끝');
  listeners.compositionend();h.env.queue();h.env.flush();assert.equal(h.saved().blocks[0].text,'앞\n중간\n끝');
+});
+
+test('closing an editor releases its IME draft without clearing a different active editor',()=>{
+ const h=editor(1),input={isConnected:true,dataset:{blockId:'b1'},runs:[{text:'조합 중'}],closest(){return this;}};
+ h.events.compositionstart({target:input});h.env.endComposition({});h.env.queue();h.env.flush();
+ assert.equal(h.saved().blocks[0].text,'조합 중');assert.equal(h.stats.reads,1);
+ h.state.blocks[0]={id:'b1',text:'확정한 글',runs:[{text:'확정한 글'}]};
+ h.env.endComposition(input);h.env.queue();h.env.flush();
+ assert.equal(h.saved().blocks[0].text,'확정한 글');assert.equal(h.stats.reads,1);
 });
